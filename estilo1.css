@@ -2,4 +2,6 @@ body {
     background-image: url(imagens/FundoCentral.png);
     color: white;
     font-weight: bold;
+    margin-left: 10%;
+    margin-right: 10%;
 }
