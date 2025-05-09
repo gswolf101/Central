@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GsWolf101 🐺 </title>
+    <link rel="stylesheet" href="estilo1.css"> 
+</head>
+<body>
+    <a href="#"><img src="imagens/Mascara_GsWolf101.png" alt="">Imagem mascara</a>
+    <figure>
+        <img src="" alt="Instagram">
+        <img src="" alt="Twitch">
+        <img src="" alt="Tiktok">
+        <img src="" alt="Discord">
+        <img src="" alt="Youtube">
+    </figure>
+</body>
+</html>
