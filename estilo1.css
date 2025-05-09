@@ -5,3 +5,8 @@ body {
     margin-left: 10%;
     margin-right: 10%;
 }
+
+#redes_sociais img{
+    width: 100px;
+    height: 100px;
+}
