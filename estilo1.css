@@ -5,18 +5,18 @@ body {
 }
 
 #Centro {
-        margin-left: 30%;
-        margin-right: 30%;
+        margin-left: 15%;
+        margin-right: 15%;
         text-align: center;
         border: solid;
 }
 
-#Centro #imgmascara {
-    width: 45%;
-    height: 45%;
+#Centro #imgmascara img{
+    width: 30%;
+    height: 30%;
 }
 
 #Centro #redes_sociais img{
-    width: 100px;
-    height: 100px;
+    width: 22%;
+    height: 22%;
 }
