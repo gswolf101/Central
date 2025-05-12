@@ -7,6 +7,12 @@ body {
 #Centro {
         margin-left: 30%;
         margin-right: 30%;
+        text-align: center;
+}
+
+#Centro #imgmascara {
+    width: 45%;
+    height: 45%;
 }
 
 #redes_sociais img{
