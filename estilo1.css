@@ -12,6 +12,7 @@ body {
 }
 
 #Centro #imgmascara img{
+    padding-top: 50px;
     width: 30%;
     height: 30%;
 }
