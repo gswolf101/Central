@@ -23,3 +23,7 @@ body {
     width: 22%;
     height: 22%;
 }
+
+#esquerda {
+    float: right;
+}
