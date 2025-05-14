@@ -15,7 +15,7 @@ body {
         text-align: center;
         border: solid;
         float: left;
-    max-width: 50%;
+        max-width: 50%;
 }
 
 #Centro #imgmascara img{
@@ -27,5 +27,3 @@ body {
     width: 22%;
     height: 22%;
 }
-
-
