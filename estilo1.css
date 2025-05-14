@@ -1,9 +1,14 @@
+/*---------- Corpo / 
 body {
     background-image: url(imagens/FundoCentral.png);
     background-size: 50%;
     background-repeat: repeat-x repeat-y;
     color: white;
     font-weight: bold;
+}
+
+.tipo, .especificacao {
+    display: inline; 
 }
 
 #esquerda {
