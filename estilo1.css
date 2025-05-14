@@ -6,11 +6,16 @@ body {
     font-weight: bold;
 }
 
+#esquerda {
+    float: left;
+    border: solid blue; 
+}
+
 #Centro {
         text-align: center;
         border: solid;
         float: left;
-        margin: 5%
+    max-width: 50%;
 }
 
 #Centro #imgmascara img{
@@ -23,6 +28,4 @@ body {
     height: 22%;
 }
 
-#esquerda {
-    float: right;
-}
+
