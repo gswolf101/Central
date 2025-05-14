@@ -41,7 +41,7 @@ body {
         text-align: center;
         border: solid;
         float: left;
-        max-width: 50%;
+        max-width: 60%;
 }
 
 #Centro #imgmascara img{
@@ -50,6 +50,6 @@ body {
 }
 
 #Centro #redes_sociais img{
-    width: 22%;
-    height: 22%;
+    width: 15%;
+    height: auto;
 }
