@@ -11,6 +11,17 @@ body {
     border: solid blue; 
 }
 
+#esquerda h2 {
+    text-align: center;
+    color: red;
+}
+
+#esquerda li {
+    text-decoration: none;
+    list-style-type: none;
+    text-align: left;
+}
+
 #Centro {
         text-align: center;
         border: solid;
