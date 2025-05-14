@@ -9,6 +9,8 @@ body {
 
 .tipo, .especificacao {
     display: inline; 
+    margin-right: auto;
+    
 }
 
 /*---------- Bloco da esquerda ----------*/ 
@@ -29,6 +31,9 @@ body {
     text-align: left;
 }
 
+.tipo {
+    color: rgb(241, 0, 0);
+}
 .especificacao {
     text-align: right;
 }
