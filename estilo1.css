@@ -1,4 +1,4 @@
-/*---------- Corpo / 
+/*---------- Corpo ----------*/ 
 body {
     background-image: url(imagens/FundoCentral.png);
     background-size: 50%;
@@ -10,6 +10,8 @@ body {
 .tipo, .especificacao {
     display: inline; 
 }
+
+/*---------- Bloco da esquerda ----------*/ 
 
 #esquerda {
     float: left;
@@ -26,6 +28,12 @@ body {
     list-style-type: none;
     text-align: left;
 }
+
+.especificacao {
+    text-align: right;
+}
+
+/*---------- Bloco da Direita ----------*/ 
 
 #Centro {
         text-align: center;
