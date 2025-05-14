@@ -7,22 +7,19 @@ body {
     font-weight: bold;
 }
 
-.tipo, .especificacao {
-    display: inline; 
-    margin-right: auto;
-    
-}
-
 /*---------- Bloco da esquerda ----------*/ 
 
 #esquerda {
     float: left;
     border: solid blue; 
+    font-size: smaller;
+     
 }
 
 #esquerda h2 {
     text-align: center;
     color: red;
+    font-size: small;
 }
 
 #esquerda li {
