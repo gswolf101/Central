@@ -13,7 +13,18 @@ body {
     float: left;
     border: solid blue; 
     font-size: smaller;
-     
+    background-color: rgb(62, 62, 62);
+    max-width: 20%;
+}
+
+#esquerda p {
+    margin: 0;
+    padding: 0;
+}
+
+#esquerda br {
+    margin: 0;
+    padding: 0;
 }
 
 #esquerda h2 {
@@ -34,6 +45,7 @@ body {
 .especificacao {
     text-align: right;
 }
+
 
 /*---------- Bloco da Direita ----------*/ 
 
