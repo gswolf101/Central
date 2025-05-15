@@ -16,21 +16,25 @@ div {
 
 #esquerda {
     float: left;
-    border: solid blue; 
+    border: solid #3f3f3f; 
     font-size: smaller;
     background-color: rgb(36 36 36);
-    max-width: 25%;
+    max-width: auto;
     text-align: center;
 }
 
 #esquerda p {
-    margin: 0;
+    margin: 0px;
     padding: 0;
+    border-bottom: #3f3f3f1
 }
 
-#esquerda br {
-    margin: 0;
+#esquerda hr {
+    margin-top: 0;
+    margin-bottom: 0;
     padding: 0;
+    border-style:solid;
+    color: #3f3f3f;
 }
 
 #esquerda h2 {
@@ -50,7 +54,6 @@ div {
 }
 .especificacao {
     text-align: right;
-    margin: 10px;
 }
 
 
@@ -58,7 +61,8 @@ div {
 
 #Centro {
         text-align: center;
-        border: solid;
+        border-left: solid red;
+        border-right: solid red;
         float: left;
         max-width: 60%;
 }
