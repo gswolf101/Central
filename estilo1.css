@@ -78,3 +78,8 @@ div {
     width: 15%;
     height: auto;
 }
+
+#botaodc {
+    padding: 10px;
+    border: solid blue;
+}
