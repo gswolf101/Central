@@ -59,7 +59,7 @@ div {
 }
 
 
-/*---------- Bloco da Direita ----------*/ 
+/*---------- Bloco do Centro----------*/ 
 
 #Centro {
         text-align: center;
@@ -82,4 +82,9 @@ div {
 #botaodc {
     padding: 10px;
     border: solid blue;
+}
+
+#botaodc {
+    text-align: center;
+    color: rgb(241, 0, 0);
 }
