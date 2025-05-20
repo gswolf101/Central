@@ -5,14 +5,17 @@ body {
     background-repeat: repeat-x repeat-y;
     color: white;
     font-weight: bold;
-    margin-left: 10%;
-    margin-right: 8%;
+    margin-left: 0;
+    margin-right: 0;
     font-family: 'Gill Sans MT';
+    min-width: 414px; /* Força uma largura mínima típica de desktop */
+    overflow-x: auto; /* Permite rolagem horizontal, se necessário */
+    margin: 3%;
 }
 
 div {
-    margin-left: 10px;
-    margin-right:10px;
+    margin-left: 5px;
+    margin-right:5px;
 }
 
 /*---------- Bloco da esquerda 1 ----------*/ 
@@ -68,7 +71,7 @@ div {
         border-left: solid red;
         border-right: solid red;
         float: left;
-        max-width: 55%;
+        max-width: 50%;
 }
 
 #Centro #imgmascara img{
@@ -103,7 +106,7 @@ div {
     color: #3f3f3f;
 }
 
-#Centro #contato h3 {
+#Centro #contato h1 {
     font-size: small;
     color: #3f3f3f;
 }
@@ -115,7 +118,7 @@ div {
     border: solid #3f3f3f; 
     font-size: smaller;
     background-color: rgb(36 36 36);
-    max-width: 18%;
+    max-width: 15%;
     text-align: center;
 }
 
