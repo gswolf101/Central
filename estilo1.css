@@ -53,6 +53,7 @@ div {
 
 .tipo {
     color: rgb(241, 0, 0);
+    text-align: left;
 }
 .especificacao {
     text-align: right;
