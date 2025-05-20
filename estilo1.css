@@ -16,7 +16,7 @@ div {
 
 /*---------- Bloco da esquerda ----------*/ 
 
-#esquerda {
+#esquerda1 {
     float: left;
     border: solid #3f3f3f; 
     font-size: smaller;
@@ -25,13 +25,13 @@ div {
     text-align: center;
 }
 
-#esquerda p {
+#esquerda1 p {
     margin: 0px;
     padding: 0;
     border-bottom: #3f3f3f;
 }
 
-#esquerda hr {
+#esquerda1 hr {
     margin-top: 0;
     margin-bottom: 0;
     padding: 0;
@@ -39,13 +39,13 @@ div {
     color: #3f3f3f;
 }
 
-#esquerda h2 {
+#esquerda1 h2 {
     text-align: center;
     color: red;
     font-size: small;
 }
 
-#esquerda li {
+#esquerda1 li {
     text-decoration: none;
     list-style-type: none;
     text-align: left;
