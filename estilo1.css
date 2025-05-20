@@ -5,7 +5,7 @@ body {
     background-repeat: repeat-x repeat-y;
     color: white;
     font-weight: normal;
-    margin-left: 0;
+    margin-left: 3%;
     margin-right: 0;
     font-family: 'Gill Sans MT';
     min-width: 200px; /* Força uma largura mínima típica de desktop */
@@ -32,6 +32,7 @@ div {
     margin: 0px;
     padding: 0;
     border-bottom: #3f3f3f;
+    font-size: 10px;
 }
 
 #esquerda1 hr {
