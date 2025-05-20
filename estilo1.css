@@ -5,8 +5,8 @@ body {
     background-repeat: repeat-x repeat-y;
     color: white;
     font-weight: bold;
-    margin-left: 20%;
-    margin-right: 20%;
+    margin-left: 10%;
+    margin-right: 10%;
 }
 
 div {
@@ -91,4 +91,15 @@ div {
 
 .separa {
     color: rgb(241, 0, 0);
+}
+
+/*---------- Bloco da Direita ----------*/ 
+
+#direita     {
+    float: right;
+    border: solid #3f3f3f; 
+    font-size: smaller;
+    background-color: rgb(36 36 36);
+    max-width: auto;
+    text-align: center;
 }
