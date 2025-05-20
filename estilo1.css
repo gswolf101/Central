@@ -3,18 +3,18 @@ body {
     background-image: url(imagens/FundoCentral.png);
     background-size: 50%;
     background-repeat: repeat-x repeat-y;
-    color: black;
-    font-weight: bold;
-    margin-left: 10%;
-    margin-right: 8%;
+    color: white;
+    font-weight: normal;
+    margin-left: 0;
+    margin-right: 0;
     font-family: 'Gill Sans MT';
-    min-width: 1000px; /* Força uma largura mínima típica de desktop */
+    min-width: 200px; /* Força uma largura mínima típica de desktop */
 
 }
 
 div {
-    margin-left: 10px;
-    margin-right:10px;
+    margin-left: 5px;
+    margin-right:5px;
 }
 
 /*---------- Bloco da esquerda 1 ----------*/ 
@@ -70,7 +70,7 @@ div {
         border-left: solid red;
         border-right: solid red;
         float: left;
-        max-width: 55%;
+        max-width: 50%;
 }
 
 #Centro #imgmascara img{
