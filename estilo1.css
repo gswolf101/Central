@@ -5,8 +5,8 @@ body {
     background-repeat: repeat-x repeat-y;
     color: white;
     font-weight: bold;
-    margin-left: 9%;
-    margin-right: 9%;
+    margin-left: 10%;
+    margin-right: 8%;
 }
 
 div {
@@ -108,6 +108,11 @@ div {
 #direita #skin {
     width: 83%;
     height: auto;
+}
+
+#direita p {
+    font-size: smaller;
+    text-align: center;
 }
 
 #direita h2 {
