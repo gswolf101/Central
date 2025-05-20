@@ -28,7 +28,7 @@ div {
 #esquerda p {
     margin: 0px;
     padding: 0;
-    border-bottom: #3f3f3f1
+    border-bottom: #3f3f3f;
 }
 
 #esquerda hr {
@@ -107,4 +107,9 @@ div {
 #direita #skin {
     width: 83%;
     height: auto;
+}
+
+#direita h2 {
+    text-align: center;
+    color: red;
 }
