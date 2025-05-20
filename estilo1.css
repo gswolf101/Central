@@ -14,7 +14,7 @@ div {
     margin-right:10px;
 }
 
-/*---------- Bloco da esquerda ----------*/ 
+/*---------- Bloco da esquerda 1 ----------*/ 
 
 #esquerda1 {
     float: left;
@@ -51,15 +51,60 @@ div {
     text-align: left;
 }
 
-.tipo {
+#esquerda1 .tipo {
     color: rgb(241, 0, 0);
     text-align: left;
 }
-.especificacao {
+
+#esquerda1 .especificacao {
     text-align: right;
 }
 
+/*---------- Bloco da esquerda 2 ----------*/ 
 
+#esquerda2 {
+    float: left;
+    border: solid #3f3f3f; 
+    font-size: smaller;
+    background-color: rgb(36 36 36);
+    max-width: auto;
+    text-align: center;
+}
+
+#esquerda2 p {
+    margin: 0px;
+    padding: 0;
+    border-bottom: #3f3f3f;
+}
+
+#esquerda2 hr {
+    margin-top: 0;
+    margin-bottom: 0;
+    padding: 0;
+    border-style:solid;
+    color: #3f3f3f;
+}
+
+#esquerda2 h2 {
+    text-align: center;
+    color: red;
+    font-size: small;
+}
+
+#esquerda2 li {
+    text-decoration: none;
+    list-style-type: none;
+    text-align: left;
+}
+
+#esquerda2 .tipo {
+    color: rgb(241, 0, 0);
+    text-align: left;
+}
+
+#esquerda2 .especificacao {
+    text-align: right;
+}
 /*---------- Bloco do Centro----------*/ 
 
 #Centro {
