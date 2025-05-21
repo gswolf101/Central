@@ -94,6 +94,11 @@ div {
     color: rgb(241, 0, 0);
 }
 
+#botãodc img{
+    width: 90%;
+    height: auto;
+}
+
 .separa {
     color: rgb(241, 0, 0);
 }
