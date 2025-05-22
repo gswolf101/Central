@@ -106,6 +106,8 @@ div {
     width: 53%;
     height: auto;
     float: left;
+    margin-left: 0;
+    margin-right: 14px;
 }
 
 #livepix p {
