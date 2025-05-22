@@ -94,7 +94,7 @@ div {
     color: rgb(241, 0, 0);
 }
 
-#botãodc img{
+#botaodc img{
     width: 90%;
     height: auto;
 }
@@ -103,6 +103,15 @@ div {
     color: rgb(241, 0, 0);
 }
 
+#livepix img{
+    width: 53%;
+    height: auto;
+    float: left;
+}
+
+#livepix p {
+    text-align: left;
+}
 /*---------- Bloco do Contato----------*/ 
 
 #Centro #contato h2 {
