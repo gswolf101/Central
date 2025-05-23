@@ -113,6 +113,12 @@ div {
 #livepix p {
     text-align: left;
 }
+
+#espaco {
+    color: rgb(241, 0, 0);
+    margin-left: 5%;
+    margin-right: 5%;
+}
 /*---------- Bloco do Contato----------*/ 
 
 #Centro #contato h2 {
