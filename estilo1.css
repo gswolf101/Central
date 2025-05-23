@@ -8,7 +8,7 @@ body {
     margin-left: 3%;
     margin-right: 0;
     font-family: 'Gill Sans MT';
-    min-width: 200px; /* Força uma largura mínima típica de desktop */
+    min-width: 200px; 
 
 }
 
@@ -112,7 +112,6 @@ div {
 
 #livepix p {
     text-align: left;
-    font-size: 80%;
 }
 
 #espaco {
