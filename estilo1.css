@@ -75,7 +75,7 @@ div {
 }
 
 #Centro hr {
-    color: solid rgb(241, 0, 0);
+    border: solid 1px rgb(241, 0, 0);
     margin-left: 5%;
     margin-right: 5%;
 }
@@ -158,3 +158,4 @@ div {
     text-align: center;
     color: red;
 }
+
