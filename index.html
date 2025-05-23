@@ -1,103 +1,157 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GsWolf101</title>
-    <link rel="stylesheet" href="estilo1.css"> 
-</head>
-<body>
+/*---------- Corpo ----------*/ 
+body {
+    background-image: url(imagens/FundoCentral.png);
+    background-size: 50%;
+    background-repeat: repeat-x repeat-y;
+    color: white;
+    font-weight: normal;
+    margin-left: 3%;
+    margin-right: 0;
+    font-family: 'Gill Sans MT';
+    min-width: 200px; 
 
-        <!-- BLOCO ESQUERDA 1 -->
+}
 
-    <div id="esquerda1">
-        <div id="meupc">
-            <h2>Sobre o meu notebook</h2>
-            <p class="tipo">Marca:      </p><p class="especificacao">Avell</p>
-            <hr>
-            <p class="tipo">Tela:      </p><p class="especificacao">144Hz</p>
-            <hr>
-            <p class="tipo">Processador:      </p><p class="especificacao">i7 12650h</p>
-            <hr>
-            <p class="tipo">Placa de vídeo:      </p><p class="especificacao">RTX3050 Black</p>
-            <hr>
-            <p class="tipo">Espaço:      </p><p class="especificacao">NVME 500GB</p>
-            <hr>
-            <p class="tipo">Memória:      </p><p class="especificacao">16GB (2x8)</p>
-        </div>
-        <div id="perifericos">
-            <h2>Extras</h2>
-            <p class="tipo">Mouse:      </p><p class="especificacao">Razer Deathadder Essential </p>
-            <hr>
-            <p class="tipo">Fone e Microfone:      </p><p class="especificacao">Headset Gamer Redragon Zeus Pro Preto Sem Fio 7.1 H510-PRO </p>
-            <hr>
-            <p class="tipo">:      </p><p class="especificacao"></p>
-            <hr>
-        </div>
+div {
+    margin-left: 5px;
+    margin-right:5px;
+}
 
-    
-    </div>
+/*---------- Bloco da esquerda 1 ----------*/ 
 
+#esquerda1 {
+    float: left;
+    border: solid #3f3f3f; 
+    background-color: rgb(36 36 36);
+    max-width: 17%;
+    text-align: center;
+}
 
-    <!-- BLOCO CENTRO -->
+#esquerda1 p {
+    margin: 0px;
+    padding: 0;
+    border-bottom: #3f3f3f;
+    font-size: 10px;
+}
 
-    <div id="Centro">
-        <a href="#" id="imgmascara"><img src="imagens/Mascara_GsWolf101.png" alt="Imagem mascara"></a>
-        <h2>Redes sociais</h2>
-        <figure id="redes_sociais">
-            <a href="https://www.instagram.com/gswolf101/" target="_blank" rel="noopener"> <img src="imagens/Logoinstagram.png" alt="Instagram"></a>
-            <a href="https://www.twitch.tv/gswolf101" target="_blank" rel="noopener" ><img src="imagens/Logotwitch.png" alt="Twitch"></a>
-            <a href="https://www.tiktok.com/@gswolf101" target="_blank" rel="noopener"><img src="imagens/Logottk.png" alt="Tiktok"></a>
-            <a href="#" target="_blank" rel="noopener"><img src="imagens/Logoyoutube.png" alt="Youtube"></a>
-        </figure>
-        <div>
-            <a href="https://discord.gg/tKrRVKBxh5" id="botaodc" target="_blank" rel="noopener"><img src="imagens/botaodc.png" alt="Imagem botão do discord"></a>
-        </div>
-        <hr id="espaco">
-        <div id="livepix">
-            <figure>
-                <a href="https://livepix.gg/gswolf101" target="_blank" rel="noopener"><img src="imagens/img-teste.png" alt="Qrcode"></a>
-            </figure>
-                <p>Ajude o Wolf a melhorar o setup e trazer novos conteúdos para as lives e vídeos</p>
-             <!-- <iframe src="" frameborder="0"></iframe>  (widget da meta do livepix usar depois)-->   
-        </div>
-        <br>
-        <br>
-        <br>
-        <br>
-        <br>
-        <br>
-        <br>
-        <br>
-        <br>
-        <br>
-        <br>
-        <br>
-        <br>
-        <br>
-        <br>
-        <br>
-        <br>
-        <br>
-        <br>
-        <br>
-        <br>
-        <br>
-        <br>
-        <br>
-        <div id="contato">
-            <h2>E-mail</h2>
-            <h3>gswolf101@gmail.com</h1>
-        </div>
-    </div>
+#esquerda1 hr {
+    margin-top: 0;
+    margin-bottom: 0;
+    padding: 0;
+    border-style:solid;
+    color: #3f3f3f;
+}
 
-    <!-- BLOCO DIREITA 1 -->
+#esquerda1 h2 {
+    text-align: center;
+    color: red;
+}
 
-    <div id="direita">
-        <h2>Minha Skin</h2>
-        <p>Você pode ver mais sobre as skins que usei clicando na imagem!!</p>
-        <a href="https://pt.namemc.com/profile/GsWolf101.1" target="_blank" rel="noopener"> <img src="imagens/skin.jpeg" alt="imagens skin" id="skin"></a>
-    </div>
+#esquerda1 li {
+    text-decoration: none;
+    list-style-type: none;
+    text-align: left;
+}
 
-</body>
-</html>
+#esquerda1 .tipo {
+    color: rgb(241, 0, 0);
+    text-align: left;
+}
+
+#esquerda1 .especificacao {
+    text-align: right;
+}
+
+/*---------- Bloco do Centro----------*/ 
+
+#Centro {
+        text-align: center;
+        border-left: solid red;
+        border-right: solid red;
+        float: left;
+        max-width: 50%;
+}
+
+#Centro #imgmascara img{
+    width: 30%;
+    height: 30%;
+}
+
+#Centro #redes_sociais img{
+    width: 15%;
+    height: auto;
+}
+
+#botaodc {
+    padding: 10px;
+}
+
+#botaodc {
+    text-align: center;
+    color: rgb(241, 0, 0);
+}
+
+#botaodc img{
+    width: 90%;
+    height: auto;
+}
+
+.separa {
+    color: rgb(241, 0, 0);
+}
+
+#livepix img{
+    width: 53%;
+    height: auto;
+    float: left;
+    margin-left: 0;
+    margin-right: 14px;
+}
+
+#livepix p {
+    text-align: left;
+}
+
+#espaco {
+    color: rgb(241, 0, 0);
+    margin-left: 5%;
+    margin-right: 5%;
+}
+/*---------- Bloco do Contato----------*/ 
+
+#Centro #contato h2 {
+    text-align: center;
+    font-size: small;
+    color: #3f3f3f;
+}
+
+#Centro #contato h3 {
+    font-size: small;
+    color: #3f3f3f;
+}
+
+/*---------- Bloco da Direita ----------*/ 
+
+#direita     {
+    float: left;
+    border: solid #3f3f3f; 
+    font-size: smaller;
+    background-color: rgb(36 36 36);
+    max-width: 18%;
+    text-align: center;
+}
+
+#direita #skin {
+    width: 83%;
+    height: auto;
+}
+
+#direita p {
+
+    text-align: center;
+}
+
+#direita h2 {
+    text-align: center;
+    color: red;
+}
