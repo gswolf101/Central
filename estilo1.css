@@ -74,6 +74,12 @@ div {
         max-width: 50%;
 }
 
+#Centro hr {
+    color: solid rgb(241, 0, 0);
+    margin-left: 5%;
+    margin-right: 5%;
+}
+
 #Centro #imgmascara img{
     width: 30%;
     height: 30%;
@@ -114,11 +120,6 @@ div {
     text-align: left;
 }
 
-#espaco {
-    color: rgb(241, 0, 0);
-    margin-left: 5%;
-    margin-right: 5%;
-}
 /*---------- Bloco do Contato----------*/ 
 
 #Centro #contato h2 {
