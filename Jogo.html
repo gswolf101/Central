@@ -102,7 +102,10 @@
 
         function createBar() {
             const side = Math.floor(Math.random() * 4);
-            let bar = { speed: 3 + Math.floor(score / 10) * 0.5 };
+            let bar = {
+                speed: 3 + Math.floor(score / 10) * 0.5,
+                counted: false
+            };
 
             const centerX = canvas.width / 2;
             const centerY = canvas.height / 2;
@@ -181,16 +184,20 @@
         }
 
         function checkCollisions() {
-            if (player.immune) return;
-            for (let bar of bars) {
+            bars.forEach(bar => {
                 const closestX = Math.max(bar.x, Math.min(player.x, bar.x + bar.width));
                 const closestY = Math.max(bar.y, Math.min(player.y, bar.y + bar.height));
                 const distX = player.x - closestX;
                 const distY = player.y - closestY;
-                if (distX * distX + distY * distY < player.radius * player.radius) {
+                const hit = distX * distX + distY * distY < player.radius * player.radius;
+
+                if (hit && !player.immune) {
                     gameOver = true;
+                } else if (hit && player.immune && !bar.counted) {
+                    score++;
+                    bar.counted = true;
                 }
-            }
+            });
         }
 
         function draw() {
@@ -255,7 +262,6 @@
             if (timestamp - lastTime > barInterval) {
                 createBar();
                 lastTime = timestamp;
-                score++;
             }
 
             movePlayer(deltaTime);
