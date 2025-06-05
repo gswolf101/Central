@@ -8,18 +8,39 @@
         body {
             display: flex;
             justify-content: center;
-            align-items: center;
+            align-items: flex-start;
             height: 100vh;
             margin: 0;
             background-color: #000;
+            color: white;
+            font-family: Arial, sans-serif;
         }
         canvas {
             border: 2px solid #fff;
+            margin-right: 20px;
+        }
+        #ranking {
+            width: 200px;
+        }
+        #ranking h2 {
+            margin: 0 0 10px 0;
+            font-size: 20px;
+        }
+        #rankingList {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            font-size: 16px;
         }
     </style>
 </head>
 <body>
-<canvas id="gameCanvas" width="1000" height="1000"></canvas>
+<canvas id="gameCanvas" width="650" height="650"></canvas>
+<div id="ranking">
+    <h2>Ranking</h2>
+    <ul id="rankingList"></ul>
+</div>
+
 <script>
 const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
@@ -39,25 +60,23 @@ const player = {
     immune: false,
     immuneTime: 0,
     immuneDuration: 1500,
-    immuneCooldown: 750, // Alterado para 0.75 segundos
+    immuneCooldown: 750,
     lastImmuneEnd: 0
 };
 
 let bars = [];
 let score = 0;
 let gameOver = false;
+let rankings = [];
 
 let keys = {
-    ArrowUp: false,
-    ArrowDown: false,
-    ArrowLeft: false,
-    ArrowRight: false,
+    ArrowUp: false, ArrowDown: false,
+    ArrowLeft: false, ArrowRight: false,
     'w': false, 'W': false,
     's': false, 'S': false,
     'a': false, 'A': false,
     'd': false, 'D': false,
-    ' ': false,
-    'Enter': false
+    ' ': false, 'Enter': false
 };
 
 document.addEventListener('keydown', (e) => {
@@ -68,15 +87,13 @@ document.addEventListener('keydown', (e) => {
             player.immuneTime = Date.now();
         }
         if (e.key === 'Enter' && gameOver) {
-            player.x = canvas.width / 2;
-            player.y = canvas.height / 2;
-            player.immune = false;
-            bars = [];
-            score = 0;
-            gameOver = false;
-            lastTime = 0;
-            lastFrame = 0;
-            requestAnimationFrame(gameLoop);
+            const name = prompt("Digite seu nome para salvar no ranking:");
+            if (name) {
+                rankings.push({ name, score });
+                rankings.sort((a, b) => b.score - a.score);
+                updateRanking();
+            }
+            resetGame();
         }
     }
 });
@@ -86,6 +103,28 @@ document.addEventListener('keyup', (e) => {
         keys[e.key] = false;
     }
 });
+
+function updateRanking() {
+    const list = document.getElementById("rankingList");
+    list.innerHTML = '';
+    rankings.forEach(r => {
+        const li = document.createElement('li');
+        li.textContent = `${r.name}: ${r.score}`;
+        list.appendChild(li);
+    });
+}
+
+function resetGame() {
+    player.x = canvas.width / 2;
+    player.y = canvas.height / 2;
+    player.immune = false;
+    bars = [];
+    score = 0;
+    gameOver = false;
+    lastTime = 0;
+    lastFrame = 0;
+    requestAnimationFrame(gameLoop);
+}
 
 function isBarOverlapping(newBar) {
     return bars.some(bar =>
@@ -97,7 +136,7 @@ function isBarOverlapping(newBar) {
 }
 
 function createBar() {
-    const side = Math.floor(Math.random() * 4);
+    const direction = Math.floor(Math.random() * 4);
     let bar = {
         speed: 3 + Math.floor(score / 10) * 0.5,
         counted: false
@@ -106,34 +145,39 @@ function createBar() {
     const centerX = canvas.width / 2;
     const centerY = canvas.height / 2;
 
-    if (side === 0) {
-        bar.width = boundary.width * 1.0;
-        bar.height = 20;
-        bar.x = centerX - bar.width / 2;
-        bar.y = boundary.y;
-        bar.speedX = 0;
-        bar.speedY = bar.speed;
-    } else if (side === 1) {
-        bar.width = 20;
-        bar.height = boundary.height * 1.0;
-        bar.x = boundary.x + boundary.width - bar.width;
-        bar.y = centerY - bar.height / 2;
-        bar.speedX = -bar.speed;
-        bar.speedY = 0;
-    } else if (side === 2) {
-        bar.width = boundary.width * 1.0;
-        bar.height = 20;
-        bar.x = centerX - bar.width / 2;
-        bar.y = boundary.y + boundary.height - bar.height;
-        bar.speedX = 0;
-        bar.speedY = -bar.speed;
-    } else {
-        bar.width = 20;
-        bar.height = boundary.height * 1.0;
-        bar.x = boundary.x;
-        bar.y = centerY - bar.height / 2;
-        bar.speedX = bar.speed;
-        bar.speedY = 0;
+    switch (direction) {
+        case 0: // De cima
+            bar.width = boundary.width;
+            bar.height = 20;
+            bar.x = centerX - bar.width / 2;
+            bar.y = boundary.y;
+            bar.speedX = 0;
+            bar.speedY = bar.speed;
+            break;
+        case 1: // Da direita
+            bar.width = 20;
+            bar.height = boundary.height;
+            bar.x = boundary.x + boundary.width - bar.width;
+            bar.y = centerY - bar.height / 2;
+            bar.speedX = -bar.speed;
+            bar.speedY = 0;
+            break;
+        case 2: // De baixo
+            bar.width = boundary.width;
+            bar.height = 20;
+            bar.x = centerX - bar.width / 2;
+            bar.y = boundary.y + boundary.height - bar.height;
+            bar.speedX = 0;
+            bar.speedY = -bar.speed;
+            break;
+        case 3: // Da esquerda
+            bar.width = 20;
+            bar.height = boundary.height;
+            bar.x = boundary.x;
+            bar.y = centerY - bar.height / 2;
+            bar.speedX = bar.speed;
+            bar.speedY = 0;
+            break;
     }
 
     if (!isBarOverlapping(bar)) {
@@ -238,28 +282,25 @@ function draw() {
     ctx.font = '24px Arial';
     ctx.fillText(`Pontuação: ${score}`, 10, 30);
 
-    // Alinhamento dos textos imunidade e recarga à direita da pontuação
-    const scoreWidth = ctx.measureText(`Pontuação: ${score}`).width;
-    const baseX = 10 + scoreWidth + 20;
-
     ctx.font = '18px Arial';
     ctx.fillStyle = 'yellow';
-    ctx.fillText(`Imunidade: ${(immunityRemaining / 1000).toFixed(1)}s`, baseX, 30);
+    ctx.fillText(`Imunidade: ${(immunityRemaining / 1000).toFixed(1)}s`, 200, 30);
     ctx.fillStyle = 'gray';
-    ctx.fillText(`Recarga: ${(cooldownRemaining / 1000).toFixed(1)}s`, baseX, 50);
+    ctx.fillText(`Recarga: ${(cooldownRemaining / 1000).toFixed(1)}s`, 400, 30);
 
     if (gameOver) {
         ctx.fillStyle = 'white';
         ctx.font = '48px Arial';
-        ctx.fillText('Game Over', canvas.width / 2 - 100, canvas.height / 2);
+        ctx.fillText('Game Over', canvas.width / 2 - 120, canvas.height / 2);
         ctx.font = '24px Arial';
-        ctx.fillText(`Pontuação Final: ${score}`, canvas.width / 2 - 80, canvas.height / 2 + 40);
-        ctx.fillText('Pressione Enter para reiniciar', canvas.width / 2 - 120, canvas.height / 2 + 80);
+        ctx.fillText(`Pontuação Final: ${score}`, canvas.width / 2 - 100, canvas.height / 2 + 40);
+        ctx.fillText('Pressione Enter para reiniciar', canvas.width / 2 - 140, canvas.height / 2 + 80);
     }
 }
 
 let lastTime = 0;
 let lastFrame = 0;
+
 function gameLoop(timestamp) {
     if (gameOver) return;
 
@@ -272,10 +313,8 @@ function gameLoop(timestamp) {
 
     if (timestamp - lastTime > barInterval) {
         createBar();
-        if (score >= 10) {
-            createBar(); // Segunda barra por ciclo
-            if (score >= 20) createBar(); // Terceira barra para mais desafio (opcional)
-        }
+        if (score >= 10) createBar();
+        if (score >= 20) createBar();
         lastTime = timestamp;
     }
 
