@@ -95,13 +95,17 @@
       'Enter': false
     };
 
-    let rankings = [];
+    let rankings = JSON.parse(localStorage.getItem('rankings')) || [];
+
+    function saveRanking() {
+      localStorage.setItem('rankings', JSON.stringify(rankings));
+    }
 
     function updateRanking() {
       const rankingList = document.getElementById('rankingList');
       rankingList.innerHTML = '';
       rankings.sort((a, b) => b.score - a.score);
-      rankings.forEach(entry => {
+      rankings.slice(0, 10).forEach(entry => {
         const li = document.createElement('li');
         li.textContent = `${entry.name} - ${entry.score}`;
         rankingList.appendChild(li);
@@ -119,6 +123,7 @@
           const name = prompt('Digite seu nome para salvar sua pontuação:');
           if (name) {
             rankings.push({ name, score });
+            saveRanking();
             updateRanking();
           }
           player.x = canvas.width / 2;
@@ -320,6 +325,7 @@
       requestAnimationFrame(gameLoop);
     }
 
+    updateRanking();
     requestAnimationFrame(gameLoop);
   </script>
 </body>
