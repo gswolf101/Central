@@ -1,166 +1,346 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Jogo de Pong</title>
-    <style>
-        body {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            margin: 0;
-            background-color: #000;
-        }
-        canvas {
-            border: 2px solid #fff;
-        }
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Jogo de Esquiva</title>
+  <style>
+    body {
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      height: 100vh;
+      margin: 0;
+      background-color: #000;
+      color: white;
+      font-family: Arial, sans-serif;
+    }
+
+    #scoreboard {
+      width: 250px;
+      margin-left: 20px;
+    }
+
+    canvas {
+      border: 2px solid #fff;
+      margin-top: 20px;
+    }
+
+    #nameInputContainer {
+      display: none;
+      margin-top: 20px;
+    }
+
+    input[type="text"] {
+      width: 200px;
+      padding: 8px;
+      margin-top: 10px;
+      font-size: 16px;
+    }
+
+    button {
+      padding: 8px 12px;
+      margin-left: 5px;
+      font-size: 16px;
+      cursor: pointer;
+    }
+  </style>
 </head>
 <body>
-    <canvas id="pongCanvas" width="800" height="400"></canvas>
-    <script>
-        const canvas = document.getElementById('pongCanvas');
-        const ctx = canvas.getContext('2d');
+  <canvas id="gameCanvas" width="1000" height="1000"></canvas>
+  <div id="scoreboard">
+    <h2>Ranking</h2>
+    <ul id="rankingList"></ul>
+    <div id="nameInputContainer">
+      <label for="playerName">Seu nome:</label><br>
+      <input type="text" id="playerName" maxlength="20" />
+      <button onclick="submitScore()">Salvar</button>
+    </div>
+  </div>
 
-        // Objetos do jogo
-        const ball = {
-            x: canvas.width / 2,
-            y: canvas.height / 2,
-            radius: 10,
-            speedX: 5,
-            speedY: 5
-        };
+  <script>
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas.getContext('2d');
 
-        const paddle1 = {
-            x: 10,
-            y: canvas.height / 2 - 50,
-            width: 10,
-            height: 100,
-            speed: 8,
-            score: 0
-        };
+    const boundary = {
+      x: 50,
+      y: 50,
+      width: canvas.width - 100,
+      height: canvas.height - 100
+    };
 
-        const paddle2 = {
-            x: canvas.width - 20,
-            y: canvas.height / 2 - 50,
-            width: 10,
-            height: 100,
-            speed: 8,
-            score: 0
-        };
+    const player = {
+      x: canvas.width / 2,
+      y: canvas.height / 2,
+      radius: 20,
+      speed: 5,
+      immune: false,
+      immuneTime: 0,
+      immuneDuration: 1500,
+      immuneCooldown: 750,
+      lastImmuneEnd: 0
+    };
 
-        // Controles
-        let keys = {
-            w: false,
-            s: false,
-            ArrowUp: false,
-            ArrowDown: false
-        };
+    let bars = [];
+    let score = 0;
+    let gameOver = false;
+    let nameSubmitted = false;
 
-        document.addEventListener('keydown', (e) => {
-            if (e.key in keys) {
-                keys[e.key] = true;
-            }
-        });
+    let keys = {
+      ArrowUp: false, ArrowDown: false, ArrowLeft: false, ArrowRight: false,
+      w: false, W: false, a: false, A: false, s: false, S: false, d: false, D: false,
+      ' ': false, Enter: false
+    };
 
-        document.addEventListener('keyup', (e) => {
-            if (e.key in keys) {
-                keys[e.key] = false;
-            }
-        });
+    let rankings = JSON.parse(localStorage.getItem('rankings')) || [];
 
-        // Função para mover as raquetes
-        function movePaddles() {
-            if (keys.w && paddle1.y > 0) {
-                paddle1.y -= paddle1.speed;
-            }
-            if (keys.s && paddle1.y < canvas.height - paddle1.height) {
-                paddle1.y += paddle1.speed;
-            }
-            if (keys.ArrowUp && paddle2.y > 0) {
-                paddle2.y -= paddle2.speed;
-            }
-            if (keys.ArrowDown && paddle2.y < canvas.height - paddle2.height) {
-                paddle2.y += paddle2.speed;
-            }
+    const rankingList = document.getElementById('rankingList');
+    const nameInputContainer = document.getElementById('nameInputContainer');
+    const nameInput = document.getElementById('playerName');
+
+    function updateRankingDisplay() {
+      rankingList.innerHTML = '';
+      rankings.sort((a, b) => b.score - a.score);
+      rankings.forEach(entry => {
+        const li = document.createElement('li');
+        li.textContent = `${entry.name}: ${entry.score}`;
+        rankingList.appendChild(li);
+      });
+    }
+
+    updateRankingDisplay();
+
+    document.addEventListener('keydown', (e) => {
+      if (e.key in keys) {
+        keys[e.key] = true;
+        if (e.key === ' ' && !player.immune && Date.now() - player.lastImmuneEnd >= player.immuneCooldown) {
+          player.immune = true;
+          player.immuneTime = Date.now();
         }
-
-        // Função para mover a bola
-        function moveBall() {
-            ball.x += ball.speedX;
-            ball.y += ball.speedY;
-
-            // Colisão com as bordas superior e inferior
-            if (ball.y + ball.radius > canvas.height || ball.y - ball.radius < 0) {
-                ball.speedY = -ball.speedY;
-            }
-
-            // Colisão com as raquetes
-            if (
-                (ball.x - ball.radius < paddle1.x + paddle1.width && 
-                 ball.y > paddle1.y && 
-                 ball.y < paddle1.y + paddle1.height) ||
-                (ball.x + ball.radius > paddle2.x && 
-                 ball.y > paddle2.y && 
-                 ball.y < paddle2.y + paddle2.height)
-            ) {
-                ball.speedX = -ball.speedX;
-            }
-
-            // Pontuação e reset da bola
-            if (ball.x < 0) {
-                paddle2.score++;
-                resetBall();
-            } else if (ball.x > canvas.width) {
-                paddle1.score++;
-                resetBall();
-            }
+        if (e.key === 'Enter' && gameOver && nameSubmitted) {
+          restartGame();
         }
+      }
+    });
 
-        // Função para resetar a bola
-        function resetBall() {
-            ball.x = canvas.width / 2;
-            ball.y = canvas.height / 2;
-            ball.speedX = -ball.speedX;
-            ball.speedY = 5 * (Math.random() > 0.5 ? 1 : -1);
+    document.addEventListener('keyup', (e) => {
+      if (e.key in keys) keys[e.key] = false;
+    });
+
+    function submitScore() {
+      const name = nameInput.value.trim() || "Anônimo";
+      rankings.push({ name, score });
+      localStorage.setItem('rankings', JSON.stringify(rankings));
+      updateRankingDisplay();
+      nameInputContainer.style.display = 'none';
+      nameSubmitted = true;
+    }
+
+    function restartGame() {
+      player.x = canvas.width / 2;
+      player.y = canvas.height / 2;
+      player.immune = false;
+      bars = [];
+      score = 0;
+      gameOver = false;
+      nameSubmitted = false;
+      nameInput.value = '';
+      nameInputContainer.style.display = 'none';
+      lastTime = 0;
+      lastFrame = 0;
+      requestAnimationFrame(gameLoop);
+    }
+
+    function isBarOverlapping(newBar) {
+      return bars.some(bar =>
+        newBar.x < bar.x + bar.width &&
+        newBar.x + newBar.width > bar.x &&
+        newBar.y < bar.y + bar.height &&
+        newBar.y + newBar.height > bar.y
+      );
+    }
+
+    function createBar() {
+      const side = Math.floor(Math.random() * 4);
+      const bar = {
+        speed: 3 + Math.floor(score / 10) * 0.5,
+        counted: false
+      };
+
+      const centerX = canvas.width / 2;
+      const centerY = canvas.height / 2;
+
+      if (side === 0) {
+        bar.width = boundary.width;
+        bar.height = 20;
+        bar.x = centerX - bar.width / 2;
+        bar.y = boundary.y;
+        bar.speedX = 0;
+        bar.speedY = bar.speed;
+      } else if (side === 1) {
+        bar.width = 20;
+        bar.height = boundary.height;
+        bar.x = boundary.x + boundary.width - bar.width;
+        bar.y = centerY - bar.height / 2;
+        bar.speedX = -bar.speed;
+        bar.speedY = 0;
+      } else if (side === 2) {
+        bar.width = boundary.width;
+        bar.height = 20;
+        bar.x = centerX - bar.width / 2;
+        bar.y = boundary.y + boundary.height - bar.height;
+        bar.speedX = 0;
+        bar.speedY = -bar.speed;
+      } else {
+        bar.width = 20;
+        bar.height = boundary.height;
+        bar.x = boundary.x;
+        bar.y = centerY - bar.height / 2;
+        bar.speedX = bar.speed;
+        bar.speedY = 0;
+      }
+
+      if (!isBarOverlapping(bar)) bars.push(bar);
+    }
+
+    function movePlayer(deltaTime) {
+      let dx = 0, dy = 0;
+      if (keys.ArrowUp || keys.w || keys.W) dy = -1;
+      if (keys.ArrowDown || keys.s || keys.S) dy = 1;
+      if (keys.ArrowLeft || keys.a || keys.A) dx = -1;
+      if (keys.ArrowRight || keys.d || keys.D) dx = 1;
+
+      const length = Math.hypot(dx, dy);
+      if (length > 0) {
+        dx /= length;
+        dy /= length;
+      }
+
+      const newX = player.x + dx * player.speed * deltaTime;
+      const newY = player.y + dy * player.speed * deltaTime;
+
+      if (newX - player.radius >= boundary.x && newX + player.radius <= boundary.x + boundary.width) {
+        player.x = newX;
+      }
+      if (newY - player.radius >= boundary.y && newY + player.radius <= boundary.y + boundary.height) {
+        player.y = newY;
+      }
+    }
+
+    function moveBars(deltaTime) {
+      bars.forEach(bar => {
+        bar.x += bar.speedX * deltaTime;
+        bar.y += bar.speedY * deltaTime;
+      });
+    }
+
+    function manageImmunity() {
+      if (player.immune && Date.now() - player.immuneTime >= player.immuneDuration) {
+        player.immune = false;
+        player.lastImmuneEnd = Date.now();
+      }
+    }
+
+    function checkCollisions() {
+      bars.forEach(bar => {
+        const closestX = Math.max(bar.x, Math.min(player.x, bar.x + bar.width));
+        const closestY = Math.max(bar.y, Math.min(player.y, bar.y + bar.height));
+        const distX = player.x - closestX;
+        const distY = player.y - closestY;
+        const hit = distX * distX + distY * distY < player.radius * player.radius;
+
+        if (hit && !player.immune) {
+          gameOver = true;
+          nameInputContainer.style.display = 'block';
+        } else if (hit && player.immune && !bar.counted) {
+          score++;
+          bar.counted = true;
         }
+      });
+    }
 
-        // Função para desenhar os elementos
-        function draw() {
-            // Limpar o canvas
-            ctx.fillStyle = 'black';
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
+    function draw() {
+      ctx.fillStyle = 'black';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-            // Desenhar raquetes
-            ctx.fillStyle = 'white';
-            ctx.fillRect(paddle1.x, paddle1.y, paddle1.width, paddle1.height);
-            ctx.fillRect(paddle2.x, paddle2.y, paddle2.width, paddle2.height);
+      ctx.strokeStyle = 'white';
+      ctx.strokeRect(boundary.x, boundary.y, boundary.width, boundary.height);
 
-            // Desenhar bola
-            ctx.beginPath();
-            ctx.arc(ball.x, ball.y, ball.radius, 0, Math.PI * 2);
-            ctx.fillStyle = 'white';
-            ctx.fill();
-            ctx.closePath();
+      ctx.beginPath();
+      ctx.arc(player.x, player.y, player.radius, 0, Math.PI * 2);
 
-            // Desenhar placar
-            ctx.font = '32px Arial';
-            ctx.fillText(paddle1.score, canvas.width / 4, 50);
-            ctx.fillText(paddle2.score, 3 * canvas.width / 4, 50);
-        }
+      const now = Date.now();
+      const inCooldown = now - player.lastImmuneEnd < player.immuneCooldown;
+      const cooldownRemaining = Math.max(0, player.immuneCooldown - (now - player.lastImmuneEnd));
+      const immunityRemaining = player.immune ? Math.max(0, player.immuneDuration - (now - player.immuneTime)) : 0;
 
-        // Loop principal do jogo
-        function gameLoop() {
-            movePaddles();
-            moveBall();
-            draw();
-            requestAnimationFrame(gameLoop);
-        }
+      ctx.fillStyle = player.immune ? 'yellow' : inCooldown ? '#444' : 'white';
+      ctx.fill();
 
-        // Iniciar o jogo
-        gameLoop();
-    </script>
+      if (player.immune) {
+        ctx.beginPath();
+        ctx.arc(player.x, player.y, player.radius + 10, 0, Math.PI * 2);
+        ctx.strokeStyle = 'yellow';
+        ctx.lineWidth = 3;
+        ctx.stroke();
+      }
+
+      ctx.fillStyle = 'red';
+      bars.forEach(bar => {
+        ctx.fillRect(bar.x, bar.y, bar.width, bar.height);
+      });
+
+      ctx.fillStyle = 'white';
+      ctx.font = '24px Arial';
+      ctx.fillText(`Pontuação: ${score}`, 10, 30);
+
+      const scoreWidth = ctx.measureText(`Pontuação: ${score}`).width;
+      const baseX = 10 + scoreWidth + 20;
+
+      ctx.font = '18px Arial';
+      ctx.fillStyle = 'yellow';
+      ctx.fillText(`Imunidade: ${(immunityRemaining / 1000).toFixed(1)}s`, baseX, 30);
+      ctx.fillStyle = 'gray';
+      ctx.fillText(`Recarga: ${(cooldownRemaining / 1000).toFixed(1)}s`, baseX, 50);
+
+      if (gameOver) {
+        ctx.fillStyle = 'white';
+        ctx.font = '48px Arial';
+        ctx.fillText('Game Over', canvas.width / 2 - 100, canvas.height / 2);
+        ctx.font = '24px Arial';
+        ctx.fillText(`Pontuação Final: ${score}`, canvas.width / 2 - 80, canvas.height / 2 + 40);
+        ctx.fillText('Digite seu nome ao lado', canvas.width / 2 - 110, canvas.height / 2 + 80);
+      }
+    }
+
+    let lastTime = 0;
+    let lastFrame = 0;
+    function gameLoop(timestamp) {
+      if (gameOver) return;
+
+      const deltaTime = (timestamp - lastFrame) / 16.67;
+      lastFrame = timestamp;
+
+      const baseInterval = 2500;
+      const speedUp = Math.min(score * 30, 1500);
+      const barInterval = baseInterval - speedUp;
+
+      if (timestamp - lastTime > barInterval) {
+        createBar();
+        if (score >= 10) createBar();
+        if (score >= 20) createBar();
+        lastTime = timestamp;
+      }
+
+      movePlayer(deltaTime);
+      moveBars(deltaTime);
+      manageImmunity();
+      checkCollisions();
+      draw();
+      requestAnimationFrame(gameLoop);
+    }
+
+    requestAnimationFrame(gameLoop);
+  </script>
 </body>
 </html>
