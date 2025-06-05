@@ -96,7 +96,8 @@ function isBarOverlapping(newBar) {
     );
 }
 
-function createBar(side) {
+function createBar() {
+    const side = Math.floor(Math.random() * 4);
     let bar = {
         speed: 3 + Math.floor(score / 10) * 0.5,
         counted: false
@@ -233,15 +234,31 @@ function draw() {
         ctx.fillRect(bar.x, bar.y, bar.width, bar.height);
     });
 
-    ctx.fillStyle = 'white';
+    // Desenhar pontuação
     ctx.font = '24px Arial';
-    ctx.fillText(`Pontuação: ${score}`, 10, 30);
+    ctx.fillStyle = 'white';
+    const scoreText = `Pontuação: ${score}`;
+    ctx.fillText(scoreText, 10, 30);
 
+    // Calcular posição à direita da pontuação para desenhar Imunidade e Recarga em linha única
+    const scoreWidth = ctx.measureText(scoreText).width;
+    let nextX = 10 + scoreWidth + 20; // 20px de espaçamento após a pontuação
+    const baseY = 30; // Mesma linha vertical que a pontuação
+
+    // Desenhar Imunidade
     ctx.font = '18px Arial';
     ctx.fillStyle = 'yellow';
-    ctx.fillText(`Imunidade: ${(immunityRemaining / 1000).toFixed(1)}s`, 10, 60);
+    const imunText = `Imunidade: ${(immunityRemaining / 1000).toFixed(1)}s`;
+    ctx.fillText(imunText, nextX, baseY);
+
+    // Atualizar posição para Recarga
+    const imunWidth = ctx.measureText(imunText).width;
+    nextX += imunWidth + 20; // 20px de espaçamento após Imunidade
+
+    // Desenhar Recarga
     ctx.fillStyle = 'gray';
-    ctx.fillText(`Recarga: ${(cooldownRemaining / 1000).toFixed(1)}s`, 10, 80);
+    const recargaText = `Recarga: ${(cooldownRemaining / 1000).toFixed(1)}s`;
+    ctx.fillText(recargaText, nextX, baseY);
 
     if (gameOver) {
         ctx.fillStyle = 'white';
@@ -266,8 +283,10 @@ function gameLoop(timestamp) {
     const barInterval = baseInterval - speedUp;
 
     if (timestamp - lastTime > barInterval) {
-        for (let side = 0; side < 4; side++) {
-            createBar(side);
+        createBar();
+        if (score >= 10) {
+            createBar(); // Segunda barra por ciclo
+            if (score >= 20) createBar(); // Terceira barra para mais desafio (opcional)
         }
         lastTime = timestamp;
     }
