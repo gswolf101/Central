@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Line Dodge Challenge</title>
+    <script type="importmap">
+      {
+        "imports": {
+          "three": "https://esm.sh/three@0.160.0?dev",
+          "three/": "https://esm.sh/three@0.160.0&dev/"
+        }
+      }
+    </script>
+    <style>
+      body {
+        margin: 0;
+        padding: 0;
+        background: linear-gradient(135deg, #7a6b8a 0%, #9b8ba3 100%);
+        font-family: 'Arial', sans-serif;
+        overflow: hidden;
+      }
+      
+      #gameContainer {
+        position: relative;
+        width: 100vw;
+        height: 100vh;
+      }
+      
+      #ui {
+        position: absolute;
+        top: 20px;
+        left: 20px;
+        color: #ffffff;
+        font-size: 24px;
+        font-weight: bold;
+        z-index: 100;
+        text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+      }
+      
+      #gameOver {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        background: rgba(0,0,0,0.8);
+        color: white;
+        padding: 40px;
+        border-radius: 10px;
+        text-align: center;
+        display: none;
+        z-index: 200;
+        border: 2px solid #ff6b9d;
+      }
+      
+      #instructions {
+        position: absolute;
+        bottom: 20px;
+        left: 20px;
+        color: #ffffff;
+        font-size: 14px;
+        opacity: 0.8;
+        z-index: 100;
+      }
+    </style>
+  </head>
+
+  <body>
+    <div id="gameContainer">
+      <div id="ui">
+        <div>SCORE: <span id="score">0</span></div>
+        <div id="immuneStatus" style="display: none; color: #ff6b9d;">IMMUNE: <span id="immuneTime">0.0</span>s</div>
+      </div>
+      
+      <div id="gameOver">
+        <h2 style="color: #ff6b9d; margin-top: 0;">GAME OVER</h2>
+        <p>Final Score: <span id="finalScore">0</span></p>
+        <p style="font-size: 14px; opacity: 0.8;">Press R to restart</p>
+      </div>
+      
+      <div id="instructions">
+        <div>WASD: Move | SPACE: Shield (10% bigger + immune)</div>
+      </div>
+    </div>
+    
+    <script type="module" src="main.js"></script>
+  </body>
+</html>
