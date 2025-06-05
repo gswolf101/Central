@@ -19,12 +19,11 @@
     </style>
 </head>
 <body>
-    <canvas id="gameCanvas" width="800" height="600"></canvas>
+    <canvas id="gameCanvas" width="1000" height="1000"></canvas>
     <script>
         const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d');
 
-        // Configurações do jogo
         const boundary = {
             x: 50,
             y: 50,
@@ -39,14 +38,15 @@
             speed: 5,
             immune: false,
             immuneTime: 0,
-            immuneDuration: 1500 // 1.5 segundos
+            immuneDuration: 1500,
+            immuneCooldown: 1000,
+            lastImmuneEnd: 0
         };
 
         let bars = [];
         let score = 0;
         let gameOver = false;
 
-        // Controles (adicionando WASD)
         let keys = {
             ArrowUp: false,
             ArrowDown: false,
@@ -67,12 +67,11 @@
         document.addEventListener('keydown', (e) => {
             if (e.key in keys) {
                 keys[e.key] = true;
-                if (e.key === ' ' && !player.immune) {
+                if (e.key === ' ' && !player.immune && Date.now() - player.lastImmuneEnd >= player.immuneCooldown) {
                     player.immune = true;
                     player.immuneTime = Date.now();
                 }
                 if (e.key === 'Enter' && gameOver) {
-                    // Reiniciar o jogo
                     player.x = canvas.width / 2;
                     player.y = canvas.height / 2;
                     player.immune = false;
@@ -92,7 +91,6 @@
             }
         });
 
-        // Função para verificar se uma nova barra se sobrepõe a barras existentes
         function isBarOverlapping(newBar) {
             return bars.some(bar =>
                 newBar.x < bar.x + bar.width &&
@@ -102,33 +100,32 @@
             );
         }
 
-        // Função para criar barras
         function createBar() {
-            const side = Math.floor(Math.random() * 4); // 0: cima, 1: direita, 2: baixo, 3: esquerda
-            let bar = { speed: 3 + Math.floor(score / 10) * 0.5 }; // Aumenta velocidade a cada 10 pontos
+            const side = Math.floor(Math.random() * 4);
+            let bar = { speed: 3 + Math.floor(score / 10) * 0.5 };
 
-            if (side === 0) { // Cima (horizontal)
+            if (side === 0) {
                 bar.width = 60;
                 bar.height = 20;
                 bar.x = Math.random() > 0.5 ? boundary.x : boundary.x + boundary.width - bar.width;
                 bar.y = boundary.y;
                 bar.speedX = 0;
                 bar.speedY = bar.speed;
-            } else if (side === 1) { // Direita (vertical)
+            } else if (side === 1) {
                 bar.width = 20;
                 bar.height = 60;
                 bar.x = boundary.x + boundary.width - bar.width;
                 bar.y = Math.random() > 0.5 ? boundary.y : boundary.y + boundary.height - bar.height;
                 bar.speedX = -bar.speed;
                 bar.speedY = 0;
-            } else if (side === 2) { // Baixo (horizontal)
+            } else if (side === 2) {
                 bar.width = 60;
                 bar.height = 20;
                 bar.x = Math.random() > 0.5 ? boundary.x : boundary.x + boundary.width - bar.width;
                 bar.y = boundary.y + boundary.height - bar.height;
                 bar.speedX = 0;
                 bar.speedY = -bar.speed;
-            } else { // Esquerda (vertical)
+            } else {
                 bar.width = 20;
                 bar.height = 60;
                 bar.x = boundary.x;
@@ -137,86 +134,69 @@
                 bar.speedY = 0;
             }
 
-            // Verificar sobreposição antes de adicionar
             if (!isBarOverlapping(bar)) {
                 bars.push(bar);
             }
         }
 
-        // Função para mover o jogador
         function movePlayer(deltaTime) {
-            let newX = player.x;
-            let newY = player.y;
+            let dx = 0, dy = 0;
+            if (keys.ArrowUp || keys.w || keys.W) dy = -1;
+            if (keys.ArrowDown || keys.s || keys.S) dy = 1;
+            if (keys.ArrowLeft || keys.a || keys.A) dx = -1;
+            if (keys.ArrowRight || keys.d || keys.D) dx = 1;
 
-            if (keys.ArrowUp || keys.w || keys.W) newY -= player.speed * deltaTime;
-            if (keys.ArrowDown || keys.s || keys.S) newY += player.speed * deltaTime;
-            if (keys.ArrowLeft || keys.a || keys.A) newX -= player.speed * deltaTime;
-            if (keys.ArrowRight || keys.d || keys.D) newX += player.speed * deltaTime;
+            const length = Math.hypot(dx, dy);
+            if (length > 0) {
+                dx /= length;
+                dy /= length;
+            }
 
-            // Manter o jogador dentro do limite
-            if (newX - player.radius >= boundary.x &&
-                newX + player.radius <= boundary.x + boundary.width &&
-                newY - player.radius >= boundary.y &&
-                newY + player.radius <= boundary.y + boundary.height) {
+            const newX = player.x + dx * player.speed * deltaTime;
+            const newY = player.y + dy * player.speed * deltaTime;
+
+            if (newX - player.radius >= boundary.x && newX + player.radius <= boundary.x + boundary.width) {
                 player.x = newX;
+            }
+            if (newY - player.radius >= boundary.y && newY + player.radius <= boundary.y + boundary.height) {
                 player.y = newY;
             }
         }
 
-        // Função para mover barras
         function moveBars(deltaTime) {
             bars.forEach(bar => {
                 bar.x += bar.speedX * deltaTime;
                 bar.y += bar.speedY * deltaTime;
             });
-
-            // Remover barras que saem da tela
-            bars = bars.filter(bar =>
-                bar.x + bar.width > boundary.x &&
-                bar.x < boundary.x + boundary.width &&
-                bar.y + bar.height > boundary.y &&
-                bar.y < boundary.y + boundary.height
-            );
         }
 
-        // Função para verificar colisão círculo-retângulo
-        function checkCircleRectCollision(circle, rect) {
-            const closestX = Math.max(rect.x, Math.min(circle.x, rect.x + rect.width));
-            const closestY = Math.max(rect.y, Math.min(circle.y, rect.y + rect.height));
-            const distanceX = circle.x - closestX;
-            const distanceY = circle.y - closestY;
-            return (distanceX ** 2 + distanceY ** 2) < (circle.radius ** 2);
-        }
-
-        // Função para verificar colisões
-        function checkCollisions() {
-            if (player.immune) return;
-
-            bars.forEach(bar => {
-                if (checkCircleRectCollision(player, bar)) {
-                    gameOver = true;
-                }
-            });
-        }
-
-        // Função para gerenciar imunidade
         function manageImmunity() {
-            if (player.immune && Date.now() - player.immuneTime > player.immuneDuration) {
+            if (player.immune && Date.now() - player.immuneTime >= player.immuneDuration) {
                 player.immune = false;
+                player.lastImmuneEnd = Date.now();
             }
         }
 
-        // Função para desenhar
+        function checkCollisions() {
+            if (player.immune) return;
+            for (let bar of bars) {
+                const closestX = Math.max(bar.x, Math.min(player.x, bar.x + bar.width));
+                const closestY = Math.max(bar.y, Math.min(player.y, bar.y + bar.height));
+                const distX = player.x - closestX;
+                const distY = player.y - closestY;
+                if (distX * distX + distY * distY < player.radius * player.radius) {
+                    gameOver = true;
+                }
+            }
+        }
+
         function draw() {
-            // Limpar canvas
             ctx.fillStyle = 'black';
             ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-            // Desenhar limite
             ctx.strokeStyle = 'white';
             ctx.strokeRect(boundary.x, boundary.y, boundary.width, boundary.height);
 
-            // Desenhar jogador
             ctx.beginPath();
             ctx.arc(player.x, player.y, player.radius, 0, Math.PI * 2);
             ctx.fillStyle = player.immune ? 'yellow' : 'white';
@@ -230,13 +210,11 @@
             }
             ctx.closePath();
 
-            // Desenhar barras
             ctx.fillStyle = 'red';
             bars.forEach(bar => {
                 ctx.fillRect(bar.x, bar.y, bar.width, bar.height);
             });
 
-            // Desenhar pontuação
             ctx.fillStyle = 'white';
             ctx.font = '24px Arial';
             ctx.fillText(`Pontuação: ${score}`, 10, 30);
@@ -251,16 +229,15 @@
             }
         }
 
-        // Loop principal do jogo
         let lastTime = 0;
         let lastFrame = 0;
         function gameLoop(timestamp) {
             if (gameOver) return;
 
-            const deltaTime = (timestamp - lastFrame) / 16.67; // Normalizado para 60 FPS
+            const deltaTime = (timestamp - lastFrame) / 16.67;
             lastFrame = timestamp;
 
-            const barInterval = 1000 - Math.min(score * 10, 500); // Reduz intervalo até 500ms
+            const barInterval = 1000 - Math.min(score * 10, 500);
             if (timestamp - lastTime > barInterval) {
                 createBar();
                 lastTime = timestamp;
@@ -269,13 +246,12 @@
 
             movePlayer(deltaTime);
             moveBars(deltaTime);
-            manageImmunity(); // Chamado antes de checkCollisions
+            manageImmunity();
             checkCollisions();
             draw();
             requestAnimationFrame(gameLoop);
         }
 
-        // Iniciar o jogo
         requestAnimationFrame(gameLoop);
     </script>
 </body>
