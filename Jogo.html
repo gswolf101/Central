@@ -108,7 +108,7 @@
             const centerY = canvas.height / 2;
 
             if (side === 0) {
-                bar.width = boundary.width * 0.8;
+                bar.width = boundary.width * 1.0;
                 bar.height = 20;
                 bar.x = centerX - bar.width / 2;
                 bar.y = boundary.y;
@@ -116,13 +116,13 @@
                 bar.speedY = bar.speed;
             } else if (side === 1) {
                 bar.width = 20;
-                bar.height = boundary.height * 0.8;
+                bar.height = boundary.height * 1.0;
                 bar.x = boundary.x + boundary.width - bar.width;
                 bar.y = centerY - bar.height / 2;
                 bar.speedX = -bar.speed;
                 bar.speedY = 0;
             } else if (side === 2) {
-                bar.width = boundary.width * 0.8;
+                bar.width = boundary.width * 1.0;
                 bar.height = 20;
                 bar.x = centerX - bar.width / 2;
                 bar.y = boundary.y + boundary.height - bar.height;
@@ -130,7 +130,7 @@
                 bar.speedY = -bar.speed;
             } else {
                 bar.width = 20;
-                bar.height = boundary.height * 0.8;
+                bar.height = boundary.height * 1.0;
                 bar.x = boundary.x;
                 bar.y = centerY - bar.height / 2;
                 bar.speedX = bar.speed;
@@ -202,7 +202,18 @@
 
             ctx.beginPath();
             ctx.arc(player.x, player.y, player.radius, 0, Math.PI * 2);
-            ctx.fillStyle = player.immune ? 'yellow' : 'white';
+
+            const now = Date.now();
+            const inCooldown = now - player.lastImmuneEnd < player.immuneCooldown;
+
+            if (player.immune) {
+                ctx.fillStyle = 'yellow';
+            } else if (inCooldown) {
+                ctx.fillStyle = '#444';
+            } else {
+                ctx.fillStyle = 'white';
+            }
+
             ctx.fill();
             if (player.immune) {
                 ctx.beginPath();
