@@ -104,32 +104,35 @@
             const side = Math.floor(Math.random() * 4);
             let bar = { speed: 3 + Math.floor(score / 10) * 0.5 };
 
+            const centerX = canvas.width / 2;
+            const centerY = canvas.height / 2;
+
             if (side === 0) {
-                bar.width = 100;
-                bar.height = 40;
-                bar.x = Math.random() > 0.5 ? boundary.x : boundary.x + boundary.width - bar.width;
+                bar.width = boundary.width / 2;
+                bar.height = 20;
+                bar.x = centerX - bar.width / 2;
                 bar.y = boundary.y;
                 bar.speedX = 0;
                 bar.speedY = bar.speed;
             } else if (side === 1) {
-                bar.width = 40;
-                bar.height = 100;
+                bar.width = 20;
+                bar.height = boundary.height / 2;
                 bar.x = boundary.x + boundary.width - bar.width;
-                bar.y = Math.random() > 0.5 ? boundary.y : boundary.y + boundary.height - bar.height;
+                bar.y = centerY - bar.height / 2;
                 bar.speedX = -bar.speed;
                 bar.speedY = 0;
             } else if (side === 2) {
-                bar.width = 100;
-                bar.height = 40;
-                bar.x = Math.random() > 0.5 ? boundary.x : boundary.x + boundary.width - bar.width;
+                bar.width = boundary.width / 2;
+                bar.height = 20;
+                bar.x = centerX - bar.width / 2;
                 bar.y = boundary.y + boundary.height - bar.height;
                 bar.speedX = 0;
                 bar.speedY = -bar.speed;
             } else {
-                bar.width = 40;
-                bar.height = 100;
+                bar.width = 20;
+                bar.height = boundary.height / 2;
                 bar.x = boundary.x;
-                bar.y = Math.random() > 0.5 ? boundary.y : boundary.y + boundary.height - bar.height;
+                bar.y = centerY - bar.height / 2;
                 bar.speedX = bar.speed;
                 bar.speedY = 0;
             }
