@@ -9,6 +9,7 @@
       display: flex;
       justify-content: center;
       align-items: flex-start;
+      gap: 40px;
       height: 100vh;
       margin: 0;
       background-color: #000;
@@ -16,46 +17,64 @@
       font-family: Arial, sans-serif;
     }
 
-    #scoreboard {
-      width: 250px;
-      margin-left: 20px;
-    }
-
     canvas {
       border: 2px solid #fff;
-      margin-top: 20px;
+    }
+
+    #ranking {
+      margin-top: 50px;
+    }
+
+    #ranking h2 {
+      font-size: 20px;
+      margin-bottom: 10px;
+      text-align: center;
+    }
+
+    #rankingList {
+      list-style-type: none;
+      padding: 0;
+      margin-top: 10px;
+    }
+
+    #rankingList li {
+      margin-bottom: 6px;
+      font-size: 16px;
+      border-bottom: 1px solid #444;
+      padding-bottom: 4px;
     }
 
     #nameInputContainer {
       display: none;
+      flex-direction: column;
+      align-items: center;
       margin-top: 20px;
     }
 
-    input[type="text"] {
-      width: 200px;
-      padding: 8px;
-      margin-top: 10px;
+    #nameInput {
+      padding: 5px;
       font-size: 16px;
+      margin-bottom: 10px;
     }
 
-    button {
-      padding: 8px 12px;
-      margin-left: 5px;
+    #submitName {
+      padding: 5px 10px;
       font-size: 16px;
       cursor: pointer;
     }
   </style>
 </head>
 <body>
-  <canvas id="gameCanvas" width="1000" height="1000"></canvas>
-  <div id="scoreboard">
+  <canvas id="gameCanvas" width="700" height="700"></canvas>
+
+  <div id="ranking">
     <h2>Ranking</h2>
     <ul id="rankingList"></ul>
-    <div id="nameInputContainer">
-      <label for="playerName">Seu nome:</label><br>
-      <input type="text" id="playerName" maxlength="20" />
-      <button onclick="submitScore()">Salvar</button>
-    </div>
+  </div>
+
+  <div id="nameInputContainer">
+    <input id="nameInput" type="text" placeholder="Digite seu nome" maxlength="20" />
+    <button id="submitName">Salvar</button>
   </div>
 
   <script>
@@ -84,31 +103,17 @@
     let bars = [];
     let score = 0;
     let gameOver = false;
-    let nameSubmitted = false;
+    let ranking = [];
 
-    let keys = {
-      ArrowUp: false, ArrowDown: false, ArrowLeft: false, ArrowRight: false,
-      w: false, W: false, a: false, A: false, s: false, S: false, d: false, D: false,
+    const keys = {
+      ArrowUp: false, ArrowDown: false,
+      ArrowLeft: false, ArrowRight: false,
+      w: false, W: false,
+      a: false, A: false,
+      s: false, S: false,
+      d: false, D: false,
       ' ': false, Enter: false
     };
-
-    let rankings = JSON.parse(localStorage.getItem('rankings')) || [];
-
-    const rankingList = document.getElementById('rankingList');
-    const nameInputContainer = document.getElementById('nameInputContainer');
-    const nameInput = document.getElementById('playerName');
-
-    function updateRankingDisplay() {
-      rankingList.innerHTML = '';
-      rankings.sort((a, b) => b.score - a.score);
-      rankings.forEach(entry => {
-        const li = document.createElement('li');
-        li.textContent = `${entry.name}: ${entry.score}`;
-        rankingList.appendChild(li);
-      });
-    }
-
-    updateRankingDisplay();
 
     document.addEventListener('keydown', (e) => {
       if (e.key in keys) {
@@ -117,8 +122,8 @@
           player.immune = true;
           player.immuneTime = Date.now();
         }
-        if (e.key === 'Enter' && gameOver && nameSubmitted) {
-          restartGame();
+        if (e.key === 'Enter' && gameOver) {
+          resetGame();
         }
       }
     });
@@ -126,30 +131,6 @@
     document.addEventListener('keyup', (e) => {
       if (e.key in keys) keys[e.key] = false;
     });
-
-    function submitScore() {
-      const name = nameInput.value.trim() || "Anônimo";
-      rankings.push({ name, score });
-      localStorage.setItem('rankings', JSON.stringify(rankings));
-      updateRankingDisplay();
-      nameInputContainer.style.display = 'none';
-      nameSubmitted = true;
-    }
-
-    function restartGame() {
-      player.x = canvas.width / 2;
-      player.y = canvas.height / 2;
-      player.immune = false;
-      bars = [];
-      score = 0;
-      gameOver = false;
-      nameSubmitted = false;
-      nameInput.value = '';
-      nameInputContainer.style.display = 'none';
-      lastTime = 0;
-      lastFrame = 0;
-      requestAnimationFrame(gameLoop);
-    }
 
     function isBarOverlapping(newBar) {
       return bars.some(bar =>
@@ -162,7 +143,7 @@
 
     function createBar() {
       const side = Math.floor(Math.random() * 4);
-      const bar = {
+      let bar = {
         speed: 3 + Math.floor(score / 10) * 0.5,
         counted: false
       };
@@ -200,7 +181,9 @@
         bar.speedY = 0;
       }
 
-      if (!isBarOverlapping(bar)) bars.push(bar);
+      if (!isBarOverlapping(bar)) {
+        bars.push(bar);
+      }
     }
 
     function movePlayer(deltaTime) {
@@ -251,7 +234,7 @@
 
         if (hit && !player.immune) {
           gameOver = true;
-          nameInputContainer.style.display = 'block';
+          showNameInput();
         } else if (hit && player.immune && !bar.counted) {
           score++;
           bar.counted = true;
@@ -274,9 +257,15 @@
       const cooldownRemaining = Math.max(0, player.immuneCooldown - (now - player.lastImmuneEnd));
       const immunityRemaining = player.immune ? Math.max(0, player.immuneDuration - (now - player.immuneTime)) : 0;
 
-      ctx.fillStyle = player.immune ? 'yellow' : inCooldown ? '#444' : 'white';
-      ctx.fill();
+      if (player.immune) {
+        ctx.fillStyle = 'yellow';
+      } else if (inCooldown) {
+        ctx.fillStyle = '#444';
+      } else {
+        ctx.fillStyle = 'white';
+      }
 
+      ctx.fill();
       if (player.immune) {
         ctx.beginPath();
         ctx.arc(player.x, player.y, player.radius + 10, 0, Math.PI * 2);
@@ -284,6 +273,7 @@
         ctx.lineWidth = 3;
         ctx.stroke();
       }
+      ctx.closePath();
 
       ctx.fillStyle = 'red';
       bars.forEach(bar => {
@@ -293,24 +283,55 @@
       ctx.fillStyle = 'white';
       ctx.font = '24px Arial';
       ctx.fillText(`Pontuação: ${score}`, 10, 30);
-
-      const scoreWidth = ctx.measureText(`Pontuação: ${score}`).width;
-      const baseX = 10 + scoreWidth + 20;
-
-      ctx.font = '18px Arial';
+      ctx.font = '16px Arial';
       ctx.fillStyle = 'yellow';
-      ctx.fillText(`Imunidade: ${(immunityRemaining / 1000).toFixed(1)}s`, baseX, 30);
+      ctx.fillText(`Imunidade: ${(immunityRemaining / 1000).toFixed(1)}s`, 10, 55);
       ctx.fillStyle = 'gray';
-      ctx.fillText(`Recarga: ${(cooldownRemaining / 1000).toFixed(1)}s`, baseX, 50);
+      ctx.fillText(`Recarga: ${(cooldownRemaining / 1000).toFixed(1)}s`, 10, 75);
 
       if (gameOver) {
         ctx.fillStyle = 'white';
         ctx.font = '48px Arial';
-        ctx.fillText('Game Over', canvas.width / 2 - 100, canvas.height / 2);
+        ctx.fillText('Game Over', canvas.width / 2 - 130, canvas.height / 2 - 20);
         ctx.font = '24px Arial';
-        ctx.fillText(`Pontuação Final: ${score}`, canvas.width / 2 - 80, canvas.height / 2 + 40);
-        ctx.fillText('Digite seu nome ao lado', canvas.width / 2 - 110, canvas.height / 2 + 80);
+        ctx.fillText(`Pontuação Final: ${score}`, canvas.width / 2 - 100, canvas.height / 2 + 30);
+        ctx.fillText('Pressione Enter para reiniciar', canvas.width / 2 - 140, canvas.height / 2 + 70);
       }
+    }
+
+    function showNameInput() {
+      document.getElementById('nameInputContainer').style.display = 'flex';
+    }
+
+    document.getElementById('submitName').addEventListener('click', () => {
+      const name = document.getElementById('nameInput').value.trim() || "Sem nome";
+      ranking.push({ name, score });
+      ranking.sort((a, b) => b.score - a.score);
+      updateRankingDisplay();
+      document.getElementById('nameInputContainer').style.display = 'none';
+      document.getElementById('nameInput').value = '';
+    });
+
+    function updateRankingDisplay() {
+      const rankingList = document.getElementById('rankingList');
+      rankingList.innerHTML = '';
+      ranking.forEach(entry => {
+        const li = document.createElement('li');
+        li.textContent = `${entry.name}: ${entry.score}`;
+        rankingList.appendChild(li);
+      });
+    }
+
+    function resetGame() {
+      player.x = canvas.width / 2;
+      player.y = canvas.height / 2;
+      player.immune = false;
+      bars = [];
+      score = 0;
+      gameOver = false;
+      lastTime = 0;
+      lastFrame = 0;
+      requestAnimationFrame(gameLoop);
     }
 
     let lastTime = 0;
