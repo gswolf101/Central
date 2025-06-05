@@ -19,260 +19,260 @@
     </style>
 </head>
 <body>
-    <canvas id="gameCanvas" width="1000" height="1000"></canvas>
-    <script>
-        const canvas = document.getElementById('gameCanvas');
-        const ctx = canvas.getContext('2d');
+<canvas id="gameCanvas" width="1000" height="1000"></canvas>
+<script>
+const canvas = document.getElementById('gameCanvas');
+const ctx = canvas.getContext('2d');
 
-        const boundary = {
-            x: 50,
-            y: 50,
-            width: canvas.width - 100,
-            height: canvas.height - 100
-        };
+const boundary = {
+    x: 50,
+    y: 50,
+    width: canvas.width - 100,
+    height: canvas.height - 100
+};
 
-        const player = {
-            x: canvas.width / 2,
-            y: canvas.height / 2,
-            radius: 20,
-            speed: 5,
-            immune: false,
-            immuneTime: 0,
-            immuneDuration: 1500,
-            immuneCooldown: 1000,
-            lastImmuneEnd: 0
-        };
+const player = {
+    x: canvas.width / 2,
+    y: canvas.height / 2,
+    radius: 20,
+    speed: 5,
+    immune: false,
+    immuneTime: 0,
+    immuneDuration: 1500,
+    immuneCooldown: 1000,
+    lastImmuneEnd: 0
+};
 
-        let bars = [];
-        let score = 0;
-        let gameOver = false;
+let bars = [];
+let score = 0;
+let gameOver = false;
 
-        let keys = {
-            ArrowUp: false,
-            ArrowDown: false,
-            ArrowLeft: false,
-            ArrowRight: false,
-            'w': false,
-            'W': false,
-            's': false,
-            'S': false,
-            'a': false,
-            'A': false,
-            'd': false,
-            'D': false,
-            ' ': false,
-            'Enter': false
-        };
+let keys = {
+    ArrowUp: false,
+    ArrowDown: false,
+    ArrowLeft: false,
+    ArrowRight: false,
+    'w': false, 'W': false,
+    's': false, 'S': false,
+    'a': false, 'A': false,
+    'd': false, 'D': false,
+    ' ': false,
+    'Enter': false
+};
 
-        document.addEventListener('keydown', (e) => {
-            if (e.key in keys) {
-                keys[e.key] = true;
-                if (e.key === ' ' && !player.immune && Date.now() - player.lastImmuneEnd >= player.immuneCooldown) {
-                    player.immune = true;
-                    player.immuneTime = Date.now();
-                }
-                if (e.key === 'Enter' && gameOver) {
-                    player.x = canvas.width / 2;
-                    player.y = canvas.height / 2;
-                    player.immune = false;
-                    bars = [];
-                    score = 0;
-                    gameOver = false;
-                    lastTime = 0;
-                    lastFrame = 0;
-                    requestAnimationFrame(gameLoop);
-                }
-            }
-        });
-
-        document.addEventListener('keyup', (e) => {
-            if (e.key in keys) {
-                keys[e.key] = false;
-            }
-        });
-
-        function isBarOverlapping(newBar) {
-            return bars.some(bar =>
-                newBar.x < bar.x + bar.width &&
-                newBar.x + newBar.width > bar.x &&
-                newBar.y < bar.y + bar.height &&
-                newBar.y + newBar.height > bar.y
-            );
+document.addEventListener('keydown', (e) => {
+    if (e.key in keys) {
+        keys[e.key] = true;
+        if (e.key === ' ' && !player.immune && Date.now() - player.lastImmuneEnd >= player.immuneCooldown) {
+            player.immune = true;
+            player.immuneTime = Date.now();
         }
-
-        function createBar() {
-            const side = Math.floor(Math.random() * 4);
-            let bar = {
-                speed: 3 + Math.floor(score / 10) * 0.5,
-                counted: false
-            };
-
-            const centerX = canvas.width / 2;
-            const centerY = canvas.height / 2;
-
-            if (side === 0) {
-                bar.width = boundary.width * 1.0;
-                bar.height = 20;
-                bar.x = centerX - bar.width / 2;
-                bar.y = boundary.y;
-                bar.speedX = 0;
-                bar.speedY = bar.speed;
-            } else if (side === 1) {
-                bar.width = 20;
-                bar.height = boundary.height * 1.0;
-                bar.x = boundary.x + boundary.width - bar.width;
-                bar.y = centerY - bar.height / 2;
-                bar.speedX = -bar.speed;
-                bar.speedY = 0;
-            } else if (side === 2) {
-                bar.width = boundary.width * 1.0;
-                bar.height = 20;
-                bar.x = centerX - bar.width / 2;
-                bar.y = boundary.y + boundary.height - bar.height;
-                bar.speedX = 0;
-                bar.speedY = -bar.speed;
-            } else {
-                bar.width = 20;
-                bar.height = boundary.height * 1.0;
-                bar.x = boundary.x;
-                bar.y = centerY - bar.height / 2;
-                bar.speedX = bar.speed;
-                bar.speedY = 0;
-            }
-
-            if (!isBarOverlapping(bar)) {
-                bars.push(bar);
-            }
-        }
-
-        function movePlayer(deltaTime) {
-            let dx = 0, dy = 0;
-            if (keys.ArrowUp || keys.w || keys.W) dy = -1;
-            if (keys.ArrowDown || keys.s || keys.S) dy = 1;
-            if (keys.ArrowLeft || keys.a || keys.A) dx = -1;
-            if (keys.ArrowRight || keys.d || keys.D) dx = 1;
-
-            const length = Math.hypot(dx, dy);
-            if (length > 0) {
-                dx /= length;
-                dy /= length;
-            }
-
-            const newX = player.x + dx * player.speed * deltaTime;
-            const newY = player.y + dy * player.speed * deltaTime;
-
-            if (newX - player.radius >= boundary.x && newX + player.radius <= boundary.x + boundary.width) {
-                player.x = newX;
-            }
-            if (newY - player.radius >= boundary.y && newY + player.radius <= boundary.y + boundary.height) {
-                player.y = newY;
-            }
-        }
-
-        function moveBars(deltaTime) {
-            bars.forEach(bar => {
-                bar.x += bar.speedX * deltaTime;
-                bar.y += bar.speedY * deltaTime;
-            });
-        }
-
-        function manageImmunity() {
-            if (player.immune && Date.now() - player.immuneTime >= player.immuneDuration) {
-                player.immune = false;
-                player.lastImmuneEnd = Date.now();
-            }
-        }
-
-        function checkCollisions() {
-            bars.forEach(bar => {
-                const closestX = Math.max(bar.x, Math.min(player.x, bar.x + bar.width));
-                const closestY = Math.max(bar.y, Math.min(player.y, bar.y + bar.height));
-                const distX = player.x - closestX;
-                const distY = player.y - closestY;
-                const hit = distX * distX + distY * distY < player.radius * player.radius;
-
-                if (hit && !player.immune) {
-                    gameOver = true;
-                } else if (hit && player.immune && !bar.counted) {
-                    score++;
-                    bar.counted = true;
-                }
-            });
-        }
-
-        function draw() {
-            ctx.fillStyle = 'black';
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-            ctx.strokeStyle = 'white';
-            ctx.strokeRect(boundary.x, boundary.y, boundary.width, boundary.height);
-
-            ctx.beginPath();
-            ctx.arc(player.x, player.y, player.radius, 0, Math.PI * 2);
-
-            const now = Date.now();
-            const inCooldown = now - player.lastImmuneEnd < player.immuneCooldown;
-
-            if (player.immune) {
-                ctx.fillStyle = 'yellow';
-            } else if (inCooldown) {
-                ctx.fillStyle = '#444';
-            } else {
-                ctx.fillStyle = 'white';
-            }
-
-            ctx.fill();
-            if (player.immune) {
-                ctx.beginPath();
-                ctx.arc(player.x, player.y, player.radius + 10, 0, Math.PI * 2);
-                ctx.strokeStyle = 'yellow';
-                ctx.lineWidth = 3;
-                ctx.stroke();
-            }
-            ctx.closePath();
-
-            ctx.fillStyle = 'red';
-            bars.forEach(bar => {
-                ctx.fillRect(bar.x, bar.y, bar.width, bar.height);
-            });
-
-            ctx.fillStyle = 'white';
-            ctx.font = '24px Arial';
-            ctx.fillText(`Pontuação: ${score}`, 10, 30);
-
-            if (gameOver) {
-                ctx.fillStyle = 'white';
-                ctx.font = '48px Arial';
-                ctx.fillText('Game Over', canvas.width / 2 - 100, canvas.height / 2);
-                ctx.font = '24px Arial';
-                ctx.fillText(`Pontuação Final: ${score}`, canvas.width / 2 - 80, canvas.height / 2 + 40);
-                ctx.fillText('Pressione Enter para reiniciar', canvas.width / 2 - 120, canvas.height / 2 + 80);
-            }
-        }
-
-        let lastTime = 0;
-        let lastFrame = 0;
-        function gameLoop(timestamp) {
-            if (gameOver) return;
-
-            const deltaTime = (timestamp - lastFrame) / 16.67;
-            lastFrame = timestamp;
-
-            const barInterval = 2000 - Math.min(score * 5, 1000);
-            if (timestamp - lastTime > barInterval) {
-                createBar();
-                lastTime = timestamp;
-            }
-
-            movePlayer(deltaTime);
-            moveBars(deltaTime);
-            manageImmunity();
-            checkCollisions();
-            draw();
+        if (e.key === 'Enter' && gameOver) {
+            player.x = canvas.width / 2;
+            player.y = canvas.height / 2;
+            player.immune = false;
+            bars = [];
+            score = 0;
+            gameOver = false;
+            lastTime = 0;
+            lastFrame = 0;
             requestAnimationFrame(gameLoop);
         }
+    }
+});
 
-        requestAnimationFrame(gameLoop);
-    </script>
+document.addEventListener('keyup', (e) => {
+    if (e.key in keys) {
+        keys[e.key] = false;
+    }
+});
+
+function isBarOverlapping(newBar) {
+    return bars.some(bar =>
+        newBar.x < bar.x + bar.width &&
+        newBar.x + newBar.width > bar.x &&
+        newBar.y < bar.y + bar.height &&
+        newBar.y + newBar.height > bar.y
+    );
+}
+
+function createBar() {
+    const side = Math.floor(Math.random() * 4);
+    let bar = {
+        speed: 3 + Math.floor(score / 10) * 0.5,
+        counted: false
+    };
+
+    const centerX = canvas.width / 2;
+    const centerY = canvas.height / 2;
+
+    if (side === 0) {
+        bar.width = boundary.width * 1.0;
+        bar.height = 20;
+        bar.x = centerX - bar.width / 2;
+        bar.y = boundary.y;
+        bar.speedX = 0;
+        bar.speedY = bar.speed;
+    } else if (side === 1) {
+        bar.width = 20;
+        bar.height = boundary.height * 1.0;
+        bar.x = boundary.x + boundary.width - bar.width;
+        bar.y = centerY - bar.height / 2;
+        bar.speedX = -bar.speed;
+        bar.speedY = 0;
+    } else if (side === 2) {
+        bar.width = boundary.width * 1.0;
+        bar.height = 20;
+        bar.x = centerX - bar.width / 2;
+        bar.y = boundary.y + boundary.height - bar.height;
+        bar.speedX = 0;
+        bar.speedY = -bar.speed;
+    } else {
+        bar.width = 20;
+        bar.height = boundary.height * 1.0;
+        bar.x = boundary.x;
+        bar.y = centerY - bar.height / 2;
+        bar.speedX = bar.speed;
+        bar.speedY = 0;
+    }
+
+    if (!isBarOverlapping(bar)) {
+        bars.push(bar);
+    }
+}
+
+function movePlayer(deltaTime) {
+    let dx = 0, dy = 0;
+    if (keys.ArrowUp || keys.w || keys.W) dy = -1;
+    if (keys.ArrowDown || keys.s || keys.S) dy = 1;
+    if (keys.ArrowLeft || keys.a || keys.A) dx = -1;
+    if (keys.ArrowRight || keys.d || keys.D) dx = 1;
+
+    const length = Math.hypot(dx, dy);
+    if (length > 0) {
+        dx /= length;
+        dy /= length;
+    }
+
+    const newX = player.x + dx * player.speed * deltaTime;
+    const newY = player.y + dy * player.speed * deltaTime;
+
+    if (newX - player.radius >= boundary.x && newX + player.radius <= boundary.x + boundary.width) {
+        player.x = newX;
+    }
+    if (newY - player.radius >= boundary.y && newY + player.radius <= boundary.y + boundary.height) {
+        player.y = newY;
+    }
+}
+
+function moveBars(deltaTime) {
+    bars.forEach(bar => {
+        bar.x += bar.speedX * deltaTime;
+        bar.y += bar.speedY * deltaTime;
+    });
+}
+
+function manageImmunity() {
+    if (player.immune && Date.now() - player.immuneTime >= player.immuneDuration) {
+        player.immune = false;
+        player.lastImmuneEnd = Date.now();
+    }
+}
+
+function checkCollisions() {
+    bars.forEach(bar => {
+        const closestX = Math.max(bar.x, Math.min(player.x, bar.x + bar.width));
+        const closestY = Math.max(bar.y, Math.min(player.y, bar.y + bar.height));
+        const distX = player.x - closestX;
+        const distY = player.y - closestY;
+        const hit = distX * distX + distY * distY < player.radius * player.radius;
+
+        if (hit && !player.immune) {
+            gameOver = true;
+        } else if (hit && player.immune && !bar.counted) {
+            score++;
+            bar.counted = true;
+        }
+    });
+}
+
+function draw() {
+    ctx.fillStyle = 'black';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    ctx.strokeStyle = 'white';
+    ctx.strokeRect(boundary.x, boundary.y, boundary.width, boundary.height);
+
+    ctx.beginPath();
+    ctx.arc(player.x, player.y, player.radius, 0, Math.PI * 2);
+
+    const now = Date.now();
+    const inCooldown = now - player.lastImmuneEnd < player.immuneCooldown;
+
+    if (player.immune) {
+        ctx.fillStyle = 'yellow';
+    } else if (inCooldown) {
+        ctx.fillStyle = '#444';
+    } else {
+        ctx.fillStyle = 'white';
+    }
+
+    ctx.fill();
+    if (player.immune) {
+        ctx.beginPath();
+        ctx.arc(player.x, player.y, player.radius + 10, 0, Math.PI * 2);
+        ctx.strokeStyle = 'yellow';
+        ctx.lineWidth = 3;
+        ctx.stroke();
+    }
+    ctx.closePath();
+
+    ctx.fillStyle = 'red';
+    bars.forEach(bar => {
+        ctx.fillRect(bar.x, bar.y, bar.width, bar.height);
+    });
+
+    ctx.fillStyle = 'white';
+    ctx.font = '24px Arial';
+    ctx.fillText(`Pontuação: ${score}`, 10, 30);
+
+    if (gameOver) {
+        ctx.fillStyle = 'white';
+        ctx.font = '48px Arial';
+        ctx.fillText('Game Over', canvas.width / 2 - 100, canvas.height / 2);
+        ctx.font = '24px Arial';
+        ctx.fillText(`Pontuação Final: ${score}`, canvas.width / 2 - 80, canvas.height / 2 + 40);
+        ctx.fillText('Pressione Enter para reiniciar', canvas.width / 2 - 120, canvas.height / 2 + 80);
+    }
+}
+
+let lastTime = 0;
+let lastFrame = 0;
+function gameLoop(timestamp) {
+    if (gameOver) return;
+
+    const deltaTime = (timestamp - lastFrame) / 16.67;
+    lastFrame = timestamp;
+
+    const baseInterval = 2500;
+    const speedUp = Math.min(score * 30, 1500);
+    const barInterval = baseInterval - speedUp;
+
+    if (timestamp - lastTime > barInterval) {
+        createBar();
+        if (score >= 10) createBar();
+        lastTime = timestamp;
+    }
+
+    movePlayer(deltaTime);
+    moveBars(deltaTime);
+    manageImmunity();
+    checkCollisions();
+    draw();
+    requestAnimationFrame(gameLoop);
+}
+
+requestAnimationFrame(gameLoop);
+</script>
 </body>
 </html>
