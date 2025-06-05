@@ -97,7 +97,7 @@ function isBarOverlapping(newBar) {
 }
 
 function createBar() {
-    const side = Math.floor(Math.random() * 4);
+    const axis = Math.floor(Math.random() * 2); // 0 para eixo X, 1 para eixo Y
     let bar = {
         speed: 3 + Math.floor(score / 10) * 0.5,
         counted: false
@@ -106,34 +106,34 @@ function createBar() {
     const centerX = canvas.width / 2;
     const centerY = canvas.height / 2;
 
-    if (side === 0) {
+    if (axis === 0) { // eixo X - barra horizontal
+        const side = Math.floor(Math.random() * 2); // 0 topo, 1 base
         bar.width = boundary.width * 1.0;
         bar.height = 20;
         bar.x = centerX - bar.width / 2;
-        bar.y = boundary.y;
-        bar.speedX = 0;
-        bar.speedY = bar.speed;
-    } else if (side === 1) {
+        if (side === 0) {
+            bar.y = boundary.y;
+            bar.speedX = 0;
+            bar.speedY = bar.speed;
+        } else {
+            bar.y = boundary.y + boundary.height - bar.height;
+            bar.speedX = 0;
+            bar.speedY = -bar.speed;
+        }
+    } else { // eixo Y - barra vertical
+        const side = Math.floor(Math.random() * 2); // 0 direita, 1 esquerda
         bar.width = 20;
         bar.height = boundary.height * 1.0;
-        bar.x = boundary.x + boundary.width - bar.width;
         bar.y = centerY - bar.height / 2;
-        bar.speedX = -bar.speed;
-        bar.speedY = 0;
-    } else if (side === 2) {
-        bar.width = boundary.width * 1.0;
-        bar.height = 20;
-        bar.x = centerX - bar.width / 2;
-        bar.y = boundary.y + boundary.height - bar.height;
-        bar.speedX = 0;
-        bar.speedY = -bar.speed;
-    } else {
-        bar.width = 20;
-        bar.height = boundary.height * 1.0;
-        bar.x = boundary.x;
-        bar.y = centerY - bar.height / 2;
-        bar.speedX = bar.speed;
-        bar.speedY = 0;
+        if (side === 0) {
+            bar.x = boundary.x + boundary.width - bar.width;
+            bar.speedX = -bar.speed;
+            bar.speedY = 0;
+        } else {
+            bar.x = boundary.x;
+            bar.speedX = bar.speed;
+            bar.speedY = 0;
+        }
     }
 
     if (!isBarOverlapping(bar)) {
@@ -234,31 +234,17 @@ function draw() {
         ctx.fillRect(bar.x, bar.y, bar.width, bar.height);
     });
 
-    // Desenhar pontuação
-    ctx.font = '24px Arial';
     ctx.fillStyle = 'white';
+    ctx.font = '24px Arial';
     const scoreText = `Pontuação: ${score}`;
     ctx.fillText(scoreText, 10, 30);
 
-    // Calcular posição à direita da pontuação para desenhar Imunidade e Recarga em linha única
-    const scoreWidth = ctx.measureText(scoreText).width;
-    let nextX = 10 + scoreWidth + 20; // 20px de espaçamento após a pontuação
-    const baseY = 30; // Mesma linha vertical que a pontuação
-
-    // Desenhar Imunidade
     ctx.font = '18px Arial';
     ctx.fillStyle = 'yellow';
-    const imunText = `Imunidade: ${(immunityRemaining / 1000).toFixed(1)}s`;
-    ctx.fillText(imunText, nextX, baseY);
-
-    // Atualizar posição para Recarga
-    const imunWidth = ctx.measureText(imunText).width;
-    nextX += imunWidth + 20; // 20px de espaçamento após Imunidade
-
-    // Desenhar Recarga
+    const scoreWidth = ctx.measureText(scoreText).width;
+    ctx.fillText(`Imunidade: ${(immunityRemaining / 1000).toFixed(1)}s`, 20 + scoreWidth, 30);
     ctx.fillStyle = 'gray';
-    const recargaText = `Recarga: ${(cooldownRemaining / 1000).toFixed(1)}s`;
-    ctx.fillText(recargaText, nextX, baseY);
+    ctx.fillText(`Recarga: ${(cooldownRemaining / 1000).toFixed(1)}s`, 40 + scoreWidth + ctx.measureText(`Imunidade: ${(immunityRemaining / 1000).toFixed(1)}s`).width, 30);
 
     if (gameOver) {
         ctx.fillStyle = 'white';
