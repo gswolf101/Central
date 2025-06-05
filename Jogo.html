@@ -105,29 +105,29 @@
             let bar = { speed: 3 + Math.floor(score / 10) * 0.5 };
 
             if (side === 0) {
-                bar.width = 60;
-                bar.height = 20;
+                bar.width = 100;
+                bar.height = 40;
                 bar.x = Math.random() > 0.5 ? boundary.x : boundary.x + boundary.width - bar.width;
                 bar.y = boundary.y;
                 bar.speedX = 0;
                 bar.speedY = bar.speed;
             } else if (side === 1) {
-                bar.width = 20;
-                bar.height = 60;
+                bar.width = 40;
+                bar.height = 100;
                 bar.x = boundary.x + boundary.width - bar.width;
                 bar.y = Math.random() > 0.5 ? boundary.y : boundary.y + boundary.height - bar.height;
                 bar.speedX = -bar.speed;
                 bar.speedY = 0;
             } else if (side === 2) {
-                bar.width = 60;
-                bar.height = 20;
+                bar.width = 100;
+                bar.height = 40;
                 bar.x = Math.random() > 0.5 ? boundary.x : boundary.x + boundary.width - bar.width;
                 bar.y = boundary.y + boundary.height - bar.height;
                 bar.speedX = 0;
                 bar.speedY = -bar.speed;
             } else {
-                bar.width = 20;
-                bar.height = 60;
+                bar.width = 40;
+                bar.height = 100;
                 bar.x = boundary.x;
                 bar.y = Math.random() > 0.5 ? boundary.y : boundary.y + boundary.height - bar.height;
                 bar.speedX = bar.speed;
