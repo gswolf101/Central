@@ -17,13 +17,18 @@ export class Player {
     this.setupInput();
   }
 
-  createPlayer() {
-    // Main player cube
-    const geometry = new THREE.BoxGeometry(0.8, 0.8, 0.2);
-    const material = new THREE.MeshStandardMaterial({ 
-      color: 0xffffff,
-      emissive: 0x111111
-    });
+createPlayer() {
+  console.log('Creating player...'); // Adicione esta linha
+  // Main player cube
+  const geometry = new THREE.BoxGeometry(0.8, 0.8, 0.2);
+  const material = new THREE.MeshStandardMaterial({ 
+    color: 0xffffff,
+    emissive: 0x111111
+  });
+  this.mesh = new THREE.Mesh(geometry, material);
+  this.mesh.position.set(0, 0, 0);
+  console.log('Player mesh created at position:', this.mesh.position); // Adicione esta linha
+  this.scene.add(this.mesh);
     
     this.mesh = new THREE.Mesh(geometry, material);
     this.mesh.position.set(0, 0, 0);
