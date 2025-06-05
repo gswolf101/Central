@@ -96,8 +96,7 @@ function isBarOverlapping(newBar) {
     );
 }
 
-function createBar() {
-    const side = Math.floor(Math.random() * 4);
+function createBar(side) {
     let bar = {
         speed: 3 + Math.floor(score / 10) * 0.5,
         counted: false
@@ -267,10 +266,8 @@ function gameLoop(timestamp) {
     const barInterval = baseInterval - speedUp;
 
     if (timestamp - lastTime > barInterval) {
-        createBar();
-        if (score >= 10) {
-            createBar(); // Segunda barra por ciclo
-            if (score >= 20) createBar(); // Terceira barra para mais desafio (opcional)
+        for (let side = 0; side < 4; side++) {
+            createBar(side);
         }
         lastTime = timestamp;
     }
