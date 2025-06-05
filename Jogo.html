@@ -208,6 +208,8 @@ function draw() {
 
     const now = Date.now();
     const inCooldown = now - player.lastImmuneEnd < player.immuneCooldown;
+    const cooldownRemaining = Math.max(0, player.immuneCooldown - (now - player.lastImmuneEnd));
+    const immunityRemaining = player.immune ? Math.max(0, player.immuneDuration - (now - player.immuneTime)) : 0;
 
     if (player.immune) {
         ctx.fillStyle = 'yellow';
@@ -235,6 +237,13 @@ function draw() {
     ctx.fillStyle = 'white';
     ctx.font = '24px Arial';
     ctx.fillText(`Pontuação: ${score}`, 10, 30);
+
+    // Informações de imunidade
+    ctx.font = '18px Arial';
+    ctx.fillStyle = 'yellow';
+    ctx.fillText(`Imunidade: ${(immunityRemaining / 1000).toFixed(1)}s`, 10, 60);
+    ctx.fillStyle = 'gray';
+    ctx.fillText(`Recarga: ${(cooldownRemaining / 1000).toFixed(1)}s`, 10, 80);
 
     if (gameOver) {
         ctx.fillStyle = 'white';
