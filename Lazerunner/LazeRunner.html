@@ -95,9 +95,23 @@
     Imunidade: Barra de espaço<br />
     Reiniciar: Enter
   </div>
-  <div id="version">Versão 1.2</div>
+  <div id="version">Versão 1.1</div>
 
   <script>
+    // Bloquear clique direito
+    document.addEventListener('contextmenu', (e) => {
+      e.preventDefault();
+      alert('O clique com o botão direito está desativado para proteger o jogo.');
+    });
+
+    // Bloquear tecla F12
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'F12' || e.keyCode === 123) {
+        e.preventDefault();
+        alert('As ferramentas de desenvolvedor estão desativadas para proteger o jogo.');
+      }
+    });
+
     const canvas = document.getElementById('gameCanvas');
     const ctx = canvas.getContext('2d');
     const startScreen = document.getElementById('startScreen');
@@ -217,9 +231,9 @@
 
     function createBar() {
       const direction = Math.floor(Math.random() * 4);
-      const thickness = 30; // Espessura mantida
-      const length = Math.random() * 400 + 200; // Comprimento mantido (200-600px)
-      const speed = 1.8 + Math.random() * 1.7; // Velocidade aumentada (1.8-3.5)
+      const thickness = 30;
+      const length = Math.random() * 400 + 200;
+      const speed = 1.8 + Math.random() * 1.7; // Velocidade 1.8-3.5
 
       let bar = {};
 
@@ -354,14 +368,14 @@
       const dt = (timestamp - lastFrame) / 16.67;
       lastFrame = timestamp;
 
-      const baseInterval = 3000; // Reduzido de 4000 para 3000
+      const baseInterval = 3000;
       const speedUp = Math.min(score * 25, 1500);
       const barInterval = baseInterval - speedUp;
 
       if (timestamp - lastTime > barInterval) {
         createBar();
-        if (score >= 15) createBar(); // Barra extra em score >= 15
-        if (score >= 30) createBar(); // Segunda barra extra em score >= 30
+        if (score >= 15) createBar();
+        if (score >= 30) createBar();
         lastTime = timestamp;
         score++;
       }
