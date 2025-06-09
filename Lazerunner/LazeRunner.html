@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>LazerRunner</title>
+  <title>LazerRunner (Beta1.2)</title>
   <style>
     body {
       display: flex;
@@ -55,11 +55,11 @@
       text-align: center;
     }
     #startScreen button, #gameOverScreen button {
-      margin: 20px;
+      margin: 10px;
       padding: 10px 20px;
       font-size: 24px;
       cursor: pointer;
-      background-color: #fff;
+      background-color: white;
       color: #000;
       border: none;
       border-radius: 5px;
@@ -79,7 +79,7 @@
   </style>
 </head>
 <body>
-  <canvas id="gameCanvas" width="900" height="900"></canvas>
+  <canvas id="gameCanvas" width="900" height="500"></canvas>
   <div id="ranking">
     <h2>Ranking</h2>
     <ol id="rankingList"></ol>
@@ -90,10 +90,10 @@
     <button id="playButton">Play</button>
   </div>
   <div id="gameOverScreen" class="hidden">
-    <h1>Game Over</h1>
-    <p id="finalScore"></p>
-    <button id="restartButton">Restart</button>
-    <button id="saveRankingButton">Salvar no Ranking</button>
+    <h1>Game Over</h2>
+    <p id="finalScoreText"></p>
+    <button id="resetButton">Reset</button>
+    <button id="saveRankingButton">Save Ranking</button>
   </div>
 
   <div id="footer">
@@ -104,17 +104,18 @@
   <div id="version">Versão 1.2</div>
 
   <script>
-    // Bloquear clique direito
+    // Bloqueio ajustado para evitar interferência com o prompt
     document.addEventListener('contextmenu', (e) => {
+      // Evitar bloqueio em elementos de diálogo (como o prompt)
+      if (e.target.tagName !== 'CANVAS') return;
       e.preventDefault();
-      alert('O clique com o botão direito está desativado para proteger o jogo.');
+      console.log('Clique direito bloqueado no canvas.');
     });
 
-    // Bloquear tecla F12
     document.addEventListener('keydown', (e) => {
       if (e.key === 'F12' || e.keyCode === 123) {
         e.preventDefault();
-        alert('As ferramentas de desenvolvedor estão desativadas para proteger o jogo.');
+        console.log('F12 bloqueado.');
       }
     });
 
@@ -223,11 +224,13 @@
     });
 
     saveRankingButton.addEventListener('click', () => {
+      console.log('Botão Salvar no Ranking clicado.');
       if (scoreSaved) {
         console.log('Pontuação já salva, ignorando clique.');
         return;
       }
-      const name = prompt('Digite seu nome para salvar sua pontuação:');
+      const name = window.prompt('Digite seu nome para salvar sua pontuação:');
+      console.log('Prompt aberto, nome inserido:', name);
       if (name && name.trim()) {
         const trimmedName = name.trim();
         rankings.push({ name: trimmedName, score });
@@ -305,8 +308,8 @@
         player.x += dx;
         player.y += dy;
 
-        player.x = Math.max(boundary.x + player.radius, Math.min(player.x, boundary.x + boundary.width - player.radius));
-        player.y = Math.max(boundary.y + player.radius, Math.min(player.y, boundary.y + boundary.height - player.radius));
+        player.x = Math.max(boundary.x, Math.min(player.x, boundary.x + boundary.width - player.radius));
+        player.y = Math.max(boundary.y, Math.min(player.y, boundary.y + boundary.height - player.radius));
       }
     }
 
