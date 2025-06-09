@@ -23,12 +23,6 @@ LazerRunner é um jogo de arcade em HTML5 onde o jogador controla um círculo br
 - `index.html`: Contém o código HTML, CSS e JavaScript do jogo.
 - O ranking é salvo localmente no navegador usando `localStorage`.
 
-## Como Executar
-
-1. Faça o download ou clone este repositório.
-2. Abra o arquivo `index.html` em um navegador web.
-3. Clique em "Play" para iniciar o jogo.
-
 ## Controles
 
 - **Mover**: Setas ou WASD
@@ -37,16 +31,24 @@ LazerRunner é um jogo de arcade em HTML5 onde o jogador controla um círculo br
 
 ## Versão
 
-- **Versão 1.1**: Inclui tela inicial, tela de game over com botões, ranking persistente e instruções ampliadas.
+- **Versão 1.2**: Inclui tela inicial, tela de game over com botões, ranking persistente e instruções ampliadas.
 
 ## Licença
 
 Este projeto é de código aberto e pode ser modificado ou distribuído livremente.
 
+## Alterações 1.1
+- **Timers**: Agora é possivel saber quanto tempo resta de imunidade e quanto tempo fala para poder utiliza-la novamente!
+- **Ranking**: Adição de um ranking ao final da partida para registrar as pontuações e poder competir com seus amigos!
+
+## Alterações 1.2
+- **Barras**: Comportamento das barras alterado visando uma partida mais randomizada, agora as barras podem vir das quatro direções simuntaneamente e de tamanhos variados!
+- **Não perca seu ranking!!**: agora o ranking fica salvo no navegador, para que não seja perdida suas pontuações ao recarregar a pagina!!
+- **Pense melhor antes de usar seu escudo!!**: cooldown para o uso do escudo alterado para 1.5 segundos.
+
 ## Contribuições
 
 Sinta-se à vontade para sugerir melhorias ou abrir pull requests no repositório do projeto.
-
 ---
 
-Desenvolvido por [Seu Nome ou Pseudônimo].
+Desenvolvido por GsWolf101.
