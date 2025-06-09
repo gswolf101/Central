@@ -95,7 +95,7 @@
     Imunidade: Barra de espaço<br />
     Reiniciar: Enter
   </div>
-  <div id="version">Versão 1.1</div>
+  <div id="version">Versão 1.2</div> <!-- Atualizado de 1.1 para 1.2 -->
 
   <script>
     // Bloquear clique direito
@@ -138,7 +138,7 @@
       immune: false,
       immuneTime: 0,
       immuneDuration: 1500,
-      immuneCooldown: 750,
+      immuneCooldown: 2000, // Aumentado de 750 para 2000 (2 segundos)
       lastImmuneEnd: 0
     };
 
@@ -233,7 +233,7 @@
       const direction = Math.floor(Math.random() * 4);
       const thickness = 30;
       const length = Math.random() * 400 + 200;
-      const speed = 1.8 + Math.random() * 1.7; // Velocidade 1.8-3.5
+      const speed = 2.0 + Math.random() * 1.8; // Velocidade aumentada (2.0-3.8)
 
       let bar = {};
 
@@ -368,14 +368,14 @@
       const dt = (timestamp - lastFrame) / 16.67;
       lastFrame = timestamp;
 
-      const baseInterval = 3000;
-      const speedUp = Math.min(score * 25, 1500);
+      const baseInterval = 2500; // Reduzido de 3000 para 2500
+      const speedUp = Math.min(score * 30, 1500); // Aumentado de score * 25 para score * 30
       const barInterval = baseInterval - speedUp;
 
       if (timestamp - lastTime > barInterval) {
         createBar();
-        if (score >= 15) createBar();
-        if (score >= 30) createBar();
+        if (score >= 10) createBar(); // Barra extra em score >= 10
+        if (score >= 25) createBar(); // Segunda barra extra em score >= 25
         lastTime = timestamp;
         score++;
       }
