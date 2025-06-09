@@ -224,17 +224,17 @@
       let bar = {};
 
       switch (direction) {
-        case 0: // left to right
-          bar = { x: -length, y: Math.random() * canvas.height, width: length, height: thickness, dx: speed, dy: 0 };
+        case 0: // left to right (vertical)
+          bar = { x: -thickness, y: Math.random() * (canvas.height - length), width: thickness, height: length, dx: speed, dy: 0 };
           break;
-        case 1: // right to left
-          bar = { x: canvas.width, y: Math.random() * canvas.height, width: length, height: thickness, dx: -speed, dy: 0 };
+        case 1: // right to left (vertical)
+          bar = { x: canvas.width, y: Math.random() * (canvas.height - length), width: thickness, height: length, dx: -speed, dy: 0 };
           break;
-        case 2: // top to bottom
-          bar = { x: Math.random() * canvas.width, y: -length, width: thickness, height: length, dx: 0, dy: speed };
+        case 2: // top to bottom (horizontal)
+          bar = { x: Math.random() * (canvas.width - length), y: -thickness, width: length, height: thickness, dx: 0, dy: speed };
           break;
-        case 3: // bottom to top
-          bar = { x: Math.random() * canvas.width, y: canvas.height, width: thickness, height: length, dx: 0, dy: -speed };
+        case 3: // bottom to top (horizontal)
+          bar = { x: Math.random() * (canvas.width - length), y: canvas.height, width: length, height: thickness, dx: 0, dy: -speed };
           break;
       }
 
