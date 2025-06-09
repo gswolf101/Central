@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Jogo de Esquiva</title>
+  <title>LazerRunner</title>
   <style>
     body {
       display: flex;
@@ -29,7 +29,7 @@
       position: absolute;
       bottom: 10px;
       left: 10px;
-      font-size: 18px; /* Tamanho aumentado */
+      font-size: 24px; /* Tamanho aumentado para instruções */
       color: #aaa;
     }
     #version {
@@ -39,6 +39,37 @@
       font-size: 14px;
       color: #aaa;
     }
+    #startScreen, #gameOverScreen {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.8);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      color: white;
+      font-size: 48px;
+      text-align: center;
+    }
+    #startScreen button, #gameOverScreen button {
+      margin: 20px;
+      padding: 10px 20px;
+      font-size: 24px;
+      cursor: pointer;
+      background-color: #fff;
+      color: #000;
+      border: none;
+      border-radius: 5px;
+    }
+    #startScreen button:hover, #gameOverScreen button:hover {
+      background-color: #ccc;
+    }
+    #startScreen.hidden, #gameOverScreen.hidden {
+      display: none;
+    }
   </style>
 </head>
 <body>
@@ -46,6 +77,17 @@
   <div id="ranking">
     <h2>Ranking</h2>
     <ol id="rankingList"></ol>
+  </div>
+
+  <div id="startScreen">
+    <h1>LazerRunner</h1>
+    <button id="playButton">Play</button>
+  </div>
+  <div id="gameOverScreen" class="hidden">
+    <h1>Game Over</h1>
+    <p id="finalScore"></p>
+    <button id="restartButton">Restart</button>
+    <button id="saveRankingButton">Salvar no Ranking</button>
   </div>
 
   <div id="footer">
@@ -58,6 +100,14 @@
   <script>
     const canvas = document.getElementById('gameCanvas');
     const ctx = canvas.getContext('2d');
+    const startScreen = document.getElementById('startScreen');
+    const gameOverScreen = document.getElementById('gameOverScreen');
+    const playButton = document.getElementById('playButton');
+    const restartButton = document.getElementById('restartButton');
+    const saveRankingButton = document.getElementById('saveRankingButton');
+    const finalScoreText = document.getElementById('finalScore');
+
+    let gameStarted = false;
 
     const boundary = {
       x: 50,
@@ -122,12 +172,6 @@
         }
 
         if (e.key === 'Enter' && gameOver) {
-          const name = prompt('Digite seu nome para salvar sua pontuação:');
-          if (name) {
-            rankings.push({ name, score });
-            saveRanking();
-            updateRanking();
-          }
           resetGame();
         }
       }
@@ -139,6 +183,26 @@
       }
     });
 
+    playButton.addEventListener('click', () => {
+      startScreen.classList.add('hidden');
+      gameStarted = true;
+      resetGame();
+    });
+
+    restartButton.addEventListener('click', () => {
+      gameOverScreen.classList.add('hidden');
+      resetGame();
+    });
+
+    saveRankingButton.addEventListener('click', () => {
+      const name = prompt('Digite seu nome para salvar sua pontuação:');
+      if (name) {
+        rankings.push({ name, score });
+        saveRanking();
+        updateRanking();
+      }
+    });
+
     function resetGame() {
       player.x = canvas.width / 2;
       player.y = canvas.height / 2;
@@ -147,6 +211,7 @@
       bars = [];
       gameOver = false;
       lastTime = 0;
+      gameOverScreen.classList.add('hidden');
       requestAnimationFrame(gameLoop);
     }
 
@@ -230,6 +295,8 @@
     function draw() {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
+      if (!gameStarted) return;
+
       // Área de jogo
       ctx.strokeStyle = 'white';
       ctx.lineWidth = 2;
@@ -270,12 +337,8 @@
       ctx.fillText(`Recarga: ${(cooldownRemaining / 1000).toFixed(1)}s`, 340, 28);
 
       if (gameOver) {
-        ctx.fillStyle = 'white';
-        ctx.font = '48px Arial';
-        ctx.fillText('Game Over', canvas.width / 2 - 130, canvas.height / 2);
-        ctx.font = '24px Arial';
-        ctx.fillText(`Pontuação Final: ${score}`, canvas.width / 2 - 100, canvas.height / 2 + 40);
-        ctx.fillText('Pressione Enter para reiniciar', canvas.width / 2 - 150, canvas.height / 2 + 80);
+        finalScoreText.textContent = `Pontuação Final: ${score}`;
+        gameOverScreen.classList.remove('hidden');
       }
     }
 
@@ -283,7 +346,7 @@
     let lastFrame = 0;
 
     function gameLoop(timestamp) {
-      if (gameOver) {
+      if (!gameStarted || gameOver) {
         draw();
         return;
       }
