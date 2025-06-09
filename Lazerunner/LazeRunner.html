@@ -64,7 +64,7 @@
       border: none;
       border-radius: 5px;
     }
-    #startScreen button:hover, #gameOverScreen button:hover {
+    #startScreen button:hover, #gameOverScreen button:hover:not(:disabled) {
       background-color: #ccc;
     }
     #startScreen.hidden, #gameOverScreen.hidden {
@@ -128,7 +128,7 @@
     const finalScoreText = document.getElementById('finalScore');
 
     let gameStarted = false;
-    let scoreSaved = false; // Rastrear se a pontuação foi salva
+    let scoreSaved = false;
 
     const boundary = {
       x: 50,
@@ -171,9 +171,10 @@
     function saveRanking() {
       try {
         localStorage.setItem('rankings', JSON.stringify(rankings));
-        console.log('Ranking salvo no localStorage:', rankings); // Depuração
+        console.log('Ranking salvo no localStorage:', rankings);
       } catch (e) {
         console.error('Erro ao salvar ranking:', e);
+        alert('Erro ao salvar a pontuação. Tente novamente.');
       }
     }
 
@@ -186,7 +187,7 @@
         li.textContent = `${entry.name} - ${entry.score}`;
         rankingList.appendChild(li);
       });
-      console.log('Ranking atualizado na interface:', rankings); // Depuração
+      console.log('Ranking atualizado na interface:', rankings);
     }
 
     document.addEventListener('keydown', (e) => {
@@ -223,7 +224,7 @@
 
     saveRankingButton.addEventListener('click', () => {
       if (scoreSaved) {
-        console.log('Pontuação já salva, ignorando clique.'); // Depuração
+        console.log('Pontuação já salva, ignorando clique.');
         return;
       }
       const name = prompt('Digite seu nome para salvar sua pontuação:');
@@ -236,12 +237,12 @@
         saveRankingButton.disabled = true;
         saveRankingButton.textContent = 'Salvo';
         alert('Pontuação salva com sucesso!');
-        console.log('Pontuação salva:', { name: trimmedName, score }); // Depuração
+        console.log('Pontuação salva:', { name: trimmedName, score });
       } else if (name !== null) {
-        alert('Por favor, insira um nome válido.');
-        console.log('Nome inválido inserido:', name); // Depuração
+        alert('Por favor, insira um nome válido (não vazio).');
+        console.log('Nome inválido inserido:', name);
       } else {
-        console.log('Prompt cancelado pelo usuário.'); // Depuração
+        console.log('Prompt cancelado pelo usuário.');
       }
     });
 
@@ -257,8 +258,8 @@
       saveRankingButton.textContent = 'Salvar no Ranking';
       lastTime = 0;
       gameOverScreen.classList.add('hidden');
+      console.log('Jogo reiniciado, botão de ranking reativado.');
       requestAnimationFrame(gameLoop);
-      console.log('Jogo reiniciado, botão de ranking reativado.'); // Depuração
     }
 
     function createBar() {
