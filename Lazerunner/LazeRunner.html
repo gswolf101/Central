@@ -65,8 +65,6 @@
       border-radius: 5px;
     }
     #startScreen button:hover, #gameOverScreen button:hover {
-     
-
       background-color: #ccc;
     }
     #startScreen.hidden, #gameOverScreen.hidden {
@@ -221,7 +219,7 @@
       const direction = Math.floor(Math.random() * 4);
       const thickness = 30; // Espessura mantida
       const length = Math.random() * 400 + 200; // Comprimento mantido (200-600px)
-      const speed = 1.5 + Math.random() * 1.5; // Velocidade aumentada (1.5-3)
+      const speed = 1.2 + Math.random() * 1.3; // Velocidade reduzida (1.2-2.5)
 
       let bar = {};
 
@@ -356,8 +354,8 @@
       const dt = (timestamp - lastFrame) / 16.67;
       lastFrame = timestamp;
 
-      const baseInterval = 3500; // Aumentado de 2500 para 3500
-      const speedUp = Math.min(score * 30, 1500);
+      const baseInterval = 4000; // Aumentado de 3500 para 4000
+      const speedUp = Math.min(score * 25, 1500); // Reduzido de score * 30 para score * 25
       const barInterval = baseInterval - speedUp;
 
       if (timestamp - lastTime > barInterval) {
