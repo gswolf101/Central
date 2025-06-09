@@ -103,7 +103,7 @@
     Imunidade: Barra de Espaço<br />
     Reiniciar: Enter
   </div>
-  <div id="version">Versão 1.2.1</div>
+  <div id="version">Versão 1.2.2</div>
 
   <script>
     // Bloquear clique direito e F12
@@ -142,7 +142,7 @@
       x: canvas.width / 2,
       y: canvas.height / 2,
       radius: 20,
-      speed: 5,
+      speed: 3, // Reduzido de 5 para 3
       scale: 1.0,
       immune: false,
       immuneTime: 0,
@@ -323,9 +323,17 @@
       ctx.strokeRect(boundary.x, boundary.y, boundary.width, boundary.height);
 
       // Jogador
+      const now = Date.now();
+      let playerColor = '#fff'; // Cor padrão: branco
+      if (player.immune) {
+        playerColor = '#ff0'; // Amarelo durante imunidade
+      } else if (now - player.lastImmuneEnd < player.immuneCooldown) {
+        playerColor = '#888'; // Cinza durante cooldown
+      }
+
       ctx.beginPath();
       ctx.arc(player.x, player.y, player.radius * player.scale, 0, Math.PI * 2);
-      ctx.fillStyle = player.immune ? '#ff0' : '#fff';
+      ctx.fillStyle = playerColor;
       ctx.fill();
       if (player.immune) {
         ctx.beginPath();
@@ -340,7 +348,6 @@
       bars.forEach(bar => ctx.fillRect(bar.x, bar.y, bar.width, bar.height));
 
       // HUD
-      const now = Date.now();
       const cooldownRemaining = Math.max(0, player.immuneCooldown - (now - player.lastImmuneEnd));
       const immunityRemaining = player.immune ? Math.max(0, player.immuneDuration - (now - player.immuneTime)) : 0;
 
@@ -366,7 +373,7 @@
         return;
       }
 
-      const dt = Math.min((timestamp - lastTime) / 16.67, 1); // Limita dt para evitar saltos
+      const dt = Math.min((timestamp - lastTime) / 16.67, 1);
       lastTime = timestamp;
 
       const baseInterval = 2500;
