@@ -29,7 +29,7 @@
       position: absolute;
       bottom: 10px;
       left: 10px;
-      font-size: 24px;
+      font-size: 24px; /* Tamanho aumentado para instruções */
       color: #aaa;
     }
     #version {
@@ -64,17 +64,11 @@
       border: none;
       border-radius: 5px;
     }
-    #startScreen button:hover, #gameOverScreen button:hover:not(:disabled) {
+    #startScreen button:hover, #gameOverScreen button:hover {
       background-color: #ccc;
     }
     #startScreen.hidden, #gameOverScreen.hidden {
       display: none;
-    }
-    #saveRankingButton:disabled {
-      background-color: #888;
-      color: #ccc;
-      cursor: not-allowed;
-      opacity: 0.6;
     }
   </style>
 </head>
@@ -101,14 +95,20 @@
     Imunidade: Barra de espaço<br />
     Reiniciar: Enter
   </div>
-  <div id="version">Versão 1.2</div>
+  <div id="version">Versão 1.2</div> <!-- Atualizado de 1.1 para 1.2 -->
 
   <script>
-    // Proteções
-    document.addEventListener('contextmenu', (e) => e.preventDefault());
+    // Bloquear clique direito
+    document.addEventListener('contextmenu', (e) => {
+      e.preventDefault();
+      alert('O clique com o botão direito está desativado para proteger o jogo.');
+    });
+
+    // Bloquear tecla F12
     document.addEventListener('keydown', (e) => {
       if (e.key === 'F12' || e.keyCode === 123) {
         e.preventDefault();
+        alert('As ferramentas de desenvolvedor estão desativadas para proteger o jogo.');
       }
     });
 
@@ -120,125 +120,16 @@
     const restartButton = document.getElementById('restartButton');
     const saveRankingButton = document.getElementById('saveRankingButton');
     const finalScoreText = document.getElementById('finalScore');
-    const rankingList = document.getElementById('rankingList');
 
-    const player = {
-      x: canvas.width / 2,
-      y: canvas.height / 2,
-      radius: 20,
-      speed: 5,
-      immune: false,
-      immuneTime: 0,
-      immuneDuration: 1500,
-      immuneCooldown: 750,
-      lastImmuneEnd: 0
+    let gameStarted = false;
+
+    const boundary = {
+      x: 50,
+      y: 50,
+      width: canvas.width - 100,
+      height: canvas.height - 100
     };
 
-    let keys = {};
-    let bars = [];
-    let score = 0;
-    let gameStarted = false;
-    let gameOver = false;
-
-    let rankings = JSON.parse(localStorage.getItem('rankings')) || [];
-
-    function saveRanking(name, score) {
-      rankings.push({ name, score });
-      rankings.sort((a, b) => b.score - a.score);
-      rankings = rankings.slice(0, 10);
-      localStorage.setItem('rankings', JSON.stringify(rankings));
-      updateRanking();
-    }
-
-    function updateRanking() {
-      rankingList.innerHTML = '';
-      rankings.forEach(entry => {
-        const li = document.createElement('li');
-        li.textContent = `${entry.name} - ${entry.score}`;
-        rankingList.appendChild(li);
-      });
-    }
-
-    function resetGame() {
-      bars = [];
-      player.x = canvas.width / 2;
-      player.y = canvas.height / 2;
-      player.immune = false;
-      score = 0;
-      gameOver = false;
-      gameStarted = true;
-      saveRankingButton.disabled = false;
-      gameOverScreen.classList.add('hidden');
-    }
-
-    function createBar() {
-      const direction = Math.floor(Math.random() * 4);
-      let bar = { x: 0, y: 0, width: 0, height: 0, speedX: 0, speedY: 0 };
-      const size = 100;
-
-      if (direction === 0) { // esquerda
-        bar = { x: -size, y: Math.random() * canvas.height, width: size, height: 20, speedX: 6, speedY: 0 };
-      } else if (direction === 1) { // cima
-        bar = { x: Math.random() * canvas.width, y: -size, width: 20, height: size, speedX: 0, speedY: 6 };
-      } else if (direction === 2) { // direita
-        bar = { x: canvas.width + size, y: Math.random() * canvas.height, width: size, height: 20, speedX: -6, speedY: 0 };
-      } else if (direction === 3) { // baixo
-        bar = { x: Math.random() * canvas.width, y: canvas.height + size, width: 20, height: size, speedX: 0, speedY: -6 };
-      }
-      bars.push(bar);
-    }
-
-    function movePlayer(dt) {
-      const speed = player.speed * dt;
-      if (keys['ArrowUp'] || keys['w']) player.y -= speed;
-      if (keys['ArrowDown'] || keys['s']) player.y += speed;
-      if (keys['ArrowLeft'] || keys['a']) player.x -= speed;
-      if (keys['ArrowRight'] || keys['d']) player.x += speed;
-
-      // Limites
-      player.x = Math.max(player.radius, Math.min(canvas.width - player.radius, player.x));
-      player.y = Math.max(player.radius, Math.min(canvas.height - player.radius, player.y));
-    }
-
-    function moveBars(dt) {
-      bars.forEach(bar => {
-        bar.x += bar.speedX * dt;
-        bar.y += bar.speedY * dt;
-      });
-      bars = bars.filter(bar =>
-        bar.x + bar.width > 0 && bar.x < canvas.width &&
-        bar.y + bar.height > 0 && bar.y < canvas.height
-      );
-    }
-
-    function checkCollisions() {
-      for (let bar of bars) {
-        if (!player.immune &&
-          player.x + player.radius > bar.x &&
-          player.x - player.radius < bar.x + bar.width &&
-          player.y + player.radius > bar.y &&
-          player.y - player.radius < bar.y + bar.height
-        ) {
-          gameOver = true;
-        }
-      }
-    }
-
-    function manageImmunity() {
-      const now = Date.now();
-      if (player.immune && now - player.immuneTime > player.immuneDuration) {
-        player.immune = false;
-        player.lastImmuneEnd = now;
-      }
-    }
-
-    function draw() {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-      // Jogador
-      ctx.beginPath();
-      ctx.arc(player.x, player.y, player.radius, 0, Math.PI * 2);
-      ctx.fillStyle = player.immune ? 'yellow' : 'white';
       ctx.fill();
       if (player.immune) {
         ctx.beginPath();
@@ -250,7 +141,9 @@
 
       // Barras
       ctx.fillStyle = 'red';
-      bars.forEach(bar => ctx.fillRect(bar.x, bar.y, bar.width, bar.height));
+      bars.forEach(bar => {
+        ctx.fillRect(bar.x, bar.y, bar.width, bar.height);
+      });
 
       // HUD
       const now = Date.now();
@@ -260,12 +153,11 @@
 
       ctx.fillStyle = 'white';
       ctx.font = '24px Arial';
-      ctx.textAlign = 'left';
       ctx.fillText(`Pontuação: ${score}`, 10, 30);
       ctx.fillStyle = 'yellow';
       ctx.font = '18px Arial';
       ctx.fillText(`Imunidade: ${(immunityRemaining / 1000).toFixed(1)}s`, 180, 28);
-      ctx.fillStyle = inCooldown ? 'gray' : 'green';
+      ctx.fillStyle = 'gray';
       ctx.fillText(`Recarga: ${(cooldownRemaining / 1000).toFixed(1)}s`, 340, 28);
 
       if (gameOver) {
@@ -286,14 +178,14 @@
       const dt = (timestamp - lastFrame) / 16.67;
       lastFrame = timestamp;
 
-      const baseInterval = 2500;
-      const speedUp = Math.min(score * 30, 1500);
+      const baseInterval = 2500; // Reduzido de 3000 para 2500
+      const speedUp = Math.min(score * 30, 1500); // Aumentado de score * 25 para score * 30
       const barInterval = baseInterval - speedUp;
 
       if (timestamp - lastTime > barInterval) {
         createBar();
-        if (score >= 10) createBar();
-        if (score >= 25) createBar();
+        if (score >= 10) createBar(); // Barra extra em score >= 10
+        if (score >= 25) createBar(); // Segunda barra extra em score >= 25
         lastTime = timestamp;
         score++;
       }
@@ -306,35 +198,6 @@
 
       requestAnimationFrame(gameLoop);
     }
-
-    playButton.onclick = () => {
-      startScreen.classList.add('hidden');
-      resetGame();
-    };
-
-    restartButton.onclick = () => {
-      resetGame();
-    };
-
-    saveRankingButton.onclick = () => {
-      const name = prompt('Digite seu nome para salvar sua pontuação:');
-      if (name) {
-        saveRanking(name, score);
-        saveRankingButton.disabled = true;
-      }
-    };
-
-    document.addEventListener('keydown', (e) => {
-      keys[e.key] = true;
-      if (e.key === ' ' && !player.immune && Date.now() - player.lastImmuneEnd >= player.immuneCooldown) {
-        player.immune = true;
-        player.immuneTime = Date.now();
-      }
-    });
-
-    document.addEventListener('keyup', (e) => {
-      keys[e.key] = false;
-    });
 
     updateRanking();
     requestAnimationFrame(gameLoop);
