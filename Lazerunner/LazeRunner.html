@@ -70,6 +70,10 @@
     #startScreen.hidden, #gameOverScreen.hidden {
       display: none;
     }
+    #saveRankingButton:disabled {
+      background-color: #888;
+      cursor: not-allowed;
+    }
   </style>
 </head>
 <body>
@@ -95,7 +99,7 @@
     Imunidade: Barra de espaço<br />
     Reiniciar: Enter
   </div>
-  <div id="version">Versão 1.2</div> <!-- Atualizado de 1.1 para 1.2 -->
+  <div id="version">Versão 1.2</div>
 
   <script>
     // Bloquear clique direito
@@ -122,6 +126,7 @@
     const finalScoreText = document.getElementById('finalScore');
 
     let gameStarted = false;
+    let scoreSaved = false; // Rastrear se a pontuação foi salva
 
     const boundary = {
       x: 50,
@@ -138,7 +143,7 @@
       immune: false,
       immuneTime: 0,
       immuneDuration: 1500,
-      immuneCooldown: 1750, // Aumentado de 750 para 2000 (2 segundos)
+      immuneCooldown: 2000,
       lastImmuneEnd: 0
     };
 
@@ -209,11 +214,16 @@
     });
 
     saveRankingButton.addEventListener('click', () => {
-      const name = prompt('Digite seu nome para salvar sua pontuação:');
-      if (name) {
-        rankings.push({ name, score });
-        saveRanking();
-        updateRanking();
+      if (!scoreSaved) {
+        const name = prompt('Digite seu nome para salvar sua pontuação:');
+        if (name) {
+          rankings.push({ name, score });
+          saveRanking();
+          updateRanking();
+          scoreSaved = true;
+          saveRankingButton.disabled = true;
+          saveRankingButton.textContent = 'Salvo';
+        }
       }
     });
 
@@ -224,6 +234,9 @@
       score = 0;
       bars = [];
       gameOver = false;
+      scoreSaved = false; // Resetar o estado de salvamento
+      saveRankingButton.disabled = false; // Reativar o botão
+      saveRankingButton.textContent = 'Salvar no Ranking'; // Restaurar texto
       lastTime = 0;
       gameOverScreen.classList.add('hidden');
       requestAnimationFrame(gameLoop);
@@ -233,7 +246,7 @@
       const direction = Math.floor(Math.random() * 4);
       const thickness = 30;
       const length = Math.random() * 400 + 200;
-      const speed = 2.0 + Math.random() * 1.8; // Velocidade aumentada (2.0-3.8)
+      const speed = 2.0 + Math.random() * 1.8;
 
       let bar = {};
 
@@ -285,6 +298,7 @@
     }
 
     function checkCollisions() {
+      if (player.immune) return;
       for (let bar of bars) {
         if (
           player.x + player.radius > bar.x &&
@@ -292,9 +306,7 @@
           player.y + player.radius > bar.y &&
           player.y - player.radius < bar.y + bar.height
         ) {
-          if (!player.immune) {
-            gameOver = true;
-          }
+          gameOver = true;
         }
       }
     }
@@ -343,11 +355,12 @@
 
       ctx.fillStyle = 'white';
       ctx.font = '24px Arial';
+      ctx.textAlign = 'left';
       ctx.fillText(`Pontuação: ${score}`, 10, 30);
       ctx.fillStyle = 'yellow';
       ctx.font = '18px Arial';
       ctx.fillText(`Imunidade: ${(immunityRemaining / 1000).toFixed(1)}s`, 180, 28);
-      ctx.fillStyle = 'gray';
+      ctx.fillStyle = inCooldown ? 'gray' : 'green'; // Mudança de cor baseada no cooldown
       ctx.fillText(`Recarga: ${(cooldownRemaining / 1000).toFixed(1)}s`, 340, 28);
 
       if (gameOver) {
@@ -368,14 +381,14 @@
       const dt = (timestamp - lastFrame) / 16.67;
       lastFrame = timestamp;
 
-      const baseInterval = 2500; // Reduzido de 3000 para 2500
-      const speedUp = Math.min(score * 30, 1500); // Aumentado de score * 25 para score * 30
+      const baseInterval = 2500;
+      const speedUp = Math.min(score * 30, 1500);
       const barInterval = baseInterval - speedUp;
 
       if (timestamp - lastTime > barInterval) {
         createBar();
-        if (score >= 10) createBar(); // Barra extra em score >= 10
-        if (score >= 25) createBar(); // Segunda barra extra em score >= 25
+        if (score >= 10) createBar();
+        if (score >= 25) createBar();
         lastTime = timestamp;
         score++;
       }
