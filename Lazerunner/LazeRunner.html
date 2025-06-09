@@ -1,9 +1,9 @@
-<!DOCTYPE html>
+<!DOCTYPE html>More actions
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Lazer Runner</title>
+  <title>LazerRunner</title>
   <style>
     body {
       display: flex;
@@ -30,6 +30,7 @@
       bottom: 10px;
       left: 10px;
       font-size: 24px; /* Tamanho aumentado para instruções */
+      font-size: 24px;
       color: #aaa;
     }
     #version {
@@ -65,10 +66,17 @@
       border-radius: 5px;
     }
     #startScreen button:hover, #gameOverScreen button:hover {
+    #startScreen button:hover, #gameOverScreen button:hover:not(:disabled) {
       background-color: #ccc;
     }
     #startScreen.hidden, #gameOverScreen.hidden {
       display: none;
+    }
+    #saveRankingButton:disabled {
+      background-color: #888;
+      color: #ccc;
+      cursor: not-allowed;
+      opacity: 0.6;
     }
   </style>
 </head>
@@ -96,6 +104,7 @@
     Reiniciar: Enter
   </div>
   <div id="version">Versão 1.2</div> <!-- Atualizado de 1.1 para 1.2 -->
+  <div id="version">Versão 1.2</div>
 
   <script>
     // Bloquear clique direito
@@ -122,6 +131,7 @@
     const finalScoreText = document.getElementById('finalScore');
 
     let gameStarted = false;
+    let scoreSaved = false;
 
     const boundary = {
       x: 50,
@@ -130,6 +140,221 @@
       height: canvas.height - 100
     };
 
+    const player = {
+      x: canvas.width / 2,
+      y: canvas.height / 2,
+      radius: 20,
+      speed: 5,
+      immune: false,
+      immuneTime: 0,
+      immuneDuration: 1500,
+      immuneCooldown: 2000,
+      lastImmuneEnd: 0
+    };
+
+    let bars = [];
+    let score = 0;
+    let gameOver = false;
+
+    let keys = {
+      ArrowUp: false,
+      ArrowDown: false,
+      ArrowLeft: false,
+      ArrowRight: false,
+      'w': false, 'W': false,
+      's': false, 'S': false,
+      'a': false, 'A': false,
+      'd': false, 'D': false,
+      ' ': false,
+      'Enter': false
+    };
+
+    let rankings = JSON.parse(localStorage.getItem('rankings')) || [];
+
+    function saveRanking() {
+      try {
+        localStorage.setItem('rankings', JSON.stringify(rankings));
+        console.log('Ranking salvo no localStorage:', rankings);
+      } catch (e) {
+        console.error('Erro ao salvar ranking:', e);
+        alert('Erro ao salvar a pontuação. Tente novamente.');
+      }
+    }
+
+    function updateRanking() {
+      const rankingList = document.getElementById('rankingList');
+      rankingList.innerHTML = '';
+      rankings.sort((a, b) => b.score - a.score);
+      rankings.slice(0, 10).forEach(entry => {
+        const li = document.createElement('li');
+        li.textContent = `${entry.name} - ${entry.score}`;
+        rankingList.appendChild(li);
+      });
+      console.log('Ranking atualizado na interface:', rankings);
+    }
+
+    document.addEventListener('keydown', (e) => {
+      if (e.key in keys) {
+        keys[e.key] = true;
+
+        if (e.key === ' ' && !player.immune && Date.now() - player.lastImmuneEnd >= player.immuneCooldown) {
+          player.immune = true;
+          player.immuneTime = Date.now();
+        }
+
+        if (e.key === 'Enter' && gameOver) {
+          resetGame();
+        }
+      }
+    });
+
+    document.addEventListener('keyup', (e) => {
+      if (e.key in keys) {
+        keys[e.key] = false;
+      }
+    });
+
+    playButton.addEventListener('click', () => {
+      startScreen.classList.add('hidden');
+      gameStarted = true;
+      resetGame();
+    });
+
+    restartButton.addEventListener('click', () => {
+      gameOverScreen.classList.add('hidden');
+      resetGame();
+    });
+
+    saveRankingButton.addEventListener('click', () => {
+      if (scoreSaved) {
+        console.log('Pontuação já salva, ignorando clique.');
+        return;
+      }
+      const name = prompt('Digite seu nome para salvar sua pontuação:');
+      if (name && name.trim()) {
+        const trimmedName = name.trim();
+        rankings.push({ name: trimmedName, score });
+        saveRanking();
+        updateRanking();
+        scoreSaved = true;
+        saveRankingButton.disabled = true;
+        saveRankingButton.textContent = 'Salvo';
+        alert('Pontuação salva com sucesso!');
+        console.log('Pontuação salva:', { name: trimmedName, score });
+      } else if (name !== null) {
+        alert('Por favor, insira um nome válido (não vazio).');
+        console.log('Nome inválido inserido:', name);
+      } else {
+        console.log('Prompt cancelado pelo usuário.');
+      }
+    });
+
+    function resetGame() {
+      player.x = canvas.width / 2;
+      player.y = canvas.height / 2;
+      player.immune = false;
+      score = 0;
+      bars = [];
+      gameOver = false;
+      scoreSaved = false;
+      saveRankingButton.disabled = false;
+      saveRankingButton.textContent = 'Salvar no Ranking';
+      lastTime = 0;
+      gameOverScreen.classList.add('hidden');
+      console.log('Jogo reiniciado, botão de ranking reativado.');
+      requestAnimationFrame(gameLoop);
+    }
+
+    function createBar() {
+      const direction = Math.floor(Math.random() * 4);
+      const thickness = 30;
+      const length = Math.random() * 400 + 200;
+      const speed = 2.0 + Math.random() * 1.8;
+
+      let bar = {};
+
+      switch (direction) {
+        case 0: // left to right (vertical)
+          bar = { x: -thickness, y: Math.random() * (canvas.height - length), width: thickness, height: length, dx: speed, dy: 0 };
+          break;
+        case 1: // right to left (vertical)
+          bar = { x: canvas.width, y: Math.random() * (canvas.height - length), width: thickness, height: length, dx: -speed, dy: 0 };
+          break;
+        case 2: // top to bottom (horizontal)
+          bar = { x: Math.random() * (canvas.width - length), y: -thickness, width: length, height: thickness, dx: 0, dy: speed };
+          break;
+        case 3: // bottom to top (horizontal)
+          bar = { x: Math.random() * (canvas.width - length), y: canvas.height, width: length, height: thickness, dx: 0, dy: -speed };
+          break;
+      }
+
+      bars.push(bar);
+    }
+
+    function movePlayer(dt) {
+      let dx = 0;
+      let dy = 0;
+
+      if (keys.ArrowUp || keys.w || keys.W) dy -= 1;
+      if (keys.ArrowDown || keys.s || keys.S) dy += 1;
+      if (keys.ArrowLeft || keys.a || keys.A) dx -= 1;
+      if (keys.ArrowRight || keys.d || keys.D) dx += 1;
+
+      if (dx !== 0 || dy !== 0) {
+        const len = Math.hypot(dx, dy);
+        dx = (dx / len) * player.speed;
+        dy = (dy / len) * player.speed;
+
+        player.x += dx;
+        player.y += dy;
+
+        player.x = Math.max(boundary.x + player.radius, Math.min(player.x, boundary.x + boundary.width - player.radius));
+        player.y = Math.max(boundary.y + player.radius, Math.min(player.y, boundary.y + boundary.height - player.radius));
+      }
+    }
+
+    function moveBars(dt) {
+      bars.forEach(bar => {
+        bar.x += bar.dx * dt;
+        bar.y += bar.dy * dt;
+      });
+    }
+
+    function checkCollisions() {
+      if (player.immune) return;
+      for (let bar of bars) {
+        if (
+          player.x + player.radius > bar.x &&
+          player.x - player.radius < bar.x + bar.width &&
+          player.y + player.radius > bar.y &&
+          player.y - player.radius < bar.y + bar.height
+        ) {
+          gameOver = true;
+        }
+      }
+    }
+
+    function manageImmunity() {
+      if (player.immune && Date.now() - player.immuneTime > player.immuneDuration) {
+        player.immune = false;
+        player.lastImmuneEnd = Date.now();
+      }
+    }
+
+    function draw() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      if (!gameStarted) return;
+
+      // Área de jogo
+      ctx.strokeStyle = 'white';
+      ctx.lineWidth = 2;
+      ctx.strokeRect(boundary.x, boundary.y, boundary.width, boundary.height);
+
+      // Jogador
+      ctx.beginPath();
+      ctx.arc(player.x, player.y, player.radius, 0, Math.PI * 2);
+      ctx.fillStyle = player.immune ? 'yellow' : 'white';
       ctx.fill();
       if (player.immune) {
         ctx.beginPath();
@@ -153,11 +378,13 @@
 
       ctx.fillStyle = 'white';
       ctx.font = '24px Arial';
+      ctx.textAlign = 'left';
       ctx.fillText(`Pontuação: ${score}`, 10, 30);
       ctx.fillStyle = 'yellow';
       ctx.font = '18px Arial';
       ctx.fillText(`Imunidade: ${(immunityRemaining / 1000).toFixed(1)}s`, 180, 28);
       ctx.fillStyle = 'gray';
+      ctx.fillStyle = inCooldown ? 'gray' : 'green';
       ctx.fillText(`Recarga: ${(cooldownRemaining / 1000).toFixed(1)}s`, 340, 28);
 
       if (gameOver) {
@@ -180,12 +407,16 @@
 
       const baseInterval = 2500; // Reduzido de 3000 para 2500
       const speedUp = Math.min(score * 30, 1500); // Aumentado de score * 25 para score * 30
+      const baseInterval = 2500;
+      const speedUp = Math.min(score * 30, 1500);
       const barInterval = baseInterval - speedUp;
 
       if (timestamp - lastTime > barInterval) {
         createBar();
         if (score >= 10) createBar(); // Barra extra em score >= 10
         if (score >= 25) createBar(); // Segunda barra extra em score >= 25
+        if (score >= 10) createBar();
+        if (score >= 25) createBar();
         lastTime = timestamp;
         score++;
       }
