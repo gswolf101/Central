@@ -95,7 +95,7 @@
     Imunidade: Barra de espaço<br />
     Reiniciar: Enter
   </div>
-  <div id="version">Versão 1.1</div>
+  <div id="version">Versão 1.2</div>
 
   <script>
     const canvas = document.getElementById('gameCanvas');
@@ -123,12 +123,6 @@
       speed: 5,
       immune: false,
       immuneTime: 0,
-      immuneDuration: 1500,
-      immuneCooldown: 750,
-      lastImmuneEnd: 0
-    };
-      ctx.arc(player.x, player.y, player.radius, 0, Math.PI * 2);
-      ctx.fillStyle = player.immune ? 'yellow' : 'white';
       ctx.fill();
       if (player.immune) {
         ctx.beginPath();
@@ -177,12 +171,14 @@
       const dt = (timestamp - lastFrame) / 16.67;
       lastFrame = timestamp;
 
-      const baseInterval = 4000; // Aumentado de 3500 para 4000
-      const speedUp = Math.min(score * 25, 1500); // Reduzido de score * 30 para score * 25
+      const baseInterval = 3000; // Reduzido de 4000 para 3000
+      const speedUp = Math.min(score * 25, 1500);
       const barInterval = baseInterval - speedUp;
 
       if (timestamp - lastTime > barInterval) {
-        createBar(); // Apenas uma barra por intervalo
+        createBar();
+        if (score >= 15) createBar(); // Barra extra em score >= 15
+        if (score >= 30) createBar(); // Segunda barra extra em score >= 30
         lastTime = timestamp;
         score++;
       }
