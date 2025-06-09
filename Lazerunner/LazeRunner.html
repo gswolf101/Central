@@ -29,7 +29,7 @@
       position: absolute;
       bottom: 10px;
       left: 10px;
-      font-size: 24px; /* Tamanho aumentado para instruções */
+      font-size: 24px;
       color: #aaa;
     }
     #version {
@@ -72,7 +72,9 @@
     }
     #saveRankingButton:disabled {
       background-color: #888;
+      color: #ccc;
       cursor: not-allowed;
+      opacity: 0.6;
     }
   </style>
 </head>
@@ -167,7 +169,12 @@
     let rankings = JSON.parse(localStorage.getItem('rankings')) || [];
 
     function saveRanking() {
-      localStorage.setItem('rankings', JSON.stringify(rankings));
+      try {
+        localStorage.setItem('rankings', JSON.stringify(rankings));
+        console.log('Ranking salvo no localStorage:', rankings); // Depuração
+      } catch (e) {
+        console.error('Erro ao salvar ranking:', e);
+      }
     }
 
     function updateRanking() {
@@ -179,6 +186,7 @@
         li.textContent = `${entry.name} - ${entry.score}`;
         rankingList.appendChild(li);
       });
+      console.log('Ranking atualizado na interface:', rankings); // Depuração
     }
 
     document.addEventListener('keydown', (e) => {
@@ -214,16 +222,26 @@
     });
 
     saveRankingButton.addEventListener('click', () => {
-      if (!scoreSaved) {
-        const name = prompt('Digite seu nome para salvar sua pontuação:');
-        if (name) {
-          rankings.push({ name, score });
-          saveRanking();
-          updateRanking();
-          scoreSaved = true;
-          saveRankingButton.disabled = true;
-          saveRankingButton.textContent = 'Salvo';
-        }
+      if (scoreSaved) {
+        console.log('Pontuação já salva, ignorando clique.'); // Depuração
+        return;
+      }
+      const name = prompt('Digite seu nome para salvar sua pontuação:');
+      if (name && name.trim()) {
+        const trimmedName = name.trim();
+        rankings.push({ name: trimmedName, score });
+        saveRanking();
+        updateRanking();
+        scoreSaved = true;
+        saveRankingButton.disabled = true;
+        saveRankingButton.textContent = 'Salvo';
+        alert('Pontuação salva com sucesso!');
+        console.log('Pontuação salva:', { name: trimmedName, score }); // Depuração
+      } else if (name !== null) {
+        alert('Por favor, insira um nome válido.');
+        console.log('Nome inválido inserido:', name); // Depuração
+      } else {
+        console.log('Prompt cancelado pelo usuário.'); // Depuração
       }
     });
 
@@ -234,12 +252,13 @@
       score = 0;
       bars = [];
       gameOver = false;
-      scoreSaved = false; // Resetar o estado de salvamento
-      saveRankingButton.disabled = false; // Reativar o botão
-      saveRankingButton.textContent = 'Salvar no Ranking'; // Restaurar texto
+      scoreSaved = false;
+      saveRankingButton.disabled = false;
+      saveRankingButton.textContent = 'Salvar no Ranking';
       lastTime = 0;
       gameOverScreen.classList.add('hidden');
       requestAnimationFrame(gameLoop);
+      console.log('Jogo reiniciado, botão de ranking reativado.'); // Depuração
     }
 
     function createBar() {
@@ -360,7 +379,7 @@
       ctx.fillStyle = 'yellow';
       ctx.font = '18px Arial';
       ctx.fillText(`Imunidade: ${(immunityRemaining / 1000).toFixed(1)}s`, 180, 28);
-      ctx.fillStyle = inCooldown ? 'gray' : 'green'; // Mudança de cor baseada no cooldown
+      ctx.fillStyle = inCooldown ? 'gray' : 'green';
       ctx.fillText(`Recarga: ${(cooldownRemaining / 1000).toFixed(1)}s`, 340, 28);
 
       if (gameOver) {
