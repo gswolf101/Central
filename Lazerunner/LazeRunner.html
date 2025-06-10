@@ -104,13 +104,11 @@
   <div id="version">Versão 1.2</div>
 
   <script>
-    // Bloquear clique direito
     document.addEventListener('contextmenu', (e) => {
       e.preventDefault();
       alert('O clique com o botão direito está desativado para proteger o jogo.');
     });
 
-    // Bloquear tecla F12
     document.addEventListener('keydown', (e) => {
       if (e.key === 'F12' || e.keyCode === 123) {
         e.preventDefault();
@@ -271,16 +269,16 @@
       let bar = {};
 
       switch (direction) {
-        case 0: // left to right (vertical)
+        case 0:
           bar = { x: -thickness, y: Math.random() * (canvas.height - length), width: thickness, height: length, dx: speed, dy: 0 };
           break;
-        case 1: // right to left (vertical)
+        case 1:
           bar = { x: canvas.width, y: Math.random() * (canvas.height - length), width: thickness, height: length, dx: -speed, dy: 0 };
           break;
-        case 2: // top to bottom (horizontal)
+        case 2:
           bar = { x: Math.random() * (canvas.width - length), y: -thickness, width: length, height: thickness, dx: 0, dy: speed };
           break;
-        case 3: // bottom to top (horizontal)
+        case 3:
           bar = { x: Math.random() * (canvas.width - length), y: canvas.height, width: length, height: thickness, dx: 0, dy: -speed };
           break;
       }
@@ -343,16 +341,26 @@
 
       if (!gameStarted) return;
 
-      // Área de jogo
       ctx.strokeStyle = 'white';
       ctx.lineWidth = 2;
       ctx.strokeRect(boundary.x, boundary.y, boundary.width, boundary.height);
 
-      // Jogador
+      const now = Date.now();
+      const inCooldown = now - player.lastImmuneEnd < player.immuneCooldown;
+      const cooldownRemaining = Math.max(0, player.immuneCooldown - (now - player.lastImmuneEnd));
+      const immunityRemaining = player.immune ? Math.max(0, player.immuneDuration - (now - player.immuneTime)) : 0;
+
       ctx.beginPath();
       ctx.arc(player.x, player.y, player.radius, 0, Math.PI * 2);
-      ctx.fillStyle = player.immune ? 'yellow' : 'white';
+      if (player.immune) {
+        ctx.fillStyle = 'yellow';
+      } else if (inCooldown) {
+        ctx.fillStyle = '#444';
+      } else {
+        ctx.fillStyle = 'white';
+      }
       ctx.fill();
+
       if (player.immune) {
         ctx.beginPath();
         ctx.arc(player.x, player.y, player.radius + 10, 0, Math.PI * 2);
@@ -361,17 +369,10 @@
         ctx.stroke();
       }
 
-      // Barras
       ctx.fillStyle = 'red';
       bars.forEach(bar => {
         ctx.fillRect(bar.x, bar.y, bar.width, bar.height);
       });
-
-      // HUD
-      const now = Date.now();
-      const inCooldown = now - player.lastImmuneEnd < player.immuneCooldown;
-      const cooldownRemaining = Math.max(0, player.immuneCooldown - (now - player.lastImmuneEnd));
-      const immunityRemaining = player.immune ? Math.max(0, player.immuneDuration - (now - player.immuneTime)) : 0;
 
       ctx.fillStyle = 'white';
       ctx.font = '24px Arial';
