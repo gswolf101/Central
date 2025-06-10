@@ -101,7 +101,7 @@
     Imunidade: Barra de espaço<br />
     Reiniciar: Enter
   </div>
-  <div id="version">Versão 1.2</div>
+  <div id="version">Versão 1.3</div>
 
   <script>
     document.addEventListener('contextmenu', (e) => {
@@ -192,7 +192,7 @@
       if (e.key in keys) {
         keys[e.key] = true;
 
-        if (e.key === 'e' && !player.immune && Date.now() - player.lastImmuneEnd >= player.immuneCooldown) {
+        if (e.key === ' ' && !player.immune && Date.now() - player.lastImmuneEnd >= player.immuneCooldown) {
           player.immune = true;
           player.immuneTime = Date.now();
         }
@@ -290,12 +290,162 @@
       let dx = 0;
       let dy = 0;
 
-彼此
+      if (keys.ArrowUp || keys.w || keys.W) dy -= 1;
+      if (keys.ArrowDown || keys.s || keys.S) dy += 1;
+      if (keys.ArrowLeft || keys.a || keys.A) dx -= 1;
+      if (keys.ArrowRight || keys.d || keys.D) dx += 1;
 
-System: I notice there's an error in the code you provided. In the `keydown` event listener, there's a condition checking for the key `'e'` to trigger immunity:
+      if (dx !== 0 || dy !== 0) {
+        const len = Math.hypot(dx, dy);
+        dx = (dx / len) * player.speed;
+        dy = (dy / len) * player.speed;
 
-```javascript
-if (e.key === ' ' && !player.immune && Date.now() - player.lastImmuneEnd >= player.immuneCooldown) {
-  player.immune = true;
-  player.immuneTime = Date.now();
-}
+        player.x += dx;
+        player.y += dy;
+
+        player.x = Math.max(boundary.x + player.radius, Math.min(player.x, boundary.x + boundary.width - player.radius));
+        player.y = Math.max(boundary.y + player.radius, Math.min(player.y, boundary.y + boundary.height - player.radius));
+      }
+    }
+
+    function moveBars(dt) {
+      bars.forEach(bar => {
+        bar.x += bar.dx * dt;
+        bar.y += bar.dy * dt;
+      });
+    }
+
+    function checkCollisions() {
+      if (player.immune) return;
+      for (let bar of bars) {
+        if (
+          player.x + player.radius > bar.x &&
+          player.x - player.radius < bar.x + bar.width &&
+          player.y + player.radius > bar.y &&
+          player.y - player.radius < bar.y + bar.height
+        ) {
+          gameOver = true;
+        }
+      }
+    }
+
+    function manageImmunity() {
+      if (player.immune && Date.now() - player.immuneTime > player.immuneDuration) {
+        player.immune = false;
+        player.lastImmuneEnd = Date.now();
+      }
+    }
+
+    function draw() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      if (!gameStarted) return;
+
+      ctx.strokeStyle = 'white';
+      ctx.lineWidth = 2;
+      ctx.strokeRect(boundary.x, boundary.y, boundary.width, boundary.height);
+
+      const now = Date.now();
+      const inCooldown = now - player.lastImmuneEnd < player.immuneCooldown;
+      const cooldownRemaining = Math.max(0, player.immuneCooldown - (now - player.lastImmuneEnd));
+      const immunityRemaining = player.immune ? Math.max(0, player.immuneDuration - (now - player.immuneTime)) : 0;
+
+      ctx.beginPath();
+      ctx.arc(player.x, player.y, player.radius, 0, Math.PI * 2);
+      if (player.immune) {
+        ctx.fillStyle = 'yellow';
+      } else if (inCooldown) {
+        ctx.fillStyle = '#444';
+      } else {
+        ctx.fillStyle = 'white';
+      }
+      ctx.fill();
+
+      if (player.immune) {
+        ctx.beginPath();
+        ctx.arc(player.x, player.y, player.radius + 10, 0, Math.PI * 2);
+        ctx.strokeStyle = 'yellow';
+        ctx.lineWidth = 3;
+        ctx.stroke();
+      }
+
+      ctx.fillStyle = 'red';
+      bars.forEach(bar => {
+        ctx.fillRect(bar.x, bar.y, bar.width, bar.height);
+      });
+
+      ctx.fillStyle = 'white';
+      ctx.font = '24px Arial';
+      ctx.textAlign = 'left';
+      ctx.fillText(`Pontuação: ${score}`, 10, 30);
+      ctx.fillStyle = 'yellow';
+      ctx.font = '18px Arial';
+      ctx.fillText(`Imunidade: ${(immunityRemaining / 1000).toFixed(1)}s`, 180, 28);
+      ctx.fillStyle = inCooldown ? 'gray' : 'green';
+      ctx.fillText(`Recarga: ${(cooldownRemaining / 1000).toFixed(1)}s`, 340, 28);
+
+      if (gameOver) {
+        finalScoreText.textContent = `Pontuação Final: ${score}`;
+        gameOverScreen.classList.remove('hidden');
+      }
+    }
+
+    let lastTime = 0;
+    let lastFrame = 0;
+
+    function gameLoop(timestamp) {
+      if (!gameStarted || gameOver) {
+        draw();
+        return;
+      }
+
+      const dt = (timestamp - lastFrame) / 16.67;
+      lastFrame = timestamp;
+
+      let barInterval;
+      let numBars;
+
+      // Define intervalo e número de barras com base na pontuação
+      if (score <= 10) {
+        barInterval = 4000; // 4 segundos
+        numBars = 2;
+      } else if (score <= 25) {
+        barInterval = 3000; // 3 segundos
+        numBars = 2;
+      } else if (score <= 35) {
+        barInterval = 4000; // 4 segundos
+        numBars = 3;
+      } else if (score <= 45) {
+        barInterval = 3800; // 3,8 segundos
+        numBars = 3;
+      } else if (score <= 55) {
+        barInterval = 4000; // 4 segundos
+        numBars = 4;
+      } else {
+        barInterval = 3500; // 3,5 segundos
+        numBars = 3;
+      }
+
+      // Gera barras conforme o intervalo e número definido
+      if (timestamp - lastTime > barInterval) {
+        for (let i = 0; i < numBars; i++) {
+          createBar();
+        }
+        lastTime = timestamp;
+        score++;
+      }
+
+      movePlayer(dt);
+      moveBars(dt);
+      manageImmunity();
+      checkCollisions();
+      draw();
+
+      requestAnimationFrame(gameLoop);
+    }
+
+    updateRanking();
+    requestAnimationFrame(gameLoop);
+  </script>
+</body>
+</html>
