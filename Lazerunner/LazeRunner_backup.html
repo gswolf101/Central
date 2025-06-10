@@ -101,7 +101,7 @@
     Imunidade: Barra de espaço<br />
     Reiniciar: Enter
   </div>
-  <div id="version">Versão 1.2</div>
+  <div id="version">Versão 1.3</div>
 
   <script>
     document.addEventListener('contextmenu', (e) => {
@@ -123,39 +123,6 @@
     const playButton = document.getElementById('playButton');
     const restartButton = document.getElementById('restartButton');
     const saveRankingButton = document.getElementById('saveRankingButton');
-    const finalScoreText = document.getElementById('finalScore');
-
-    let gameStarted = false;
-    let scoreSaved = false;
-
-    const boundary = {
-      x: 50,
-      y: 50,
-      width: canvas.width - 100,
-      height: canvas.height - 100
-    };
-
-      } else if (inCooldown) {
-        ctx.fillStyle = '#444';
-      } else {
-        ctx.fillStyle = 'white';
-      }
-      ctx.fill();
-
-      if (player.immune) {
-        ctx.beginPath();
-        ctx.arc(player.x, player.y, player.radius + 10, 0, Math.PI * 2);
-        ctx.strokeStyle = 'yellow';
-        ctx.lineWidth = 3;
-        ctx.stroke();
-      }
-
-      ctx.fillStyle = 'red';
-      bars.forEach(bar => {
-        ctx.fillRect(bar.x, bar.y, bar.width, bar.height);
-      });
-
-      ctx.fillStyle = 'white';
       ctx.font = '24px Arial';
       ctx.textAlign = 'left';
       ctx.fillText(`Pontuação: ${score}`, 10, 30);
@@ -183,14 +150,35 @@
       const dt = (timestamp - lastFrame) / 16.67;
       lastFrame = timestamp;
 
-      const baseInterval = 2500;
-      const speedUp = Math.min(score * 30, 1500);
-      const barInterval = baseInterval - speedUp;
+      let barInterval;
+      let numBars;
 
+      // Define intervalo e número de barras com base na pontuação
+      if (score <= 10) {
+        barInterval = 4000; // 4 segundos
+        numBars = 2;
+      } else if (score <= 25) {
+        barInterval = 3000; // 3 segundos
+        numBars = 2;
+      } else if (score <= 35) {
+        barInterval = 4000; // 4 segundos
+        numBars = 3;
+      } else if (score <= 45) {
+        barInterval = 3800; // 3,8 segundos
+        numBars = 3;
+      } else if (score <= 55) {
+        barInterval = 4000; // 4 segundos
+        numBars = 4;
+      } else {
+        barInterval = 3500; // 3,5 segundos
+        numBars = 3;
+      }
+
+      // Gera barras conforme o intervalo e número definido
       if (timestamp - lastTime > barInterval) {
-        createBar();
-        if (score >= 10) createBar();
-        if (score >= 25) createBar();
+        for (let i = 0; i < numBars; i++) {
+          createBar();
+        }
         lastTime = timestamp;
         score++;
       }
