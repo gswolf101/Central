@@ -402,14 +402,32 @@
       const dt = (timestamp - lastFrame) / 16.67;
       lastFrame = timestamp;
 
-      const baseInterval = 2500;
-      const speedUp = Math.min(score * 30, 1500);
-      const barInterval = baseInterval - speedUp;
+      let barInterval;
+      let numBars = 1; // Padrão: 1 barra
 
+      // Define intervalo e número de barras com base na pontuação
+      if (score <= 10) {
+        barInterval = 5000; // 5 segundos
+        numBars = 1;
+      } else if (score <= 35) {
+        barInterval = 3000; // 3 segundos
+        numBars = 2;
+      } else if (score <= 45) {
+        barInterval = 4000; // 4 segundos
+        numBars = 3;
+      } else if (score >= 60) {
+        barInterval = 3500; // 3,5 segundos
+        numBars = 3;
+      } else {
+        barInterval = 5000; // Padrão para 46-59: 5 segundos
+        numBars = 1;
+      }
+
+      // Gera barras conforme o intervalo e número definido
       if (timestamp - lastTime > barInterval) {
-        createBar();
-        if (score >= 10) createBar();
-        if (score >= 25) createBar();
+        for (let i = 0; i < numBars; i++) {
+          createBar();
+        }
         lastTime = timestamp;
         score++;
       }
