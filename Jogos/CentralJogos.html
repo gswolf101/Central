@@ -6,41 +6,78 @@
     <title>Jogos do Wolf</title>
     <style>
         body {
+            margin: 0;
+            height: 100vh;
             background-color: black;
-            text-decoration: none;
             color: white;
-            margin: 20%;
+            display: flex;
+            flex-direction: column;
         }
-        #botaodejogo {
-            padding: 5px;
-            float: left;
-        }
-
-        #botaodejogo a {
-            border: 2px white solid;
-            text-decoration: none;
-            color: white;
-        }
-
+        /* Voltar fixo no canto superior esquerdo */
         #Voltar {
-            float: left;
+            position: absolute;
+            top: 10px;
+            left: 10px;
         }
         #Voltar a {
             text-decoration: none;
             color: white;
-            margin-left: 100%;
         }
 
+        /* Centra o conteúdo da lista de jogos */
+        main {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            text-align: center;
+        }
+        ul li {
+            margin: 10px 0;
+        }
+
+        /* Estilo padrão para links de jogos */
+        .game-link {
+            display: inline-block;
+            padding: 10px 20px;
+            border: 2px solid white;
+            text-decoration: none;
+            color: white;
+            font-size: 24px;
+            border-radius: 5px;
+            transition: background-color 0.2s, color 0.2s;
+        }
+        .game-link:hover {
+            background-color: white;
+            color: black;
+        }
     </style>
 </head>
 <body>
     <div id="Voltar">
-        <a href="../index.html"><h3><b>Voltar</b></h3></a>
+        <a href="../index.html"><h3><b>&larr; Voltar</b></h3></a>
     </div>
-    <div id = "botaodejogo">
-        <a href="Lazerunner/LazeRunner.html"><i><h1>LazerRunner</h1></i></a>
-    </div>
-    
-    
+    <main>
+        <ul>
+            <li>
+                <a href="Lazerunner/LazeRunner.html" class="game-link">
+                    LazerRunner
+                </a>
+            </li>
+            <!-- Adicione aqui outros jogos -->
+            <!--
+            <li>
+                <a href="OutroJogo/OutroJogo.html" class="game-link">
+                    Nome do Outro Jogo
+                </a>
+            </li>
+            -->
+        </ul>
+    </main>
 </body>
 </html>
