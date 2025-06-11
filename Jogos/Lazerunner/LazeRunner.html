@@ -142,11 +142,7 @@
 
     let gameStarted = false;
     let scoreSaved = false;
-    const boundary = {
-      x: 70, y: 70,
-      width: canvas.width - 140,
-      height: canvas.height - 140
-    };
+    const boundary = { x: 70, y: 70, width: canvas.width - 140, height: canvas.height - 140 };
     const player = {
       x: canvas.width / 2,
       y: canvas.height / 2,
@@ -162,13 +158,13 @@
     let score = 0;
     let gameOver = false;
     let keys = {
-      ArrowUp:false, ArrowDown:false,
-      ArrowLeft:false, ArrowRight:false,
-      w:false, W:false,
-      s:false, S:false,
-      a:false, A:false,
-      d:false, D:false,
-      ' ':false, Enter:false
+      ArrowUp: false, ArrowDown: false,
+      ArrowLeft: false, ArrowRight: false,
+      w: false, W: false,
+      s: false, S: false,
+      a: false, A: false,
+      d: false, D: false,
+      ' ': false, Enter: false
     };
     let rankings = JSON.parse(localStorage.getItem('rankings')) || [];
 
@@ -184,10 +180,10 @@
       const list = document.getElementById('rankingList');
       list.innerHTML = '';
       rankings.sort((a, b) => b.score - a.score)
-              .slice(0,10)
+              .slice(0, 10)
               .forEach(e => {
         const li = document.createElement('li');
-        li.textContent = ${e.name} - ${e.score};
+        li.textContent = `${e.name} - ${e.score}`;
         list.appendChild(li);
       });
     }
@@ -195,15 +191,16 @@
     document.addEventListener('keydown', e => {
       if (e.key in keys) {
         keys[e.key] = true;
+
         if (e.key === ' ' && !player.immune && Date.now() - player.lastImmuneEnd >= player.immuneCooldown) {
           player.immune = true;
           player.immuneTime = Date.now();
         }
-        if (e.key === 'Enter' && gameOver) {
-          resetGame();
-        }
+
+        if (e.key === 'Enter' && gameOver) resetGame();
       }
     });
+
     document.addEventListener('keyup', e => {
       if (e.key in keys) keys[e.key] = false;
     });
@@ -213,12 +210,15 @@
       gameStarted = true;
       resetGame();
     });
+
     restartButton.addEventListener('click', () => {
       gameOverScreen.classList.add('hidden');
       resetGame();
     });
+
     saveRankingButton.addEventListener('click', () => {
       if (scoreSaved) return;
+
       const name = prompt('Digite seu nome:');
       if (name && name.trim()) {
         rankings.push({ name: name.trim(), score });
@@ -228,12 +228,14 @@
         saveRankingButton.disabled = true;
         saveRankingButton.textContent = 'Salvo';
         alert('Pontuação salva!');
-      } else if (name !== null) alert('Nome inválido.');
+      } else if (name !== null) {
+        alert('Nome inválido.');
+      }
     });
 
     function resetGame() {
-      player.x = canvas.width/2;
-      player.y = canvas.height/2;
+      player.x = canvas.width / 2;
+      player.y = canvas.height / 2;
       player.immune = false;
       score = 0;
       bars = [];
@@ -241,52 +243,66 @@
       scoreSaved = false;
       saveRankingButton.disabled = false;
       saveRankingButton.textContent = 'Salvar no Ranking';
-      lastTime = 0;
+      lastFrameTime = lastBarTime = 0;
       gameOverScreen.classList.add('hidden');
       requestAnimationFrame(gameLoop);
     }
 
     function createBar() {
-      const dir = Math.floor(Math.random()*4);
+      const dir = Math.floor(Math.random() * 4);
       const thickness = 30;
-      const length = Math.random()*400 + 200;
-      const speed = 2 + Math.random()*1.8;
+      const length = Math.random() * 400 + 200;
+      const speed = 2 + Math.random() * 1.8;
       let bar;
       switch (dir) {
-        case 0: bar = { x:-thickness, y:Math.random()*(canvas.height-length), width:thickness, height:length, dx:speed, dy:0 }; break;
-        case 1: bar = { x:canvas.width, y:Math.random()*(canvas.height-length), width:thickness, height:length, dx:-speed, dy:0 }; break;
-        case 2: bar = { x:Math.random()*(canvas.width-length), y:-thickness, width:length, height:thickness, dx:0, dy:speed }; break;
-        case 3: bar = { x:Math.random()*(canvas.width-length), y:canvas.height, width:length, height:thickness, dx:0, dy:-speed }; break;
+        case 0:
+          bar = { x: -thickness, y: Math.random() * (canvas.height - length), width: thickness, height: length, dx: speed, dy: 0 };
+          break;
+        case 1:
+          bar = { x: canvas.width, y: Math.random() * (canvas.height - length), width: thickness, height: length, dx: -speed, dy: 0 };
+          break;
+        case 2:
+          bar = { x: Math.random() * (canvas.width - length), y: -thickness, width: length, height: thickness, dx: 0, dy: speed };
+          break;
+        case 3:
+          bar = { x: Math.random() * (canvas.width - length), y: canvas.height, width: length, height: thickness, dx: 0, dy: -speed };
+          break;
       }
       bars.push(bar);
     }
 
     function movePlayer(dt) {
       let dx = 0, dy = 0;
-      if (keys.ArrowUp||keys.w) dy--;
-      if (keys.ArrowDown||keys.s) dy++;
-      if (keys.ArrowLeft||keys.a) dx--;
-      if (keys.ArrowRight||keys.d) dx++;
-      if (dx||dy) {
-        const len = Math.hypot(dx,dy);
-        player.x += dx/len * player.speed;
-        player.y += dy/len * player.speed;
-        player.x = Math.max(boundary.x+player.radius, Math.min(player.x, boundary.x+boundary.width-player.radius));
-        player.y = Math.max(boundary.y+player.radius, Math.min(player.y, boundary.y+boundary.height-player.radius));
+      if (keys.ArrowUp || keys.w) dy--;
+      if (keys.ArrowDown || keys.s) dy++;
+      if (keys.ArrowLeft || keys.a) dx--;
+      if (keys.ArrowRight || keys.d) dx++;
+
+      if (dx || dy) {
+        const len = Math.hypot(dx, dy);
+        player.x += (dx / len) * player.speed;
+        player.y += (dy / len) * player.speed;
+        player.x = Math.max(boundary.x + player.radius, Math.min(player.x, boundary.x + boundary.width - player.radius));
+        player.y = Math.max(boundary.y + player.radius, Math.min(player.y, boundary.y + boundary.height - player.radius));
       }
     }
 
     function moveBars(dt) {
-      bars.forEach(b => { b.x += b.dx*dt; b.y += b.dy*dt; });
+      bars.forEach(b => {
+        b.x += b.dx * dt;
+        b.y += b.dy * dt;
+      });
     }
 
     function checkCollisions() {
       if (player.immune) return;
       for (const b of bars) {
-        if (player.x+player.radius > b.x &&
-            player.x-player.radius < b.x+b.width &&
-            player.y+player.radius > b.y &&
-            player.y-player.radius < b.y+b.height) {
+        if (
+          player.x + player.radius > b.x &&
+          player.x - player.radius < b.x + b.width &&
+          player.y + player.radius > b.y &&
+          player.y - player.radius < b.y + b.height
+        ) {
           gameOver = true;
           break;
         }
@@ -301,11 +317,12 @@
     }
 
     function draw() {
-      ctx.clearRect(0,0,canvas.width,canvas.height);
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
       if (!gameStarted) return;
+
       ctx.strokeStyle = 'white';
       ctx.lineWidth = 2;
-      ctx.strokeRect(boundary.x,boundary.y,boundary.width,boundary.height);
+      ctx.strokeRect(boundary.x, boundary.y, boundary.width, boundary.height);
 
       const now = Date.now();
       const inCooldown = now - player.lastImmuneEnd < player.immuneCooldown;
@@ -313,45 +330,50 @@
       const immunityRemaining = player.immune ? Math.max(0, player.immuneDuration - (now - player.immuneTime)) : 0;
 
       ctx.beginPath();
-      ctx.arc(player.x,player.y,player.radius,0,2*Math.PI);
+      ctx.arc(player.x, player.y, player.radius, 0, Math.PI * 2);
       ctx.fillStyle = player.immune ? 'yellow' : inCooldown ? '#444' : 'white';
       ctx.fill();
+
       if (player.immune) {
         ctx.beginPath();
-        ctx.arc(player.x,player.y,player.radius+10,0,2*Math.PI);
+        ctx.arc(player.x, player.y, player.radius + 10, 0, Math.PI * 2);
         ctx.strokeStyle = 'yellow';
         ctx.lineWidth = 3;
         ctx.stroke();
       }
 
       ctx.fillStyle = 'red';
-      bars.forEach(b => ctx.fillRect(b.x,b.y,b.width,b.height));
+      bars.forEach(b => ctx.fillRect(b.x, b.y, b.width, b.height));
 
       ctx.fillStyle = 'white';
       ctx.font = '24px Arial';
       ctx.textAlign = 'left';
-      ctx.fillText(Pontuação: ${score}, 10, 30);
+      ctx.fillText(`Pontuação: ${score}`, 10, 30);
 
       ctx.fillStyle = 'yellow';
       ctx.font = '18px Arial';
-      ctx.fillText(Imunidade: ${(immunityRemaining/1000).toFixed(1)}s, 180, 28);
+      ctx.fillText(`Imunidade: ${(immunityRemaining / 1000).toFixed(1)}s`, 180, 28);
 
       ctx.fillStyle = inCooldown ? 'gray' : 'green';
-      ctx.fillText(Recarga: ${(cooldownRemaining/1000).toFixed(1)}s, 340,28);
+      ctx.fillText(`Recarga: ${(cooldownRemaining / 1000).toFixed(1)}s`, 340, 28);
 
       if (gameOver) {
-        finalScoreText.textContent = Pontuação Final: ${score};
+        finalScoreText.textContent = `Pontuação Final: ${score}`;
         gameOverScreen.classList.remove('hidden');
       }
     }
 
-    let lastTime = 0;
-    function gameLoop(ts) {
+    let lastFrameTime = 0;
+    let lastBarTime = 0;
+
+    function gameLoop(timestamp) {
       if (!gameStarted || gameOver) {
-        draw(); return;
+        draw();
+        return;
       }
-      const dt = (ts - lastTime) / 16.67;
-      lastTime = ts;
+
+      const dt = (timestamp - lastFrameTime) / 16.67;
+      lastFrameTime = timestamp;
 
       let barInterval, numBars;
       if (score <= 10) { barInterval = 4000; numBars = 2; }
@@ -361,8 +383,9 @@
       else if (score <= 55) { barInterval = 4000; numBars = 4; }
       else { barInterval = 3500; numBars = 3; }
 
-      if (ts - lastTime > barInterval) {
-        for (let i=0; i<numBars; i++) createBar();
+      if (timestamp - lastBarTime > barInterval) {
+        for (let i = 0; i < numBars; i++) createBar();
+        lastBarTime = timestamp;
         score++;
       }
 
@@ -376,7 +399,11 @@
     }
 
     updateRanking();
-    requestAnimationFrame(ts => { lastTime=ts; gameLoop(ts); });
+    requestAnimationFrame(ts => {
+      lastFrameTime = ts;
+      lastBarTime = ts;
+      gameLoop(ts);
+    });
   </script>
 </body>
 </html>
