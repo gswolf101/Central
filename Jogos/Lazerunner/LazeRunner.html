@@ -6,56 +6,101 @@
   <title>Lazer Runner</title>
   <style>
     body {
-      margin: 0;
-      background: #000;
-      color: white;
-      font-family: Arial, sans-serif;
       display: flex;
       justify-content: center;
       align-items: flex-start;
       gap: 20px;
       padding: 20px;
-    }
-    #container {
-      position: relative;
-      width: 900px;
-      height: 900px;
+      margin: 0;
+      background-color: #000;
+      color: white;
+      font-family: Arial, sans-serif;
     }
     canvas {
+      border: 2px solid #fff;
+    }
+    #ranking {
+      width: 250px;
+    }
+    #ranking h2 {
+      margin-top: 0;
+    }
+    #footer {
+      position: absolute;
+      bottom: 10px;
+      left: 10px;
+      font-size: 24px;
+      color: #aaa;
+    }
+    #version {
+      position: absolute;
+      bottom: 10px;
+      right: 10px;
+      font-size: 14px;
+      color: #aaa;
+    }
+    #startScreen, #gameOverScreen {
       position: absolute;
       top: 0;
       left: 0;
-      border: 2px solid #fff;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.8);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      color: white;
+      font-size: 48px;
+      text-align: center;
     }
-    /* Rankings, telas, botões e footer continuam conforme seu estilo anterior */
+    #startScreen.hidden, #gameOverScreen.hidden {
+      display: none;
+    }
+    #startScreen button, #gameOverScreen button {
+      margin: 20px;
+      padding: 10px 20px;
+      font-size: 24px;
+      cursor: pointer;
+      background-color: white;
+      color: black;
+      border: none;
+      border-radius: 5px;
+    }
+    #startScreen button:hover, #gameOverScreen button:hover:not(:disabled) {
+      background-color: #ccc;
+    }
+    #saveRankingButton:disabled {
+      background-color: #888;
+      color: #ccc;
+      cursor: not-allowed;
+      opacity: 0.6;
+    }
     #backButton {
       position: absolute;
       top: 10px;
       left: 10px;
       padding: 8px 16px;
       font-size: 18px;
+      cursor: pointer;
       background-color: white;
       color: black;
       border: none;
       border-radius: 5px;
-      cursor: pointer;
-      z-index: 10;
+      z-index: 1000;
+    }
+    #backButton:hover {
+      background-color: #ccc;
     }
   </style>
 </head>
 <body>
   <button id="backButton" onclick="window.location.href='../CentralJogos.html'">Voltar</button>
-
-  <div id="container">
-    <canvas id="canvasBg" width="900" height="900"></canvas>
-    <canvas id="canvasTrail" width="900" height="900"></canvas>
-  </div>
-
+  <canvas id="gameCanvas" width="900" height="900"></canvas>
   <div id="ranking">
     <h2>Ranking</h2>
     <ol id="rankingList"></ol>
   </div>
-
   <div id="startScreen">
     <h1>LazerRunner</h1>
     <button id="playButton">Play</button>
@@ -67,14 +112,14 @@
     <button id="saveRankingButton">Salvar no Ranking</button>
   </div>
   <div id="footer">
-    Mover: Setas ou WASD<br />
-    Imunidade: Barra de espaço<br />
+    Mover: Setas ou WASD<br>
+    Imunidade: Barra de espaço<br>
     Reiniciar: Enter
   </div>
   <div id="version">Versão 1.3</div>
 
   <script>
-    // Previnindo clique direito e F12
+    // Proteção básica
     document.addEventListener('contextmenu', e => { e.preventDefault(); alert('Clique com o botão direito desativado.'); });
     document.addEventListener('keydown', e => {
       if (e.key === 'F12' || e.keyCode === 123) {
@@ -83,12 +128,8 @@
       }
     });
 
-    // Canvas background e trail
-    const bg = document.getElementById('canvasBg');
-    const trail = document.getElementById('canvasTrail');
-    const bgCtx = bg.getContext('2d');
-    const trailCtx = trail.getContext('2d');
-
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas.getContext('2d');
     const startScreen = document.getElementById('startScreen');
     const gameOverScreen = document.getElementById('gameOverScreen');
     const playButton = document.getElementById('playButton');
@@ -96,12 +137,11 @@
     const saveRankingButton = document.getElementById('saveRankingButton');
     const finalScoreText = document.getElementById('finalScore');
 
-    // Variáveis de jogo
     let gameStarted = false, scoreSaved = false;
-    const boundary = { x:70, y:70, width: bg.width - 140, height: bg.height - 140 };
+    const boundary = { x:70, y:70, width:canvas.width-140, height:canvas.height-140 };
     const player = {
-      x: bg.width/2,
-      y: bg.height/2,
+      x: canvas.width/2,
+      y: canvas.height/2,
       radius: 20,
       speed: 4,
       immune: false,
@@ -111,26 +151,33 @@
       lastImmuneEnd: 0
     };
     let bars = [], score = 0, gameOver = false;
-    let keys = { ArrowUp:false, ArrowDown:false, ArrowLeft:false, ArrowRight:false,
-                 w:false, s:false, a:false, d:false, ' ':false, Enter:false };
+    let keys = {
+      ArrowUp:false, ArrowDown:false,
+      ArrowLeft:false, ArrowRight:false,
+      w:false, W:false, s:false, S:false,
+      a:false, A:false, d:false, D:false,
+      ' ':false, Enter:false
+    };
     let rankings = JSON.parse(localStorage.getItem('rankings')) || [];
 
-    // Funções de ranking
     function saveRanking() {
-      try { localStorage.setItem('rankings', JSON.stringify(rankings)); }
-      catch (e) { alert('Erro ao salvar ranking.'); }
+      try {
+        localStorage.setItem('rankings', JSON.stringify(rankings));
+      } catch {
+        alert('Erro ao salvar a pontuação.');
+      }
     }
+
     function updateRanking() {
       const list = document.getElementById('rankingList');
       list.innerHTML = '';
-      rankings.sort((a,b) => b.score - a.score).slice(0,10).forEach(e => {
+      rankings.sort((a,b)=>b.score-a.score).slice(0,10).forEach(e => {
         const li = document.createElement('li');
         li.textContent = `${e.name} - ${e.score}`;
         list.appendChild(li);
       });
     }
 
-    // Controles
     document.addEventListener('keydown', e => {
       if (e.key in keys) {
         keys[e.key] = true;
@@ -156,12 +203,14 @@
         saveRankingButton.disabled = true;
         saveRankingButton.textContent = 'Salvo';
         alert('Pontuação salva!');
-      } else if (name !== null) alert('Nome inválido.');
+      } else if (name !== null) {
+        alert('Nome inválido.');
+      }
     });
 
     function resetGame() {
-      player.x = bg.width/2;
-      player.y = bg.height/2;
+      player.x = canvas.width/2;
+      player.y = canvas.height/2;
       player.immune = false;
       score = 0;
       bars = [];
@@ -181,30 +230,22 @@
       const speed = 2 + Math.random()*1.8;
       let bar;
       switch(dir) {
-        case 0:
-          bar = { x:-thickness, y:Math.random()*(bg.height-length), width:thickness, height:length, dx:speed, dy:0 };
-          break;
-        case 1:
-          bar = { x:bg.width, y:Math.random()*(bg.height-length), width:thickness, height:length, dx:-speed, dy:0 };
-          break;
-        case 2:
-          bar = { x:Math.random()*(bg.width-length), y:-thickness, width:length, height:thickness, dx:0, dy:speed };
-          break;
-        case 3:
-          bar = { x:Math.random()*(bg.width-length), y:bg.height, width:length, height:thickness, dx:0, dy:-speed };
-          break;
+        case 0: bar = { x:-thickness, y:Math.random()*(canvas.height-length), width:thickness, height:length, dx:speed, dy:0 }; break;
+        case 1: bar = { x:canvas.width, y:Math.random()*(canvas.height-length), width:thickness, height:length, dx:-speed, dy:0 }; break;
+        case 2: bar = { x:Math.random()*(canvas.width-length), y:-thickness, width:length, height:thickness, dx:0, dy:speed }; break;
+        case 3: bar = { x:Math.random()*(canvas.width-length), y:canvas.height, width:length, height:thickness, dx:0, dy:-speed }; break;
       }
       bars.push(bar);
     }
 
     function movePlayer(dt) {
-      let dx = 0, dy = 0;
-      if (keys.ArrowUp || keys.w) dy--;
-      if (keys.ArrowDown || keys.s) dy++;
-      if (keys.ArrowLeft || keys.a) dx--;
-      if (keys.ArrowRight || keys.d) dx++;
-      if (dx || dy) {
-        const len = Math.hypot(dx, dy);
+      let dx=0, dy=0;
+      if (keys.ArrowUp||keys.w) dy--;
+      if (keys.ArrowDown||keys.s) dy++;
+      if (keys.ArrowLeft||keys.a) dx--;
+      if (keys.ArrowRight||keys.d) dx++;
+      if (dx||dy) {
+        const len = Math.hypot(dx,dy);
         player.x += (dx/len)*player.speed;
         player.y += (dy/len)*player.speed;
         player.x = Math.max(boundary.x+player.radius, Math.min(player.x, boundary.x+boundary.width-player.radius));
@@ -219,10 +260,8 @@
     function checkCollisions() {
       if (player.immune) return;
       for (const b of bars) {
-        if (player.x + player.radius > b.x &&
-            player.x - player.radius < b.x + b.width &&
-            player.y + player.radius > b.y &&
-            player.y - player.radius < b.y + b.height) {
+        if (player.x+player.radius > b.x && player.x-player.radius < b.x+b.width &&
+            player.y+player.radius > b.y && player.y-player.radius < b.y+b.height) {
           gameOver = true;
           break;
         }
@@ -230,58 +269,67 @@
     }
 
     function manageImmunity() {
-      if (player.immune && Date.now() - player.immuneTime > player.immuneDuration) {
+      if (player.immune && Date.now()-player.immuneTime > player.immuneDuration) {
         player.immune = false;
         player.lastImmuneEnd = Date.now();
       }
     }
 
-    function drawBg() {
-      bgCtx.clearRect(0, 0, bg.width, bg.height);
-      bgCtx.fillStyle = '#000';
-      bgCtx.fillRect(0, 0, bg.width, bg.height);
-      bgCtx.strokeStyle = 'white';
-      bgCtx.lineWidth = 2;
-      bgCtx.strokeRect(boundary.x, boundary.y, boundary.width, boundary.height);
-      bgCtx.fillStyle = 'red';
-      bars.forEach(b => bgCtx.fillRect(b.x, b.y, b.width, b.height));
-      // HUD
-      const now = Date.now();
-      const inCd = now - player.lastImmuneEnd < player.immuneCooldown;
-      const immunityRem = player.immune ? Math.max(0, player.immuneDuration - (now - player.immuneTime)) : 0;
-      const cooldownRem = Math.max(0, player.immuneCooldown - (now - player.lastImmuneEnd));
-      bgCtx.fillStyle = 'white';
-      bgCtx.font = '24px Arial';
-      bgCtx.textAlign = 'left';
-      bgCtx.fillText(`Pontuação: ${score}`, 10, 30);
-      bgCtx.fillStyle = 'yellow';
-      bgCtx.font = '18px Arial';
-      bgCtx.fillText(`Imunidade: ${(immunityRem/1000).toFixed(1)}s`, 180, 28);
-      bgCtx.fillStyle = inCd ? 'gray' : 'green';
-      bgCtx.fillText(`Recarga: ${(cooldownRem/1000).toFixed(1)}s`, 340, 28);
-    }
+    function draw() {
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.15)';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-    function drawTrail() {
-      trailCtx.fillStyle = 'rgba(0,0,0,0.15)';
-      trailCtx.fillRect(0, 0, trail.width, trail.height);
+      if (!gameStarted) return;
+
+      ctx.strokeStyle = 'white';
+      ctx.lineWidth = 2;
+      ctx.strokeRect(boundary.x, boundary.y, boundary.width, boundary.height);
+
       const now = Date.now();
       const inCd = now - player.lastImmuneEnd < player.immuneCooldown;
-      trailCtx.beginPath();
-      trailCtx.arc(player.x, player.y, player.radius, 0, 2*Math.PI);
-      trailCtx.fillStyle = player.immune ? 'yellow' : inCd ? '#444' : 'white';
-      trailCtx.fill();
+      const immunityRemaining = player.immune ? Math.max(0, player.immuneDuration - (now - player.immuneTime)) : 0;
+      const cooldownRemaining = Math.max(0, player.immuneCooldown - (now - player.lastImmuneEnd));
+
+      ctx.beginPath();
+      ctx.arc(player.x, player.y, player.radius, 0, Math.PI*2);
+      ctx.fillStyle = player.immune ? 'yellow' : inCd ? '#444' : 'white';
+      ctx.fill();
+
       if (player.immune) {
-        trailCtx.beginPath();
-        trailCtx.arc(player.x, player.y, player.radius + 10, 0, 2*Math.PI);
-        trailCtx.strokeStyle = 'yellow';
-        trailCtx.lineWidth = 3;
-        trailCtx.stroke();
+        ctx.beginPath();
+        ctx.arc(player.x, player.y, player.radius+10, 0, Math.PI*2);
+        ctx.strokeStyle = 'yellow';
+        ctx.lineWidth = 3;
+        ctx.stroke();
+      }
+
+      ctx.fillStyle = 'red';
+      bars.forEach(b => ctx.fillRect(b.x, b.y, b.width, b.height));
+
+      ctx.fillStyle = 'white';
+      ctx.font = '24px Arial';
+      ctx.textAlign = 'left';
+      ctx.fillText(`Pontuação: ${score}`, 10, 30);
+
+      ctx.fillStyle = 'yellow';
+      ctx.font = '18px Arial';
+      ctx.fillText(`Imunidade: ${(immunityRemaining/1000).toFixed(1)}s`, 180, 28);
+
+      ctx.fillStyle = inCd ? 'gray' : 'green';
+      ctx.fillText(`Recarga: ${(cooldownRemaining/1000).toFixed(1)}s`, 340, 28);
+
+      if (gameOver) {
+        finalScoreText.textContent = `Pontuação Final: ${score}`;
+        gameOverScreen.classList.remove('hidden');
       }
     }
 
-    let lastFrameTime = 0, lastBarTime = 0;
+    let lastFrameTime=0, lastBarTime=0;
     function gameLoop(ts) {
-      if (!gameStarted) return;
+      if (!gameStarted || gameOver) {
+        draw();
+        return;
+      }
       const dt = (ts - lastFrameTime) / 16.67;
       lastFrameTime = ts;
 
@@ -294,7 +342,7 @@
       else                   { barInterval = 3500; numBars = 3; }
 
       if (ts - lastBarTime > barInterval) {
-        for (let i=0; i<numBars; i++) createBar();
+        for (let i=0;i<numBars;i++) createBar();
         lastBarTime = ts;
         score++;
       }
@@ -303,20 +351,17 @@
       moveBars(dt);
       manageImmunity();
       checkCollisions();
+      draw();
 
-      drawBg();
-      drawTrail();
-
-      if (gameOver) {
-        finalScoreText.textContent = `Pontuação Final: ${score}`;
-        gameOverScreen.classList.remove('hidden');
-      } else {
-        requestAnimationFrame(gameLoop);
-      }
+      requestAnimationFrame(gameLoop);
     }
 
     updateRanking();
-    requestAnimationFrame(ts => { lastFrameTime = ts; lastBarTime = ts; gameLoop(ts); });
+    requestAnimationFrame(ts => {
+      lastFrameTime = ts;
+      lastBarTime = ts;
+      gameLoop(ts);
+    });
   </script>
 </body>
 </html>
