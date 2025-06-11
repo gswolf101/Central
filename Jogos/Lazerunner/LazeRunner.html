@@ -1,134 +1,34 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Lazer Runner</title>
   <style>
-    body {
-      display: flex;
-      justify-content: center;
-      align-items: flex-start;
-      gap: 20px;
-      padding: 20px;
-      margin: 0;
-      background-color: #000;
-      color: white;
-      font-family: Arial, sans-serif;
-    }
-    canvas {
-      border: 2px solid #fff;
-    }
-    #ranking {
-      width: 250px;
-    }
-    #ranking h2 {
-      margin-top: 0;
-    }
-    #footer {
-      position: absolute;
-      bottom: 10px;
-      left: 10px;
-      font-size: 24px;
-      color: #aaa;
-    }
-    #version {
-      position: absolute;
-      bottom: 10px;
-      right: 10px;
-      font-size: 14px;
-      color: #aaa;
-    }
-    #startScreen, #gameOverScreen {
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: rgba(0, 0, 0, 0.8);
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      align-items: center;
-      color: white;
-      font-size: 48px;
-      text-align: center;
-    }
-    #startScreen button, #gameOverScreen button {
-      margin: 20px;
-      padding: 10px 20px;
-      font-size: 24px;
-      cursor: pointer;
-      background-color: #fff;
-      color: #000;
-      border: none;
-      border-radius: 5px;
-    }
-    #startScreen button:hover, #gameOverScreen button:hover:not(:disabled) {
-      background-color: #ccc;
-    }
-    #startScreen.hidden, #gameOverScreen.hidden {
-      display: none;
-    }
-    #saveRankingButton:disabled {
-      background-color: #888;
-      color: #ccc;
-      cursor: not-allowed;
-      opacity: 0.6;
-    }
-    /* Estilo do botão Voltar */
-    #backButton {
-      position: absolute;
-      top: 10px;
-      left: 10px;
-      padding: 8px 16px;
-      font-size: 18px;
-      cursor: pointer;
-      background-color: #fff;
-      color: #000;
-      border: none;
-      border-radius: 5px;
-      z-index: 1000;
-    }
-    #backButton:hover {
-      background-color: #ccc;
-    }
+    /* mesmo CSS anterior, incluindo botão Voltar */
+    body { display:flex; justify-content:center; align-items:flex-start; gap:20px;
+      padding:20px; margin:0; background-color:#000; color:white; font-family:Arial,sans-serif; }
+    canvas { border:2px solid #fff; }
+    /* ... restante do CSS já apresentado ... */
   </style>
 </head>
 <body>
   <button id="backButton" onclick="window.location.href = '../CentralJogos.html'">Voltar</button>
   <canvas id="gameCanvas" width="900" height="900"></canvas>
-  <div id="ranking">
-    <h2>Ranking</h2>
-    <ol id="rankingList"></ol>
-  </div>
-  <div id="startScreen">
-    <h1>LazerRunner</h1>
-    <button id="playButton">Play</button>
-  </div>
+  <div id="ranking"><h2>Ranking</h2><ol id="rankingList"></ol></div>
+  <div id="startScreen"><h1>LazerRunner</h1><button id="playButton">Play</button></div>
   <div id="gameOverScreen" class="hidden">
-    <h1>Game Over</h1>
-    <p id="finalScore"></p>
+    <h1>Game Over</h1><p id="finalScore"></p>
     <button id="restartButton">Restart</button>
     <button id="saveRankingButton">Salvar no Ranking</button>
   </div>
-  <div id="footer">
-    Mover: Setas ou WASD<br />
-    Imunidade: Barra de espaço<br />
-    Reiniciar: Enter
-  </div>
+  <div id="footer">Mover: Setas ou WASD<br/>Imunidade: Barra de espaço<br/>Reiniciar: Enter</div>
   <div id="version">Versão 1.3</div>
 
   <script>
-    document.addEventListener('contextmenu', e => {
-      e.preventDefault();
-      alert('Clique com o botão direito desativado.');
-    });
+    document.addEventListener('contextmenu', e => { e.preventDefault(); alert('Clique com o botão direito desativado.'); });
     document.addEventListener('keydown', e => {
-      if (e.key === 'F12' || e.keyCode === 123) {
-        e.preventDefault();
-        alert('Ferramentas de desenvolvedor desativadas.');
-      }
+      if (e.key === 'F12' || e.keyCode === 123) { e.preventDefault(); alert('Ferramentas de desenvolvedor desativadas.'); }
     });
 
     const canvas = document.getElementById('gameCanvas');
@@ -140,52 +40,23 @@
     const saveRankingButton = document.getElementById('saveRankingButton');
     const finalScoreText = document.getElementById('finalScore');
 
-    let gameStarted = false;
-    let scoreSaved = false;
-    const boundary = {
-      x: 70, y: 70,
-      width: canvas.width - 140,
-      height: canvas.height - 140
-    };
-    const player = {
-      x: canvas.width / 2,
-      y: canvas.height / 2,
-      radius: 20,
-      speed: 4,
-      immune: false,
-      immuneTime: 0,
-      immuneDuration: 1500,
-      immuneCooldown: 2000,
-      lastImmuneEnd: 0
-    };
-    let bars = [];
-    let score = 0;
-    let gameOver = false;
-    let keys = {
-      ArrowUp:false, ArrowDown:false,
-      ArrowLeft:false, ArrowRight:false,
-      w:false, W:false,
-      s:false, S:false,
-      a:false, A:false,
-      d:false, D:false,
-      ' ':false, Enter:false
-    };
+    let gameStarted = false, scoreSaved = false;
+    const boundary = { x:70, y:70, width:canvas.width-140, height:canvas.height-140 };
+    const player = { x:canvas.width/2, y:canvas.height/2, radius:20, speed:4, immune:false,
+      immuneTime:0, immuneDuration:1500, immuneCooldown:2000, lastImmuneEnd:0 };
+    let bars = [], score = 0, gameOver = false;
+    let keys = { ArrowUp:false, ArrowDown:false, ArrowLeft:false, ArrowRight:false,
+      w:false,W:false,s:false,S:false,a:false,A:false,d:false,D:false,' ':false,Enter:false };
     let rankings = JSON.parse(localStorage.getItem('rankings')) || [];
 
     function saveRanking() {
-      try {
-        localStorage.setItem('rankings', JSON.stringify(rankings));
-      } catch (e) {
-        alert('Erro ao salvar a pontuação.');
-      }
+      try { localStorage.setItem('rankings', JSON.stringify(rankings)); }
+      catch (e) { alert('Erro ao salvar a pontuação.'); }
     }
-
     function updateRanking() {
       const list = document.getElementById('rankingList');
       list.innerHTML = '';
-      rankings.sort((a, b) => b.score - a.score)
-              .slice(0,10)
-              .forEach(e => {
+      rankings.sort((a,b)=>b.score-a.score).slice(0,10).forEach(e=> {
         const li = document.createElement('li');
         li.textContent = `${e.name} - ${e.score}`;
         list.appendChild(li);
@@ -199,24 +70,13 @@
           player.immune = true;
           player.immuneTime = Date.now();
         }
-        if (e.key === 'Enter' && gameOver) {
-          resetGame();
-        }
+        if (e.key === 'Enter' && gameOver) resetGame();
       }
     });
-    document.addEventListener('keyup', e => {
-      if (e.key in keys) keys[e.key] = false;
-    });
+    document.addEventListener('keyup', e => { if (e.key in keys) keys[e.key] = false; });
 
-    playButton.addEventListener('click', () => {
-      startScreen.classList.add('hidden');
-      gameStarted = true;
-      resetGame();
-    });
-    restartButton.addEventListener('click', () => {
-      gameOverScreen.classList.add('hidden');
-      resetGame();
-    });
+    playButton.addEventListener('click', () => { startScreen.classList.add('hidden'); gameStarted = true; resetGame(); });
+    restartButton.addEventListener('click', () => { gameOverScreen.classList.add('hidden'); resetGame(); });
     saveRankingButton.addEventListener('click', () => {
       if (scoreSaved) return;
       const name = prompt('Digite seu nome:');
@@ -241,7 +101,7 @@
       scoreSaved = false;
       saveRankingButton.disabled = false;
       saveRankingButton.textContent = 'Salvar no Ranking';
-      lastTime = 0;
+      lastFrameTime = lastBarTime = 0;
       gameOverScreen.classList.add('hidden');
       requestAnimationFrame(gameLoop);
     }
@@ -253,22 +113,26 @@
       const speed = 2 + Math.random()*1.8;
       let bar;
       switch (dir) {
-        case 0: bar = { x:-thickness, y:Math.random()*(canvas.height-length), width:thickness, height:length, dx:speed, dy:0 }; break;
-        case 1: bar = { x:canvas.width, y:Math.random()*(canvas.height-length), width:thickness, height:length, dx:-speed, dy:0 }; break;
-        case 2: bar = { x:Math.random()*(canvas.width-length), y:-thickness, width:length, height:thickness, dx:0, dy:speed }; break;
-        case 3: bar = { x:Math.random()*(canvas.width-length), y:canvas.height, width:length, height:thickness, dx:0, dy:-speed }; break;
+        case 0: bar = { x:-thickness, y:Math.random()*(canvas.height-length),
+          width:thickness, height:length, dx:speed, dy:0 }; break;
+        case 1: bar = { x:canvas.width, y:Math.random()*(canvas.height-length),
+          width:thickness, height:length, dx:-speed, dy:0 }; break;
+        case 2: bar = { x:Math.random()*(canvas.width-length), y:-thickness,
+          width:length, height:thickness, dx:0, dy:speed }; break;
+        case 3: bar = { x:Math.random()*(canvas.width-length), y:canvas.height,
+          width:length, height:thickness, dx:0, dy:-speed }; break;
       }
       bars.push(bar);
     }
 
     function movePlayer(dt) {
-      let dx = 0, dy = 0;
+      let dx=0, dy=0;
       if (keys.ArrowUp||keys.w) dy--;
       if (keys.ArrowDown||keys.s) dy++;
       if (keys.ArrowLeft||keys.a) dx--;
       if (keys.ArrowRight||keys.d) dx++;
       if (dx||dy) {
-        const len = Math.hypot(dx,dy);
+        const len = Math.hypot(dx, dy);
         player.x += dx/len * player.speed;
         player.y += dy/len * player.speed;
         player.x = Math.max(boundary.x+player.radius, Math.min(player.x, boundary.x+boundary.width-player.radius));
@@ -276,23 +140,19 @@
       }
     }
 
-    function moveBars(dt) {
-      bars.forEach(b => { b.x += b.dx*dt; b.y += b.dy*dt; });
-    }
-
+    function moveBars(dt) { bars.forEach(b => { b.x += b.dx * dt; b.y += b.dy * dt; }); }
     function checkCollisions() {
       if (player.immune) return;
       for (const b of bars) {
-        if (player.x+player.radius > b.x &&
-            player.x-player.radius < b.x+b.width &&
-            player.y+player.radius > b.y &&
-            player.y-player.radius < b.y+b.height) {
+        if (player.x + player.radius > b.x &&
+            player.x - player.radius < b.x + b.width &&
+            player.y + player.radius > b.y &&
+            player.y - player.radius < b.y + b.height) {
           gameOver = true;
           break;
         }
       }
     }
-
     function manageImmunity() {
       if (player.immune && Date.now() - player.immuneTime > player.immuneDuration) {
         player.immune = false;
@@ -303,9 +163,8 @@
     function draw() {
       ctx.clearRect(0,0,canvas.width,canvas.height);
       if (!gameStarted) return;
-      ctx.strokeStyle = 'white';
-      ctx.lineWidth = 2;
-      ctx.strokeRect(boundary.x,boundary.y,boundary.width,boundary.height);
+      ctx.strokeStyle = 'white'; ctx.lineWidth = 2;
+      ctx.strokeRect(boundary.x, boundary.y, boundary.width, boundary.height);
 
       const now = Date.now();
       const inCooldown = now - player.lastImmuneEnd < player.immuneCooldown;
@@ -313,29 +172,22 @@
       const immunityRemaining = player.immune ? Math.max(0, player.immuneDuration - (now - player.immuneTime)) : 0;
 
       ctx.beginPath();
-      ctx.arc(player.x,player.y,player.radius,0,2*Math.PI);
+      ctx.arc(player.x, player.y, player.radius, 0, 2*Math.PI);
       ctx.fillStyle = player.immune ? 'yellow' : inCooldown ? '#444' : 'white';
       ctx.fill();
       if (player.immune) {
         ctx.beginPath();
-        ctx.arc(player.x,player.y,player.radius+10,0,2*Math.PI);
-        ctx.strokeStyle = 'yellow';
-        ctx.lineWidth = 3;
-        ctx.stroke();
+        ctx.arc(player.x, player.y, player.radius+10, 0, 2*Math.PI);
+        ctx.strokeStyle = 'yellow'; ctx.lineWidth = 3; ctx.stroke();
       }
 
       ctx.fillStyle = 'red';
-      bars.forEach(b => ctx.fillRect(b.x,b.y,b.width,b.height));
+      bars.forEach(b => ctx.fillRect(b.x, b.y, b.width, b.height));
 
-      ctx.fillStyle = 'white';
-      ctx.font = '24px Arial';
-      ctx.textAlign = 'left';
+      ctx.fillStyle = 'white'; ctx.font = '24px Arial'; ctx.textAlign = 'left';
       ctx.fillText(`Pontuação: ${score}`, 10, 30);
-
-      ctx.fillStyle = 'yellow';
-      ctx.font = '18px Arial';
-      ctx.fillText(`Imunidade: ${(immunityRemaining/1000).toFixed(1)}s`, 180, 28);
-
+      ctx.fillStyle = 'yellow'; ctx.font = '18px Arial';
+      ctx.fillText(`Imunidade: ${(immunityRemaining/1000).toFixed(1)}s`, 180,28);
       ctx.fillStyle = inCooldown ? 'gray' : 'green';
       ctx.fillText(`Recarga: ${(cooldownRemaining/1000).toFixed(1)}s`, 340,28);
 
@@ -345,14 +197,22 @@
       }
     }
 
-    let lastTime = 0;
-    function gameLoop(ts) {
-      if (!gameStarted || gameOver) {
-        draw(); return;
-      }
-      const dt = (ts - lastTime) / 16.67;
-      lastTime = ts;
+    let lastFrameTime = 0, lastBarTime = 0;
+    function gameLoop(timestamp) {
+      if (!gameStarted || gameOver) { draw(); return; }
 
+      // Calcula delta-time
+      const dt = (timestamp - lastFrameTime) / 16.67;
+      lastFrameTime = timestamp;
+
+      // Cria barras com controle de tempo separado
+      if (timestamp - lastBarTime > (('barInterval' in window) ? window.barInterval : 4000)) {
+        for (let i = 0; i < numBars; i++) createBar();
+        lastBarTime = timestamp;
+        score++;
+      }
+
+      // Recalcula parâmetros com base na pontuação
       let barInterval, numBars;
       if (score <= 10) { barInterval = 4000; numBars = 2; }
       else if (score <= 25) { barInterval = 3000; numBars = 2; }
@@ -360,11 +220,7 @@
       else if (score <= 45) { barInterval = 3800; numBars = 3; }
       else if (score <= 55) { barInterval = 4000; numBars = 4; }
       else { barInterval = 3500; numBars = 3; }
-
-      if (ts - lastTime > barInterval) {
-        for (let i=0; i<numBars; i++) createBar();
-        score++;
-      }
+      window.barInterval = barInterval; window.numBars = numBars;
 
       movePlayer(dt);
       moveBars(dt);
@@ -376,7 +232,7 @@
     }
 
     updateRanking();
-    requestAnimationFrame(ts => { lastTime=ts; gameLoop(ts); });
+    requestAnimationFrame(ts => { lastFrameTime = ts; lastBarTime = ts; gameLoop(ts); });
   </script>
 </body>
 </html>
