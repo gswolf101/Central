@@ -37,6 +37,8 @@ LazerRunner é um jogo de arcade em HTML5 onde o jogador controla um círculo br
 
 Este projeto é de código aberto e pode ser modificado ou distribuído livremente.
 
+---
+
 ## Alterações 1.1
 - **Timers**: Agora é possivel saber quanto tempo resta de imunidade e quanto tempo fala para poder utiliza-la novamente!
 - **Ranking**: Adição de um ranking ao final da partida para registrar as pontuações e poder competir com seus amigos!
@@ -46,6 +48,8 @@ Este projeto é de código aberto e pode ser modificado ou distribuído livremen
 - **Não perca seu ranking!!**: agora o ranking fica salvo no navegador, para que não seja perdida suas pontuações ao recarregar a pagina!!
 - **Pense melhor antes de usar seu escudo!!**: cooldown para o uso do escudo alterado para 1.5 segundos.
 
+## Alterações 1.3
+- **Progressividade??**: agora a dificuldade da partida vai aumentando conforme sua pontuação, para que fique mais dificl aos poucos.
 ## Contribuições
 
 Sinta-se à vontade para sugerir melhorias ou abrir pull requests no repositório do projeto.
