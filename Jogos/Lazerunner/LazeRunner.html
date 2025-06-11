@@ -92,6 +92,23 @@
     #backButton:hover {
       background-color: #ccc;
     }
+    #immunityBar {
+      position: absolute;
+      top: 50px;
+      left: 180px;
+      width: 150px;
+      height: 20px;
+      border: 2px solid white;
+      background-color: #333;
+    }
+    #immunityFill {
+      height: 100%;
+      background-color: yellow;
+      transition: width 0.1s linear;
+    }
+    #immunityFill.cooldown {
+      background-color: gray;
+    }
   </style>
 </head>
 <body>
@@ -100,6 +117,9 @@
   <div id="ranking">
     <h2>Ranking</h2>
     <ol id="rankingList"></ol>
+  </div>
+  <div id="immunityBar">
+    <div id="immunityFill"></div>
   </div>
   <div id="startScreen">
     <h1>LazerRunner</h1>
@@ -145,10 +165,9 @@
       radius: 20,
       speed: 4,
       immune: false,
-      immuneTime: 0,
-      immuneDuration: 1500,
-      immuneCooldown: 2000,
-      lastImmuneEnd: 0
+      energy: 100, // Nível de energia (0-100)
+      energyCost: 2, // Custo por frame quando imune
+      rechargeRate: 0.5 // Recarga por frame quando não imune
     };
     let bars = [], score = 0, gameOver = false;
     let keys = {
@@ -159,10 +178,6 @@
       ' ':false, Enter:false
     };
     let rankings = JSON.parse(localStorage.getItem('rankings')) || [];
-
-    // Histórico das últimas posições do jogador para rastro
-    const playerTrail = [];
-    const maxTrailLength = 10; // Quantidade de pontos no rastro
 
     function saveRanking() {
       try {
@@ -182,17 +197,30 @@
       });
     }
 
+    function updateImmunityBar() {
+      const fill = document.getElementById('immunityFill');
+      fill.style.width = `${player.energy}%`;
+      fill.className = player.immune ? '' : 'cooldown';
+    }
+
     document.addEventListener('keydown', e => {
       if (e.key in keys) {
         keys[e.key] = true;
-        if (e.key === ' ' && !player.immune && Date.now() - player.lastImmuneEnd >= player.immuneCooldown) {
+        if (e.key === ' ' && !player.immune && player.energy >= 10) {
           player.immune = true;
-          player.immuneTime = Date.now();
         }
         if (e.key === 'Enter' && gameOver) resetGame();
       }
     });
-    document.addEventListener('keyup', e => { if (e.key in keys) keys[e.key] = false; });
+
+    document.addEventListener('keyup', e => {
+      if (e.key in keys) {
+        keys[e.key] = false;
+        if (e.key === ' ') {
+          player.immune = false;
+        }
+      }
+    });
 
     playButton.addEventListener('click', () => { startScreen.classList.add('hidden'); gameStarted = true; resetGame(); });
     restartButton.addEventListener('click', () => { gameOverScreen.classList.add('hidden'); resetGame(); });
@@ -216,15 +244,16 @@
       player.x = canvas.width/2;
       player.y = canvas.height/2;
       player.immune = false;
+      player.energy = 100;
       score = 0;
       bars = [];
       gameOver = false;
       scoreSaved = false;
       saveRankingButton.disabled = false;
       saveRankingButton.textContent = 'Salvar no Ranking';
-      playerTrail.length = 0; // limpa o rastro
       lastFrameTime = lastBarTime = 0;
       gameOverScreen.classList.add('hidden');
+      updateImmunityBar();
       requestAnimationFrame(gameLoop);
     }
 
@@ -274,109 +303,93 @@
     }
 
     function manageImmunity() {
-      if (player.immune && Date.now()-player.immuneTime > player.immuneDuration) {
-        player.immune = false;
-        player.lastImmuneEnd = Date.now();
+      if (player.immune) {
+        player.energy = Math.max(0, player.energy - player.energyCost);
+        if (player.energy <= 0) {
+          player.immune = false;
+        }
+      } else {
+        player.energy = Math.min(100, player.energy + player.rechargeRate);
       }
+      updateImmunityBar();
     }
 
     function draw() {
-      // Limpa todo o canvas para não deixar rastro de fundo ou barras
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.075)';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-      // Desenha o contorno da área de jogo
+      if (!gameStarted) return;
+
       ctx.strokeStyle = 'white';
       ctx.lineWidth = 2;
-      ctx.strokeRect(boundary.x, boundary.y, boundary.width, boundary.height);
+      ctx.strokeRect(boundary.x, boundary.y, boundary.x+boundary.width, boundary.y+boundary.height);
 
-      // Desenha as barras normalmente
+      ctx.beginPath();
+      ctx.arc(player.x, player.y, player.radius, 0, Math.PI*2);
+      ctx.fillStyle = player.immune ? 'yellow' : player.energy < 10 ? '#444' : 'white';
+      ctx.fill();
+
+      if (player.immune) {
+        ctx.beginPath();
+        ctx.arc(player.x, player.y, player.radius+10, 0, Math.PI*2);
+        ctx.strokeStyle = 'yellow';
+        ctx.lineWidth = 3;
+        ctx.stroke();
+      }
+
       ctx.fillStyle = 'red';
       bars.forEach(b => ctx.fillRect(b.x, b.y, b.width, b.height));
 
-      // Atualiza o histórico do jogador para o rastro
-      playerTrail.push({ x: player.x, y: player.y });
-      if (playerTrail.length > maxTrailLength) playerTrail.shift();
-
-      // Desenha o rastro do jogador
-      for (let i = 0; i < playerTrail.length; i++) {
-        const pos = playerTrail[i];
-        const alpha = (i + 1) / playerTrail.length / 3; // menor alpha nos pontos antigos
-        ctx.beginPath();
-        ctx.arc(pos.x, pos.y, player.radius, 0, Math.PI * 2);
-        ctx.fillStyle = `rgba(0, 255, 0, ${alpha})`;
-        ctx.fill();
-      }
-
-      // Desenha o jogador na posição atual com cor sólida
-      ctx.beginPath();
-      ctx.arc(player.x, player.y, player.radius, 0, Math.PI * 2);
-      ctx.fillStyle = player.immune ? 'yellow' : 'green';
-      ctx.fill();
-
-      // Desenha pontuação no canto superior direito
       ctx.fillStyle = 'white';
       ctx.font = '24px Arial';
-      ctx.fillText(`Score: ${score}`, canvas.width - 140, 40);
+      ctx.textAlign = 'left';
+      ctx.fillText(`Pontuação: ${score}`, 10, 30);
 
-      // Desenha barra de imunidade
-      const immuneReady = (Date.now() - player.lastImmuneEnd) >= player.immuneCooldown;
-      if (immuneReady) {
-        ctx.fillStyle = player.immune ? 'yellow' : 'green';
-      } else {
-        ctx.fillStyle = 'red';
-      }
-      const barWidth = 150;
-      const barHeight = 20;
-      ctx.fillRect(30, 30, barWidth, barHeight);
-
-      // Barra de progresso da imunidade
-      if (player.immune) {
-        const progress = 1 - (Date.now() - player.immuneTime) / player.immuneDuration;
-        ctx.fillStyle = 'black';
-        ctx.fillRect(30 + barWidth * progress, 30, barWidth * (1-progress), barHeight);
-      } else if (!immuneReady) {
-        const progress = (Date.now() - player.lastImmuneEnd) / player.immuneCooldown;
-        ctx.fillStyle = 'black';
-        ctx.fillRect(30, 30, barWidth * progress, barHeight);
+      if (gameOver) {
+        finalScoreText.textContent = `Pontuação Final: ${score}`;
+        gameOverScreen.classList.remove('hidden');
       }
     }
 
-    let lastFrameTime = 0;
-    let lastBarTime = 0;
-
-    function gameLoop(timestamp = 0) {
+    let lastFrameTime=0, lastBarTime=0;
+    function gameLoop(ts) {
       if (!gameStarted || gameOver) {
-        if (gameOver) {
-          finalScoreText.textContent = `Sua pontuação: ${score}`;
-          gameOverScreen.classList.remove('hidden');
-        }
+        draw();
         return;
       }
-      const dt = (timestamp - lastFrameTime) / 16.67; // ~60fps base
-      lastFrameTime = timestamp;
+      const dt = (ts - lastFrameTime) / 16.67;
+      lastFrameTime = ts;
 
-      movePlayer(dt);
-      moveBars(dt);
-      checkCollisions();
-      manageImmunity();
+      let barInterval, numBars;
+      if (score <= 10)       { barInterval = 4000; numBars = 2; }
+      else if (score <= 25)  { barInterval = 3000; numBars = 2; }
+      else if (score <= 35)  { barInterval = 4000; numBars = 3; }
+      else if (score <= 45)  { barInterval = 3800; numBars = 3; }
+      else if (score <= 55)  { barInterval = 4000; numBars = 4; }
+      else                   { barInterval = 3500; numBars = 3; }
 
-      // Criar barra a cada 2 segundos
-      if (timestamp - lastBarTime > 2000) {
-        createBar();
-        lastBarTime = timestamp;
+      if (ts - lastBarTime > barInterval) {
+        for (let i=0;i<numBars;i++) createBar();
+        lastBarTime = ts;
         score++;
       }
 
-      // Remove barras que saíram da tela
-      bars = bars.filter(b => b.x+b.width > 0 && b.x < canvas.width && b.y+b.height > 0 && b.y < canvas.height);
-
+      movePlayer(dt);
+      moveBars(dt);
+      manageImmunity();
+      checkCollisions();
       draw();
 
       requestAnimationFrame(gameLoop);
     }
 
     updateRanking();
-
+    updateImmunityBar();
+    requestAnimationFrame(ts => {
+      lastFrameTime = ts;
+      lastBarTime = ts;
+      gameLoop(ts);
+    });
   </script>
 </body>
 </html>
