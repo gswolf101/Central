@@ -3,91 +3,36 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>LazerRunner</title>
+  <title>Lazer Runner</title>
   <style>
-    body {
-      margin: 0;
-      background: #000;
-      color: white;
-      font-family: Arial, sans-serif;
-      display: flex;
-      justify-content: center;
-      align-items: flex-start;
-      gap: 20px;
-      padding: 20px;
-    }
-    #container {
-      position: relative;
-      width: 900px;
-      height: 900px;
-    }
-    canvas {
-      position: absolute;
-      top: 0;
-      left: 0;
-      border: 2px solid #fff;
-    }
-    /* Rankings, telas, botões e footer continuam conforme seu estilo anterior */
+    body { margin: 0; background: #000; color: white; font-family: Arial, sans-serif; display: flex; justify-content: center; align-items: flex-start; gap: 20px; padding: 20px; }
+    #container { position: relative; width: 900px; height: 900px; }
+    canvas { position: absolute; top: 0; left: 0; }
+    /* Ranking, telas, botões e footer seguem o estilo anterior */
     #backButton {
-      position: absolute;
-      top: 10px;
-      left: 10px;
-      padding: 8px 16px;
-      font-size: 18px;
-      background-color: white;
-      color: black;
-      border: none;
-      border-radius: 5px;
-      cursor: pointer;
-      z-index: 10;
+      position: absolute; top: 10px; left: 10px;
+      padding: 8px 16px; font-size: 18px;
+      background: white; color: black; border: none; border-radius: 5px; cursor: pointer; z-index: 10;
     }
+    #container canvas { border: 2px solid #fff; }
   </style>
 </head>
 <body>
   <button id="backButton" onclick="window.location.href='../CentralJogos.html'">Voltar</button>
-
   <div id="container">
     <canvas id="canvasBg" width="900" height="900"></canvas>
     <canvas id="canvasTrail" width="900" height="900"></canvas>
   </div>
 
-  <div id="ranking">
-    <h2>Ranking</h2>
-    <ol id="rankingList"></ol>
-  </div>
-
-  <div id="startScreen">
-    <h1>LazerRunner</h1>
-    <button id="playButton">Play</button>
-  </div>
-  <div id="gameOverScreen" class="hidden">
-    <h1>Game Over</h1>
-    <p id="finalScore"></p>
-    <button id="restartButton">Restart</button>
-    <button id="saveRankingButton">Salvar no Ranking</button>
-  </div>
-  <div id="footer">
-    Mover: Setas ou WASD<br />
-    Imunidade: Barra de espaço<br />
-    Reiniciar: Enter
-  </div>
+  <div id="ranking"><h2>Ranking</h2><ol id="rankingList"></ol></div>
+  <div id="startScreen"><h1>LazerRunner</h1><button id="playButton">Play</button></div>
+  <div id="gameOverScreen" class="hidden"><h1>Game Over</h1><p id="finalScore"></p><button id="restartButton">Restart</button><button id="saveRankingButton">Salvar no Ranking</button></div>
+  <div id="footer">Mover: Setas ou WASD<br>Imunidade: Barra de espaço<br>Reiniciar: Enter</div>
   <div id="version">Versão 1.3</div>
 
   <script>
-    // Previnindo clique direito e F12
-    document.addEventListener('contextmenu', e => { e.preventDefault(); alert('Clique com o botão direito desativado.'); });
-    document.addEventListener('keydown', e => {
-      if (e.key === 'F12' || e.keyCode === 123) {
-        e.preventDefault();
-        alert('Ferramentas de desenvolvedor desativadas.');
-      }
-    });
-
-    // Canvas background e trail
-    const bg = document.getElementById('canvasBg');
-    const trail = document.getElementById('canvasTrail');
-    const bgCtx = bg.getContext('2d');
-    const trailCtx = trail.getContext('2d');
+    const bg = document.getElementById('canvasBg'), trail = document.getElementById('canvasTrail');
+    const bgCtx = bg.getContext('2d'), trailCtx = trail.getContext('2d');
 
     const startScreen = document.getElementById('startScreen');
     const gameOverScreen = document.getElementById('gameOverScreen');
@@ -96,61 +41,38 @@
     const saveRankingButton = document.getElementById('saveRankingButton');
     const finalScoreText = document.getElementById('finalScore');
 
-    // Variáveis de jogo
     let gameStarted = false, scoreSaved = false;
     const boundary = { x:70, y:70, width: bg.width - 140, height: bg.height - 140 };
     const player = {
-      x: bg.width/2,
-      y: bg.height/2,
-      radius: 20,
-      speed: 4,
-      immune: false,
-      immuneTime: 0,
-      immuneDuration: 1500,
-      immuneCooldown: 2000,
-      lastImmuneEnd: 0
+      x: bg.width/2, y: bg.height/2, radius:20, speed:4,
+      immune:false, immuneTime:0, immuneDuration:1500, immuneCooldown:2000, lastImmuneEnd:0
     };
     let bars = [], score = 0, gameOver = false;
-    let keys = { ArrowUp:false, ArrowDown:false, ArrowLeft:false, ArrowRight:false,
-                 w:false, s:false, a:false, d:false, ' ':false, Enter:false };
+    let keys = { ArrowUp:false, ArrowDown:false, ArrowLeft:false, ArrowRight:false, w:false, s:false, a:false, d:false, ' ':false, Enter:false };
     let rankings = JSON.parse(localStorage.getItem('rankings')) || [];
 
-    // Funções de ranking
-    function saveRanking() {
-      try { localStorage.setItem('rankings', JSON.stringify(rankings)); }
-      catch (e) { alert('Erro ao salvar ranking.'); }
-    }
-    function updateRanking() {
-      const list = document.getElementById('rankingList');
-      list.innerHTML = '';
-      rankings.sort((a,b) => b.score - a.score).slice(0,10).forEach(e => {
-        const li = document.createElement('li');
-        li.textContent = `${e.name} - ${e.score}`;
-        list.appendChild(li);
-      });
-    }
-
-    // Controles
+    document.addEventListener('contextmenu', e => { e.preventDefault(); alert('Clique direito desativado.'); });
     document.addEventListener('keydown', e => {
+      if (e.key === 'F12' || e.keyCode === 123) { e.preventDefault(); alert('DevTools desativado.'); }
       if (e.key in keys) {
         keys[e.key] = true;
-        if (e.key === ' ' && !player.immune && Date.now() - player.lastImmuneEnd >= player.immuneCooldown) {
+        if (e.key===' ' && !player.immune && Date.now() - player.lastImmuneEnd >= player.immuneCooldown) {
           player.immune = true;
           player.immuneTime = Date.now();
         }
-        if (e.key === 'Enter' && gameOver) resetGame();
+        if (e.key==='Enter' && gameOver) resetGame();
       }
     });
     document.addEventListener('keyup', e => { if (e.key in keys) keys[e.key] = false; });
 
-    playButton.addEventListener('click', () => { startScreen.classList.add('hidden'); gameStarted = true; resetGame(); });
+    playButton.addEventListener('click', () => { startScreen.classList.add('hidden'); gameStarted=true; resetGame(); });
     restartButton.addEventListener('click', () => { gameOverScreen.classList.add('hidden'); resetGame(); });
     saveRankingButton.addEventListener('click', () => {
       if (scoreSaved) return;
       const name = prompt('Digite seu nome:');
       if (name && name.trim()) {
         rankings.push({ name: name.trim(), score });
-        saveRanking();
+        localStorage.setItem('rankings', JSON.stringify(rankings));
         updateRanking();
         scoreSaved = true;
         saveRankingButton.disabled = true;
@@ -159,19 +81,14 @@
       } else if (name !== null) alert('Nome inválido.');
     });
 
-    function resetGame() {
-      player.x = bg.width/2;
-      player.y = bg.height/2;
-      player.immune = false;
-      score = 0;
-      bars = [];
-      gameOver = false;
-      scoreSaved = false;
-      saveRankingButton.disabled = false;
-      saveRankingButton.textContent = 'Salvar no Ranking';
-      lastFrameTime = lastBarTime = 0;
-      gameOverScreen.classList.add('hidden');
-      requestAnimationFrame(gameLoop);
+    function updateRanking() {
+      const list = document.getElementById('rankingList');
+      list.innerHTML = '';
+      rankings.sort((a,b)=>b.score - a.score).slice(0,10).forEach(e => {
+        const li = document.createElement('li');
+        li.textContent = `${e.name} - ${e.score}`;
+        list.appendChild(li);
+      });
     }
 
     function createBar() {
@@ -181,34 +98,26 @@
       const speed = 2 + Math.random()*1.8;
       let bar;
       switch(dir) {
-        case 0:
-          bar = { x:-thickness, y:Math.random()*(bg.height-length), width:thickness, height:length, dx:speed, dy:0 };
-          break;
-        case 1:
-          bar = { x:bg.width, y:Math.random()*(bg.height-length), width:thickness, height:length, dx:-speed, dy:0 };
-          break;
-        case 2:
-          bar = { x:Math.random()*(bg.width-length), y:-thickness, width:length, height:thickness, dx:0, dy:speed };
-          break;
-        case 3:
-          bar = { x:Math.random()*(bg.width-length), y:bg.height, width:length, height:thickness, dx:0, dy:-speed };
-          break;
+        case 0: bar = { x:-thickness, y:Math.random()*(bg.height-length), width:thickness, height:length, dx:speed, dy:0 }; break;
+        case 1: bar = { x:bg.width, y:Math.random()*(bg.height-length), width:thickness, height:length, dx:-speed, dy:0 }; break;
+        case 2: bar = { x:Math.random()*(bg.width-length), y:-thickness, width:length, height:thickness, dx:0, dy:speed }; break;
+        case 3: bar = { x:Math.random()*(bg.width-length), y:bg.height, width:length, height:thickness, dx:0, dy:-speed }; break;
       }
       bars.push(bar);
     }
 
     function movePlayer(dt) {
-      let dx = 0, dy = 0;
-      if (keys.ArrowUp || keys.w) dy--;
-      if (keys.ArrowDown || keys.s) dy++;
-      if (keys.ArrowLeft || keys.a) dx--;
-      if (keys.ArrowRight || keys.d) dx++;
-      if (dx || dy) {
-        const len = Math.hypot(dx, dy);
+      let dx=0, dy=0;
+      if (keys.ArrowUp||keys.w) dy--;
+      if (keys.ArrowDown||keys.s) dy++;
+      if (keys.ArrowLeft||keys.a) dx--;
+      if (keys.ArrowRight||keys.d) dx++;
+      if (dx||dy) {
+        const len = Math.hypot(dx,dy);
         player.x += (dx/len)*player.speed;
         player.y += (dy/len)*player.speed;
-        player.x = Math.max(boundary.x+player.radius, Math.min(player.x, boundary.x+boundary.width-player.radius));
-        player.y = Math.max(boundary.y+player.radius, Math.min(player.y, boundary.y+boundary.height-player.radius));
+        player.x = Math.max(boundary.x + player.radius, Math.min(player.x, boundary.x + boundary.width - player.radius));
+        player.y = Math.max(boundary.y + player.radius, Math.min(player.y, boundary.y + boundary.height - player.radius));
       }
     }
 
@@ -239,23 +148,20 @@
     function drawBg() {
       bgCtx.clearRect(0, 0, bg.width, bg.height);
       bgCtx.fillStyle = '#000';
-      bgCtx.fillRect(0, 0, bg.width, bg.height);
-      bgCtx.strokeStyle = 'white';
-      bgCtx.lineWidth = 2;
+      bgCtx.fillRect(0,0,bg.width,bg.height);
+      bgCtx.strokeStyle='white'; bgCtx.lineWidth=2;
       bgCtx.strokeRect(boundary.x, boundary.y, boundary.width, boundary.height);
-      bgCtx.fillStyle = 'red';
-      bars.forEach(b => bgCtx.fillRect(b.x, b.y, b.width, b.height));
-      // HUD
+      bgCtx.fillStyle='red';
+      bars.forEach(b=> bgCtx.fillRect(b.x, b.y, b.width, b.height));
+
       const now = Date.now();
       const inCd = now - player.lastImmuneEnd < player.immuneCooldown;
       const immunityRem = player.immune ? Math.max(0, player.immuneDuration - (now - player.immuneTime)) : 0;
       const cooldownRem = Math.max(0, player.immuneCooldown - (now - player.lastImmuneEnd));
-      bgCtx.fillStyle = 'white';
-      bgCtx.font = '24px Arial';
-      bgCtx.textAlign = 'left';
+
+      bgCtx.fillStyle='white'; bgCtx.font='24px Arial'; bgCtx.textAlign='left';
       bgCtx.fillText(`Pontuação: ${score}`, 10, 30);
-      bgCtx.fillStyle = 'yellow';
-      bgCtx.font = '18px Arial';
+      bgCtx.fillStyle='yellow'; bgCtx.font='18px Arial';
       bgCtx.fillText(`Imunidade: ${(immunityRem/1000).toFixed(1)}s`, 180, 28);
       bgCtx.fillStyle = inCd ? 'gray' : 'green';
       bgCtx.fillText(`Recarga: ${(cooldownRem/1000).toFixed(1)}s`, 340, 28);
@@ -272,9 +178,8 @@
       trailCtx.fill();
       if (player.immune) {
         trailCtx.beginPath();
-        trailCtx.arc(player.x, player.y, player.radius + 10, 0, 2*Math.PI);
-        trailCtx.strokeStyle = 'yellow';
-        trailCtx.lineWidth = 3;
+        trailCtx.arc(player.x, player.y, player.radius+10, 0, 2*Math.PI);
+        trailCtx.strokeStyle='yellow'; trailCtx.lineWidth=3;
         trailCtx.stroke();
       }
     }
@@ -286,12 +191,12 @@
       lastFrameTime = ts;
 
       let barInterval, numBars;
-      if (score <= 10)       { barInterval = 4000; numBars = 2; }
-      else if (score <= 25)  { barInterval = 3000; numBars = 2; }
-      else if (score <= 35)  { barInterval = 4000; numBars = 3; }
-      else if (score <= 45)  { barInterval = 3800; numBars = 3; }
-      else if (score <= 55)  { barInterval = 4000; numBars = 4; }
-      else                   { barInterval = 3500; numBars = 3; }
+      if (score <= 10) barInterval = 4000, numBars = 2;
+      else if (score <= 25) barInterval = 3000, numBars = 2;
+      else if (score <= 35) barInterval = 4000, numBars = 3;
+      else if (score <= 45) barInterval = 3800, numBars = 3;
+      else if (score <= 55) barInterval = 4000, numBars = 4;
+      else barInterval = 3500, numBars = 3;
 
       if (ts - lastBarTime > barInterval) {
         for (let i=0; i<numBars; i++) createBar();
