@@ -160,6 +160,10 @@
     };
     let rankings = JSON.parse(localStorage.getItem('rankings')) || [];
 
+    // Histórico das últimas posições do jogador para rastro
+    const playerTrail = [];
+    const maxTrailLength = 10; // Quantidade de pontos no rastro
+
     function saveRanking() {
       try {
         localStorage.setItem('rankings', JSON.stringify(rankings));
@@ -218,6 +222,7 @@
       scoreSaved = false;
       saveRankingButton.disabled = false;
       saveRankingButton.textContent = 'Salvar no Ranking';
+      playerTrail.length = 0; // limpa o rastro
       lastFrameTime = lastBarTime = 0;
       gameOverScreen.classList.add('hidden');
       requestAnimationFrame(gameLoop);
@@ -276,92 +281,102 @@
     }
 
     function draw() {
-      ctx.fillStyle = 'rgba(0, 0, 0, 0.15)';
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      // Limpa todo o canvas para não deixar rastro de fundo ou barras
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-      if (!gameStarted) return;
-
+      // Desenha o contorno da área de jogo
       ctx.strokeStyle = 'white';
       ctx.lineWidth = 2;
       ctx.strokeRect(boundary.x, boundary.y, boundary.width, boundary.height);
 
-      const now = Date.now();
-      const inCd = now - player.lastImmuneEnd < player.immuneCooldown;
-      const immunityRemaining = player.immune ? Math.max(0, player.immuneDuration - (now - player.immuneTime)) : 0;
-      const cooldownRemaining = Math.max(0, player.immuneCooldown - (now - player.lastImmuneEnd));
-
-      ctx.beginPath();
-      ctx.arc(player.x, player.y, player.radius, 0, Math.PI*2);
-      ctx.fillStyle = player.immune ? 'yellow' : inCd ? '#444' : 'white';
-      ctx.fill();
-
-      if (player.immune) {
-        ctx.beginPath();
-        ctx.arc(player.x, player.y, player.radius+10, 0, Math.PI*2);
-        ctx.strokeStyle = 'yellow';
-        ctx.lineWidth = 3;
-        ctx.stroke();
-      }
-
+      // Desenha as barras normalmente
       ctx.fillStyle = 'red';
       bars.forEach(b => ctx.fillRect(b.x, b.y, b.width, b.height));
 
+      // Atualiza o histórico do jogador para o rastro
+      playerTrail.push({ x: player.x, y: player.y });
+      if (playerTrail.length > maxTrailLength) playerTrail.shift();
+
+      // Desenha o rastro do jogador
+      for (let i = 0; i < playerTrail.length; i++) {
+        const pos = playerTrail[i];
+        const alpha = (i + 1) / playerTrail.length / 3; // menor alpha nos pontos antigos
+        ctx.beginPath();
+        ctx.arc(pos.x, pos.y, player.radius, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(0, 255, 0, ${alpha})`;
+        ctx.fill();
+      }
+
+      // Desenha o jogador na posição atual com cor sólida
+      ctx.beginPath();
+      ctx.arc(player.x, player.y, player.radius, 0, Math.PI * 2);
+      ctx.fillStyle = player.immune ? 'yellow' : 'green';
+      ctx.fill();
+
+      // Desenha pontuação no canto superior direito
       ctx.fillStyle = 'white';
       ctx.font = '24px Arial';
-      ctx.textAlign = 'left';
-      ctx.fillText(`Pontuação: ${score}`, 10, 30);
+      ctx.fillText(`Score: ${score}`, canvas.width - 140, 40);
 
-      ctx.fillStyle = 'yellow';
-      ctx.font = '18px Arial';
-      ctx.fillText(`Imunidade: ${(immunityRemaining/1000).toFixed(1)}s`, 180, 28);
+      // Desenha barra de imunidade
+      const immuneReady = (Date.now() - player.lastImmuneEnd) >= player.immuneCooldown;
+      if (immuneReady) {
+        ctx.fillStyle = player.immune ? 'yellow' : 'green';
+      } else {
+        ctx.fillStyle = 'red';
+      }
+      const barWidth = 150;
+      const barHeight = 20;
+      ctx.fillRect(30, 30, barWidth, barHeight);
 
-      ctx.fillStyle = inCd ? 'gray' : 'green';
-      ctx.fillText(`Recarga: ${(cooldownRemaining/1000).toFixed(1)}s`, 340, 28);
-
-      if (gameOver) {
-        finalScoreText.textContent = `Pontuação Final: ${score}`;
-        gameOverScreen.classList.remove('hidden');
+      // Barra de progresso da imunidade
+      if (player.immune) {
+        const progress = 1 - (Date.now() - player.immuneTime) / player.immuneDuration;
+        ctx.fillStyle = 'black';
+        ctx.fillRect(30 + barWidth * progress, 30, barWidth * (1-progress), barHeight);
+      } else if (!immuneReady) {
+        const progress = (Date.now() - player.lastImmuneEnd) / player.immuneCooldown;
+        ctx.fillStyle = 'black';
+        ctx.fillRect(30, 30, barWidth * progress, barHeight);
       }
     }
 
-    let lastFrameTime=0, lastBarTime=0;
-    function gameLoop(ts) {
+    let lastFrameTime = 0;
+    let lastBarTime = 0;
+
+    function gameLoop(timestamp = 0) {
       if (!gameStarted || gameOver) {
-        draw();
+        if (gameOver) {
+          finalScoreText.textContent = `Sua pontuação: ${score}`;
+          gameOverScreen.classList.remove('hidden');
+        }
         return;
       }
-      const dt = (ts - lastFrameTime) / 16.67;
-      lastFrameTime = ts;
-
-      let barInterval, numBars;
-      if (score <= 10)       { barInterval = 4000; numBars = 2; }
-      else if (score <= 25)  { barInterval = 3000; numBars = 2; }
-      else if (score <= 35)  { barInterval = 4000; numBars = 3; }
-      else if (score <= 45)  { barInterval = 3800; numBars = 3; }
-      else if (score <= 55)  { barInterval = 4000; numBars = 4; }
-      else                   { barInterval = 3500; numBars = 3; }
-
-      if (ts - lastBarTime > barInterval) {
-        for (let i=0;i<numBars;i++) createBar();
-        lastBarTime = ts;
-        score++;
-      }
+      const dt = (timestamp - lastFrameTime) / 16.67; // ~60fps base
+      lastFrameTime = timestamp;
 
       movePlayer(dt);
       moveBars(dt);
-      manageImmunity();
       checkCollisions();
+      manageImmunity();
+
+      // Criar barra a cada 2 segundos
+      if (timestamp - lastBarTime > 2000) {
+        createBar();
+        lastBarTime = timestamp;
+        score++;
+      }
+
+      // Remove barras que saíram da tela
+      bars = bars.filter(b => b.x+b.width > 0 && b.x < canvas.width && b.y+b.height > 0 && b.y < canvas.height);
+
       draw();
 
       requestAnimationFrame(gameLoop);
     }
 
     updateRanking();
-    requestAnimationFrame(ts => {
-      lastFrameTime = ts;
-      lastBarTime = ts;
-      gameLoop(ts);
-    });
+
   </script>
 </body>
 </html>
