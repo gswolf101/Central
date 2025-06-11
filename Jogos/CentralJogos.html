@@ -24,6 +24,17 @@
             color: white;
         }
 
+        /* Cabeçalho com título central */
+        header {
+            padding-top: 20px;
+            text-align: center;
+        }
+        header h1 {
+            margin: 0;
+            font-size: 36px;
+            letter-spacing: 2px;
+        }
+
         /* Centra o conteúdo da lista de jogos */
         main {
             flex: 1;
@@ -62,6 +73,11 @@
     <div id="Voltar">
         <a href="../index.html"><h3><b>&larr; Voltar</b></h3></a>
     </div>
+
+    <header>
+        <h1>Jogos</h1>
+    </header>
+
     <main>
         <ul>
             <li>
@@ -69,8 +85,7 @@
                     LazerRunner
                 </a>
             </li>
-            <!-- Adicione aqui outros jogos -->
-            <!--
+            <!-- Outros jogos podem ser adicionados assim:
             <li>
                 <a href="OutroJogo/OutroJogo.html" class="game-link">
                     Nome do Outro Jogo
