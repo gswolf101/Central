@@ -3,9 +3,8 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>LazerRunner</title>
+  <title>Lazer Runner</title>
   <style>
-    /* Reset e básico */
     body {
       display: flex;
       flex-direction: column;
@@ -121,7 +120,6 @@
       background-color: #ccc;
     }
 
-    /* Skin Selector */
     #skinSelector {
       margin-top: 20px;
       display: flex;
@@ -159,7 +157,6 @@
       box-shadow: 0 0 10px yellow;
     }
 
-    /* Joystick e Botão de Imunidade */
     #joystick, #immuneButton {
       display: none;
       position: fixed;
@@ -202,7 +199,6 @@
       background: yellow;
     }
 
-    /* Responsividade */
     @media(max-width: 720px) {
       #gameContainer {
         flex-direction: column;
@@ -311,35 +307,29 @@
   <div id="version">Versão 1.4</div>
 
   <script>
-    // Proteção básica
-    document.addEventListener('contextmenu', e => {
-      e.preventDefault();
-      alert('Erro ao clicar com o botão direito.');
-    }));
-    document.addEventListener('keydown', e => {
-      if (e.key === 'F12' || e.keyCode === '123') {
-        e.preventDefault();
-        alert('Ferramentas de desenvolvedor desativadas.');
-      });
-    });
-
     const canvas = document.getElementById('gameCanvas');
-    const ctx = canvas.getContext('2d');
+    const ctx = canvas ? canvas.getContext('2d') : null;
     const startScreen = document.getElementById('startScreen');
     const gameOverScreen = document.getElementById('gameOverScreen');
     const playButton = document.getElementById('playButton');
     const restartButton = document.getElementById('restartButton');
     const saveRankingButton = document.getElementById('saveRankingButton');
     const finalScoreText = document.getElementById('finalScore');
-    const joystick = document.querySelector('#joystick');
-    const joystickKnob = document.querySelector('#joystickKnob');
-    const immuneButton = document.querySelector('#immuneButton');
+    const joystick = document.getElementById('joystick');
+    const joystickKnob = document.getElementById('joystickKnob');
+    const immuneButton = document.getElementById('immuneButton');
+
+    if (!canvas || !ctx) {
+      console.error('Canvas ou contexto não encontrado!');
+      alert('Erro: Não foi possível carregar o canvas do jogo.');
+      return;
+    }
 
     let gameStarted = false, scoreSaved = false;
     const boundary = { x: 70, y: 70, width: 900 - 140, height: 900 - 140 };
     const player = {
       x: 900 / 2,
-      y: / 2,
+      y: 900 / 2,
       radius: 20,
       speed: 4,
       immune: false,
@@ -359,7 +349,6 @@
     };
     let rankings = JSON.parse(localStorage.getItem('rankings')) || [];
 
-    // --- Controle do Joystick ---
     let joystickActive = false;
     let joystickCenter = { x: 0, y: 0 };
     let joystickDirection = { x: 0, y: 0 };
@@ -367,19 +356,24 @@
     const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
 
     function setupJoystick() {
-      if (!isTouchDevice) return;
+      if (!isTouchDevice || !joystick || !joystickKnob || !immuneButton) {
+        console.warn('Joystick ou immuneButton não encontrado ou dispositivo não suporta toque.');
+        return;
+      }
 
       joystick.addEventListener('touchstart', startJoystick);
       joystick.addEventListener('touchmove', moveJoystick);
       joystick.addEventListener('touchend', endJoystick);
 
       immuneButton.addEventListener('touchstart', () => {
+        console.log('Imune ativado');
         if (!player.immune && player.energy >= 10) {
           player.immune = true;
           immuneButton.classList.add('active');
         }
       });
       immuneButton.addEventListener('touchend', () => {
+        console.log('Imune desativado');
         player.immune = false;
         immuneButton.classList.remove('active');
       });
@@ -394,6 +388,7 @@
         y: rect.top + rect.height / 2
       };
       joystickActive = true;
+      console.log('Joystick iniciado:', joystickCenter);
       moveJoystick(e);
     }
 
@@ -423,24 +418,27 @@
       joystickActive = false;
       joystickDirection = { x: 0, y: 0 };
       joystickKnob.style.transform = 'translate(-50%, -50%)';
+      console.log('Joystick finalizado');
     }
 
-    // --- Função para salvar ranking ---
     function saveRanking() {
       try {
         localStorage.setItem('rankings', JSON.stringify(rankings));
-      } catch {
-        alert('Erro ao salvar a pontuação.');
+      } catch (e) {
+        console.error('Erro ao salvar ranking:', e);
       }
     }
 
-    // --- Atualiza o ranking ---
     function updateRanking() {
       const startRankingList = startScreen.querySelector('#rankingList');
       const gameOverRankingList = gameOverScreen.querySelector('#rankingList');
+      if (!startRankingList || !gameOverRankingList) {
+        console.error('Listas de ranking não encontradas');
+        return;
+      }
       startRankingList.innerHTML = '';
       gameOverRankingList.innerHTML = '';
-      rankings.sort((a,b)=>b.score-a.score).slice(0,10).forEach(e => {
+      rankings.sort((a, b) => b.score - a.score).slice(0, 10).forEach(e => {
         const li1 = document.createElement('li');
         li1.textContent = `${e.name} - ${e.score}`;
         startRankingList.appendChild(li1);
@@ -450,7 +448,6 @@
       });
     }
 
-    // --- Controle de teclas ---
     document.addEventListener('keydown', e => {
       if (e.key in keys) {
         keys[e.key] = true;
@@ -470,35 +467,41 @@
       }
     });
 
-    // --- Eventos dos botões ---
-    playButton.addEventListener('click', () => {
-      startScreen.classList.add('hidden');
-      gameStarted = true;
-      resetGame();
-    });
+    if (playButton) {
+      playButton.addEventListener('click', () => {
+        startScreen.classList.add('hidden');
+        gameStarted = true;
+        resetGame();
+        console.log('Jogo iniciado');
+      });
+    }
 
-    restartButton.addEventListener('click', () => {
-      gameOverScreen.classList.add('hidden');
-      resetGame();
-    });
+    if (restartButton) {
+      restartButton.addEventListener('click', () => {
+        gameOverScreen.classList.add('hidden');
+        resetGame();
+        console.log('Jogo reiniciado');
+      });
+    }
 
-    saveRankingButton.addEventListener('click', () => {
-      if (scoreSaved) return;
-      const name = prompt('Digite seu nome:');
-      if (name && name.trim()) {
-        rankings.push({ name: name.trim(), score: Number(score.toFixed(2)) });
-        saveRanking();
-        updateRanking();
-        scoreSaved = true;
-        saveRankingButton.disabled = true;
-        saveRankingButton.textContent = 'Salvo';
-        alert('Pontuação salva!');
-      } else if (name !== null) {
-        alert('Nome inválido.');
-      }
-    });
+    if (saveRankingButton) {
+      saveRankingButton.addEventListener('click', () => {
+        if (scoreSaved) return;
+        const name = prompt('Digite seu nome:');
+        if (name && name.trim()) {
+          rankings.push({ name: name.trim(), score: Number(score.toFixed(2)) });
+          saveRanking();
+          updateRanking();
+          scoreSaved = true;
+          saveRankingButton.disabled = true;
+          saveRankingButton.textContent = 'Salvo';
+          console.log('Pontuação salva:', name, score);
+        } else if (name !== null) {
+          console.warn('Nome inválido');
+        }
+      });
+    }
 
-    // --- Reset do jogo ---
     function resetGame() {
       player.x = canvas.width / 2;
       player.y = canvas.height / 2;
@@ -508,8 +511,10 @@
       bars = [];
       gameOver = false;
       scoreSaved = false;
-      saveRankingButton.disabled = false;
-      saveRankingButton.textContent = 'Salvar no ranking';
+      if (saveRankingButton) {
+        saveRankingButton.disabled = false;
+        saveRankingButton.textContent = 'Salvar no ranking';
+      }
       lastFrameTime = lastBarTime = 0;
       gameOverScreen.classList.add('hidden');
       updateSkinSelectors();
@@ -517,23 +522,21 @@
       requestAnimationFrame(gameLoop);
     }
 
-    // --- Criação das barras ---
     function createBar() {
-      const dir = Math.floor(Math.random()*4);
+      const dir = Math.floor(Math.random() * 4);
       const thickness = 30;
-      const length = Math.random()*400 + 200;
-      const speed = 2 + Math.random()*1.8;
+      const length = Math.random() * 400 + 200;
+      const speed = 2 + Math.random() * 1.8;
       let bar;
-      switch(dir) {
-        case 0: bar = { x:-thickness, y:Math.random()*(canvas.height-length), width:thickness, height:length, dx:speed, dy:0 }; break;
-        case 1: bar = { x:canvas.width, y:Math.random()*(canvas.height-length), width:thickness, height:length, dx:-speed, dy:0 }; break;
-        case 2: bar = { x:Math.random()*(canvas.width-length), y:-thickness, width:length, height:thickness, dx:0, dy:speed }; break;
-        case 3: bar = { x:Math.random()*(canvas.width-length), y:canvas.height, width:length, height:thickness, dx:0, dy:-speed }; break;
+      switch (dir) {
+        case 0: bar = { x: -thickness, y: Math.random() * (canvas.height - length), width: thickness, height: length, dx: speed, dy: 0 }; break;
+        case 1: bar = { x: canvas.width, y: Math.random() * (canvas.height - length), width: thickness, height: length, dx: -speed, dy: 0 }; break;
+        case 2: bar = { x: Math.random() * (canvas.width - length), y: -thickness, width: length, height: thickness, dx: 0, dy: speed }; break;
+        case 3: bar = { x: Math.random() * (canvas.width - length), y: canvas.height, width: length, height: thickness, dx: 0, dy: -speed }; break;
       }
       bars.push(bar);
     }
 
-    // --- Movimento do jogador ---
     function movePlayer(dt) {
       let dx = 0, dy = 0;
 
@@ -556,31 +559,32 @@
       }
     }
 
-    // --- Movimento das barras ---
     function moveBars(dt) {
       bars.forEach(b => { b.x += b.dx * dt; b.y += b.dy * dt; });
     }
 
-    // --- Checar colisões ---
     function checkCollisions() {
       if (player.immune) return;
       for (const b of bars) {
-        if (player.x + player.radius > b.x && player.x - player.radius < b.x + b.width &&
-            player.y + player.radius > b.y && player.y - player.radius < b.y + b.height) {
+        if (
+          player.x + player.radius > b.x &&
+          player.x - player.radius < b.x + b.width &&
+          player.y + player.radius > b.y &&
+          player.y - player.radius < b.y + b.height
+        ) {
           gameOver = true;
           break;
         }
       }
     }
 
-    // --- Atualizar energia ---
     function updateEnergy(dt) {
       if (player.immune) {
         player.energy -= player.energyCost * dt;
         if (player.energy <= 0) {
           player.energy = 0;
           player.immune = false;
-          if (isTouchDevice) immuneButton.classList.remove('active');
+          if (isTouchDevice && immuneButton) immuneButton.classList.remove('active');
         }
       } else {
         player.energy += player.rechargeRate * dt;
@@ -588,13 +592,12 @@
       }
     }
 
-    // --- Desenhar jogador ---
-    function drawPlayer(timestamp) {
+    function drawPlayer() {
       ctx.beginPath();
       ctx.fillStyle = player.skin;
       ctx.shadowColor = player.skin;
       ctx.shadowBlur = 20;
-      ctx.arc(player.x, player.y, player.radius, 0, Math.PI*2);
+      ctx.arc(player.x, player.y, player.radius, 0, Math.PI * 2);
       ctx.fill();
       ctx.shadowBlur = 0;
 
@@ -612,7 +615,6 @@
       ctx.stroke();
     }
 
-    // --- Desenhar barras ---
     function drawBars() {
       ctx.fillStyle = 'red';
       bars.forEach(b => {
@@ -620,14 +622,12 @@
       });
     }
 
-    // --- Desenhar borda da área ---
     function drawBoundary() {
       ctx.strokeStyle = 'white';
       ctx.lineWidth = 3;
       ctx.strokeRect(boundary.x, boundary.y, boundary.width, boundary.height);
     }
 
-    // --- Desenhar pontuação ---
     function drawScore() {
       ctx.fillStyle = 'white';
       ctx.font = '24px Arial';
@@ -636,7 +636,6 @@
       ctx.textAlign = 'left';
     }
 
-    // --- Desenhar barra de energia ---
     function drawImmunityBar() {
       const barWidth = 150;
       const barHeight = 20;
@@ -650,56 +649,57 @@
       ctx.fillRect(barX + 2, barY + 2, (player.energy / 100) * (barWidth - 4), barHeight - 4);
     }
 
-    // --- Limpar tela ---
     function clearScreen() {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
     }
 
-    // --- Atualizar e desenhar tudo ---
     let lastFrameTime = 0;
     let lastBarTime = 0;
 
-    function gameLoop(timestamp=0) {
-      if (!gameStarted || gameOver) {
-        if (gameOver) {
-          finalScoreText.textContent = `Sua pontuação: ${Number(score.toFixed(2))}`;
-          gameOverScreen.classList.remove('hidden');
+    function gameLoop(timestamp = 0) {
+      try {
+        if (!gameStarted || gameOver) {
+          if (gameOver && finalScoreText) {
+            finalScoreText.textContent = `Sua pontuação: ${Number(score.toFixed(2))}`;
+            gameOverScreen.classList.remove('hidden');
+          }
+          return;
         }
-        return;
+        const dt = (timestamp - lastFrameTime) / 16.666;
+        lastFrameTime = timestamp;
+
+        clearScreen();
+        drawBoundary();
+        movePlayer(dt);
+        moveBars(dt);
+        checkCollisions();
+        updateEnergy(dt);
+
+        lastBarTime += dt;
+        if (lastBarTime > 120) {
+          createBar();
+          lastBarTime = 0;
+        }
+
+        bars = bars.filter(b =>
+          b.x + b.width > -50 && b.x < canvas.width + 50 &&
+          b.y + b.height > -50 && b.y < canvas.height + 50
+        );
+
+        drawBars();
+        drawPlayer();
+        drawScore();
+        drawImmunityBar();
+
+        score += dt * 0.16667;
+        score = Number(score.toFixed(2));
+
+        requestAnimationFrame(gameLoop);
+      } catch (e) {
+        console.error('Erro no gameLoop:', e);
       }
-      const dt = (timestamp - lastFrameTime) / 16.666;
-      lastFrameTime = timestamp;
-
-      clearScreen();
-      drawBoundary();
-      movePlayer(dt);
-      moveBars(dt);
-      checkCollisions();
-      updateEnergy(dt);
-
-      lastBarTime += dt;
-      if (lastBarTime > 120) {
-        createBar();
-        lastBarTime = 0;
-      }
-
-      bars = bars.filter(b =>
-        b.x + b.width > -50 && b.x < canvas.width + 50 &&
-        b.y + b.height > -50 && b.y < canvas.height + 50
-      );
-
-      drawBars();
-      drawPlayer(timestamp);
-      drawScore();
-      drawImmunityBar();
-
-      score += dt * 0.16667; // 10 pontos por segundo
-      score = Number(score.toFixed(2));
-
-      requestAnimationFrame(gameLoop);
     }
 
-    // --- Skin selector ---
     function updateSkinSelectors() {
       const startSkinOptions = startScreen.querySelectorAll('.skinOption');
       const gameOverSkinOptions = gameOverScreen.querySelectorAll('.skinOption');
@@ -718,6 +718,7 @@
           player.skin = option.dataset.skin;
           selectSkin(player.skin, startSkinOptions);
           selectSkin(player.skin, gameOverSkinOptions);
+          console.log('Skin selecionada:', player.skin);
         });
       });
 
@@ -726,6 +727,7 @@
           player.skin = option.dataset.skin;
           selectSkin(player.skin, startSkinOptions);
           selectSkin(player.skin, gameOverSkinOptions);
+          console.log('Skin selecionada:', player.skin);
         });
       });
 
@@ -733,7 +735,6 @@
       selectSkin(player.skin, gameOverSkinOptions);
     }
 
-    // --- Responsividade do canvas ---
     function resizeCanvas() {
       const maxWidth = window.innerWidth * 0.9;
       const maxHeight = window.innerHeight * 0.8;
@@ -744,12 +745,12 @@
 
     window.addEventListener('resize', resizeCanvas);
     window.addEventListener('load', () => {
+      console.log('Página carregada');
       resizeCanvas();
       updateRanking();
       updateSkinSelectors();
       setupJoystick();
     });
-
   </script>
 </body>
 </html>
