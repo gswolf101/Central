@@ -85,7 +85,7 @@
     }
     #startScreen button, #gameOverScreen button {
       margin: 20px;
-      padding: 10px 20px;
+      padding: 10px;
       font-size: 24px;
       cursor: pointer;
       background-color: white;
@@ -93,15 +93,15 @@
       border: none;
       border-radius: 5px;
     }
-    #startScreen button:hover, #gameOverScreen button:hover:not(:disabled) {
+    #startScreen button:hover, #gameOverScreen button:hover:not(:disabled):not(:disabled) {
       background-color: #ccc;
-    }
-    #saveRankingButton:disabled {
+      }
+
+      #saveRankingButton:disabled {
       background-color: #888;
       color: #ccc;
       cursor: not-allowed;
       opacity: 0.6;
-    }
 
     #backButton {
       position: fixed;
@@ -317,7 +317,7 @@
       skin: 'white'
     };
 
-    let bars = [], score = 0, gameOver = false;
+    let bars = [], score = 0, isGameOver = false;
     let keys = {
       ArrowUp: false, ArrowDown: false,
       ArrowLeft: false, ArrowRight: false,
@@ -327,6 +327,8 @@
     };
     let rankings = JSON.parse(localStorage.getItem('rankings')) || [];
     let animationFrameId = null;
+    let lastFrameTime = 0;
+    let lastBarTime = 0;
 
     let joystickActive = false;
     let joystickCenter = { x: 0, y: 0 };
@@ -422,7 +424,7 @@
         if (e.key === ' ' && !player.immune && player.energy >= 10) {
           player.immune = true;
         }
-        if (e.key === 'Enter' && gameOver) {
+        if (e.key === 'Enter' && isGameOver) {
           console.log('Enter pressed, triggering resetGame'); // Debug
           resetGame();
         }
@@ -441,14 +443,13 @@
     playButton.addEventListener('click', () => {
       console.log('Play button clicked, resetting score and starting game'); // Debug
       startScreen.classList.add('hidden');
-      gameStarted = true;
-      resetGame(); // Resets score to 0
+      resetGame();
     });
 
     restartButton.addEventListener('click', () => {
       console.log('Restart button clicked, triggering resetGame'); // Debug
       gameOverScreen.classList.add('hidden');
-      resetGame(); // Resets score to 0
+      resetGame();
     });
 
     saveRankingButton.addEventListener('click', () => {
@@ -478,9 +479,9 @@
       player.y = canvas.height / 2;
       player.immune = false;
       player.energy = 100;
-      score = 0; // Explicitly reset score
+      score = 0; // Reset score
       bars = [];
-      gameOver = false;
+      isGameOver = false;
       gameStarted = true;
       scoreSaved = false;
       saveRankingButton.disabled = false;
@@ -490,7 +491,7 @@
       gameOverScreen.classList.add('hidden');
       updateSkinSelectors();
       updateRanking();
-      console.log('Game reset, score:', score, 'gameStarted:', gameStarted, 'gameOver:', gameOver); // Debug
+      console.log('Game reset, score:', score, 'gameStarted:', gameStarted, 'isGameOver:', isGameOver); // Debug
       animationFrameId = requestAnimationFrame(gameLoop);
     }
 
@@ -540,7 +541,7 @@
       for (const b of bars) {
         if (player.x + player.radius > b.x && player.x - player.radius < b.x + b.width &&
             player.y + player.radius > b.y && player.y - player.radius < b.y + b.height) {
-          gameOver = true;
+          isGameOver = true;
           console.log('Collision detected, game over, score:', score); // Debug
           break;
         }
@@ -622,18 +623,21 @@
       ctx.clearRect(0, 0, canvas.width, canvas.height);
     }
 
-    let lastFrameTime = 0;
-    let lastBarTime = 0;
-
     function gameLoop(timestamp=0) {
-      if (!gameStarted || gameOver) {
-        if (gameOver) {
+      if (!gameStarted || isGameOver) {
+        if (isGameOver) {
           finalScoreText.textContent = `Sua pontuação: ${score.toFixed(1)}`;
           gameOverScreen.classList.remove('hidden');
           console.log('Game over screen shown, score:', score); // Debug
+          if (animationFrameId) {
+            cancelAnimationFrame(animationFrameId);
+            animationFrameId = null;
+            console.log('Game over, animation frame cancelled'); // Debug
+          }
         }
         return;
       }
+
       const dt = (timestamp - lastFrameTime) / 16.666;
       lastFrameTime = timestamp;
 
