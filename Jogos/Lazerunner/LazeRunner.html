@@ -403,12 +403,19 @@
     }
 
     // --- Desenhar jogador com skin ---
-    function drawPlayer() {
+    function drawPlayer(timestamp) {
       ctx.beginPath();
       ctx.fillStyle = player.skin;
       ctx.shadowColor = player.skin;
       ctx.shadowBlur = 20;
-      ctx.arc(player.x, player.y, player.radius, 0, Math.PI*2);
+
+      // Adicionar efeito de pulsação quando imune
+      let radius = player.radius;
+      if (player.immune) {
+        radius *= 1 + 0.1 * Math.sin(timestamp / 100); // Pulsar entre 0.9x e 1.1x do raio
+      }
+
+      ctx.arc(player.x, player.y, radius, 0, Math.PI*2);
       ctx.fill();
       ctx.shadowBlur = 0;
       // Contorno mais claro
@@ -492,7 +499,7 @@
       );
 
       drawBars();
-      drawPlayer();
+      drawPlayer(timestamp); // Passar timestamp para o efeito de pulsação
       drawScore();
       drawImmunityBar();
 
