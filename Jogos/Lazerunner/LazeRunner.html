@@ -175,22 +175,28 @@
     </div>
   </div>
 
-  <div id="skinSelector" title="Escolha sua skin do jogador">
-    <div class="skinOption selected" data-skin="white" style="background-color: white;"></div>
-    <div class="skinOption" data-skin="red" style="background-color: red;"></div>
-    <div class="skinOption" data-skin="blue" style="background-color: blue;"></div>
-    <div class="skinOption" data-skin="green" style="background-color: green;"></div>
-    <div class="skinOption" data-skin="yellow" style="background-color: yellow; color: black;">★</div>
-  </div>
-
   <div id="startScreen">
     <h1>LazerRunner</h1>
+    <div id="skinSelector" title="Escolha sua skin do jogador">
+      <div class="skinOption selected" data-skin="white" style="background-color: white;"></div>
+      <div class="skinOption" data-skin="red" style="background-color: red;"></div>
+      <div class="skinOption" data-skin="blue" style="background-color: blue;"></div>
+      <div class="skinOption" data-skin="green" style="background-color: green;"></div>
+      <div class="skinOption" data-skin="yellow" style="background-color: yellow; color: black;">★</div>
+    </div>
     <button id="playButton">Play</button>
   </div>
 
   <div id="gameOverScreen" class="hidden">
     <h1>Game Over</h1>
     <p id="finalScore"></p>
+    <div id="skinSelector" title="Escolha sua skin do jogador">
+      <div class="skinOption selected" data-skin="white" style="background-color: white;"></div>
+      <div class="skinOption" data-skin="red" style="background-color: red;"></div>
+      <div class="skinOption" data-skin="blue" style="background-color: blue;"></div>
+      <div class="skinOption" data-skin="green" style="background-color: green;"></div>
+      <div class="skinOption" data-skin="yellow" style="background-color: yellow; color: black;">★</div>
+    </div>
     <button id="restartButton">Restart</button>
     <button id="saveRankingButton">Salvar no ranking</button>
   </div>
@@ -222,7 +228,6 @@
     const restartButton = document.getElementById('restartButton');
     const saveRankingButton = document.getElementById('saveRankingButton');
     const finalScoreText = document.getElementById('finalScore');
-    const skinOptions = document.querySelectorAll('.skinOption');
 
     let gameStarted = false, scoreSaved = false;
     const boundary = { x: 70, y: 70, width: 900 - 140, height: 900 - 140 };
@@ -330,6 +335,7 @@
       saveRankingButton.textContent = 'Salvar no Ranking';
       lastFrameTime = lastBarTime = 0;
       gameOverScreen.classList.add('hidden');
+      updateSkinSelectors();
       requestAnimationFrame(gameLoop);
     }
 
@@ -497,13 +503,42 @@
     }
 
     // --- Skin selector ---
-    skinOptions.forEach(option => {
-      option.addEventListener('click', () => {
-        skinOptions.forEach(o => o.classList.remove('selected'));
-        option.classList.add('selected');
-        player.skin = option.dataset.skin;
+    function updateSkinSelectors() {
+      const startSkinOptions = startScreen.querySelectorAll('.skinOption');
+      const gameOverSkinOptions = gameOverScreen.querySelectorAll('.skinOption');
+
+      // Função para atualizar a seleção visual
+      function selectSkin(skin, options) {
+        options.forEach(opt => {
+          opt.classList.remove('selected');
+          if (opt.dataset.skin === skin) {
+            opt.classList.add('selected');
+          }
+        });
+      }
+
+      // Adicionar eventos para a tela inicial
+      startSkinOptions.forEach(option => {
+        option.addEventListener('click', () => {
+          player.skin = option.dataset.skin;
+          selectSkin(player.skin, startSkinOptions);
+          selectSkin(player.skin, gameOverSkinOptions); // Sincronizar com game over
+        });
       });
-    });
+
+      // Adicionar eventos para a tela de game over
+      gameOverSkinOptions.forEach(option => {
+        option.addEventListener('click', () => {
+          player.skin = option.dataset.skin;
+          selectSkin(player.skin, startSkinOptions); // Sincronizar com tela inicial
+          selectSkin(player.skin, gameOverSkinOptions);
+        });
+      });
+
+      // Inicializar com a skin atual
+      selectSkin(player.skin, startSkinOptions);
+      selectSkin(player.skin, gameOverSkinOptions);
+    }
 
     // --- Responsividade do canvas ---
     function resizeCanvas() {
@@ -519,6 +554,7 @@
     window.addEventListener('load', () => {
       resizeCanvas();
       updateRanking();
+      updateSkinSelectors();
     });
 
   </script>
