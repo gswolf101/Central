@@ -5,7 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <title>Lazer Runner</title>
   <style>
-    /* Reset e básico */
     body {
       display: flex;
       flex-direction: column;
@@ -17,7 +16,7 @@
       font-family: Arial, sans-serif;
       min-height: 100vh;
       box-sizing: border-box;
-      overflow: hidden; /* Evitar barras de rolagem */
+      overflow: hidden;
     }
 
     #gameContainer {
@@ -121,7 +120,6 @@
       background-color: #ccc;
     }
 
-    /* Skin Selector */
     #skinSelector {
       margin-top: 20px;
       display: flex;
@@ -153,9 +151,8 @@
       box-shadow: 0 0 10px yellow;
     }
 
-    /* Joystick e Botão de Imunidade */
     #joystick, #immuneButton {
-      display: none; /* Escondido por padrão, mostrado em dispositivos móveis */
+      display: none;
       position: fixed;
       bottom: 20px;
       z-index: 1000;
@@ -163,15 +160,15 @@
     }
     #joystick {
       left: 20px;
-      width: 100px;
-      height: 100px;
+      width: 120px;
+      height: 120px;
       background: rgba(255,255,255,0.2);
       border-radius: 50%;
-      touch-action: none; /* Evitar comportamento padrão do toque */
+      touch-action: none;
     }
     #joystickKnob {
-      width: 40px;
-      height: 40px;
+      width: 48px;
+      height: 48px;
       background: white;
       border-radius: 50%;
       position: absolute;
@@ -196,7 +193,6 @@
       background: yellow;
     }
 
-    /* Responsividade */
     @media(max-width: 720px) {
       #gameContainer {
         flex-direction: column;
@@ -225,12 +221,10 @@
         height: 40px;
         font-size: 20px;
       }
-      /* Mostrar controles móveis */
       #joystick, #immuneButton {
         display: block;
       }
     }
-
   </style>
 </head>
 <body>
@@ -246,7 +240,7 @@
       <h2>Ranking</h2>
       <ol id="rankingList"></ol>
     </div>
-    <div id="skinSelector" title="Escolha sua skin do jogador">
+    <div id="skinSelector" title="Escolha uma skin">
       <div class="skinOption selected" data-skin="white" style="background-color: white;"></div>
       <div class="skinOption" data-skin="red" style="background-color: red;"></div>
       <div class="skinOption" data-skin="blue" style="background-color: blue;"></div>
@@ -263,7 +257,7 @@
       <h2>Ranking</h2>
       <ol id="rankingList"></ol>
     </div>
-    <div id="skinSelector" title="Escolha sua skin do jogador">
+    <div id="skinSelector" title="Escolha uma skin">
       <div class="skinOption selected" data-skin="white" style="background-color: white;"></div>
       <div class="skinOption" data-skin="red" style="background-color: red;"></div>
       <div class="skinOption" data-skin="blue" style="background-color: blue;"></div>
@@ -289,7 +283,6 @@
   <div id="version">Versão 1.4</div>
 
   <script>
-    // Proteção básica
     document.addEventListener('contextmenu', e => { e.preventDefault(); alert('Clique com o botão direito desativado.'); });
     document.addEventListener('keydown', e => {
       if (e.key === 'F12' || e.keyCode === 123) {
@@ -321,7 +314,7 @@
       energy: 100,
       energyCost: 2,
       rechargeRate: 0.5,
-      skin: 'white'  // cor da skin
+      skin: 'white'
     };
 
     let bars = [], score = 0, gameOver = false;
@@ -334,11 +327,10 @@
     };
     let rankings = JSON.parse(localStorage.getItem('rankings')) || [];
 
-    // --- Controle do Joystick ---
     let joystickActive = false;
     let joystickCenter = { x: 0, y: 0 };
     let joystickDirection = { x: 0, y: 0 };
-    const joystickRadius = 50; // Raio do joystick em pixels
+    const joystickRadius = 60;
     const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
 
     function setupJoystick() {
@@ -381,16 +373,13 @@
       const distance = Math.hypot(dx, dy);
       const maxDistance = joystickRadius;
 
-      // Limitar o movimento do knob ao raio do joystick
       if (distance > maxDistance) {
         dx = (dx / distance) * maxDistance;
         dy = (dy / distance) * maxDistance;
       }
 
-      // Atualizar posição do knob
-      joystickKnob.style.transform = `translate(${dx - 20}px, ${dy - 20}px)`;
+      joystickKnob.style.transform = `translate(${dx - 24}px, ${dy - 24}px)`;
 
-      // Calcular direção normalizada
       joystickDirection = {
         x: distance > 0 ? dx / maxDistance : 0,
         y: distance > 0 ? dy / maxDistance : 0
@@ -403,7 +392,6 @@
       joystickKnob.style.transform = 'translate(-50%, -50%)';
     }
 
-    // --- Função para salvar ranking no localStorage ---
     function saveRanking() {
       try {
         localStorage.setItem('rankings', JSON.stringify(rankings));
@@ -412,7 +400,6 @@
       }
     }
 
-    // --- Atualiza a lista do ranking na tela ---
     function updateRanking() {
       const startRankingList = startScreen.querySelector('#rankingList');
       const gameOverRankingList = gameOverScreen.querySelector('#rankingList');
@@ -428,7 +415,6 @@
       });
     }
 
-    // --- Controle de teclas ---
     document.addEventListener('keydown', e => {
       if (e.key in keys) {
         keys[e.key] = true;
@@ -448,7 +434,6 @@
       }
     });
 
-    // --- Eventos dos botões ---
     playButton.addEventListener('click', () => {
       startScreen.classList.add('hidden');
       gameStarted = true;
@@ -476,18 +461,17 @@
       }
     });
 
-    // --- Reset do jogo ---
     function resetGame() {
       player.x = canvas.width / 2;
       player.y = canvas.height / 2;
       player.immune = false;
       player.energy = 100;
-      score = 0; // Garantir que a pontuação seja zerada
+      score = 0;
       bars = [];
       gameOver = false;
       scoreSaved = false;
       saveRankingButton.disabled = false;
-      saveRankingButton.textContent = 'Salvar no Ranking';
+      saveRankingButton.textContent = 'Salvar no ranking';
       lastFrameTime = lastBarTime = 0;
       gameOverScreen.classList.add('hidden');
       updateSkinSelectors();
@@ -495,7 +479,6 @@
       requestAnimationFrame(gameLoop);
     }
 
-    // --- Criação das barras ---
     function createBar() {
       const dir = Math.floor(Math.random()*4);
       const thickness = 30;
@@ -511,16 +494,13 @@
       bars.push(bar);
     }
 
-    // --- Movimento do jogador ---
     function movePlayer(dt) {
       let dx = 0, dy = 0;
 
-      // Priorizar joystick se ativo
       if (isTouchDevice && joystickActive && (joystickDirection.x !== 0 || joystickDirection.y !== 0)) {
         dx = joystickDirection.x;
         dy = joystickDirection.y;
       } else {
-        // Usar teclado se não houver joystick ativo
         if (keys.ArrowUp || keys.w || keys.W) dy--;
         if (keys.ArrowDown || keys.s || keys.S) dy++;
         if (keys.ArrowLeft || keys.a || keys.A) dx--;
@@ -536,12 +516,10 @@
       }
     }
 
-    // --- Movimento das barras ---
     function moveBars(dt) {
       bars.forEach(b => { b.x += b.dx * dt; b.y += b.dy * dt; });
     }
 
-    // --- Checar colisões ---
     function checkCollisions() {
       if (player.immune) return;
       for (const b of bars) {
@@ -553,7 +531,6 @@
       }
     }
 
-    // --- Atualizar energia do jogador ---
     function updateEnergy(dt) {
       if (player.immune) {
         player.energy -= player.energyCost * dt;
@@ -568,7 +545,6 @@
       }
     }
 
-    // --- Desenhar jogador com skin ---
     function drawPlayer(timestamp) {
       ctx.beginPath();
       ctx.fillStyle = player.skin;
@@ -578,7 +554,6 @@
       ctx.fill();
       ctx.shadowBlur = 0;
 
-      // Adicionar borda amarela quando imune, com brilho
       if (player.immune) {
         ctx.strokeStyle = 'yellow';
         ctx.lineWidth = 6;
@@ -588,13 +563,11 @@
         ctx.shadowBlur = 0;
       }
 
-      // Contorno padrão branco
       ctx.strokeStyle = 'white';
       ctx.lineWidth = 2;
       ctx.stroke();
     }
 
-    // --- Desenhar barras ---
     function drawBars() {
       ctx.fillStyle = 'red';
       bars.forEach(b => {
@@ -602,35 +575,37 @@
       });
     }
 
-    // --- Desenhar borda da área ---
     function drawBoundary() {
       ctx.strokeStyle = 'white';
       ctx.lineWidth = 3;
       ctx.strokeRect(boundary.x, boundary.y, boundary.width, boundary.height);
     }
 
-    // --- Desenhar pontuação ---
     function drawScore() {
       ctx.fillStyle = 'white';
       ctx.font = '24px Arial';
-      ctx.fillText('Score: ' + Number(score.toFixed(2)), 20, 40);
+      ctx.textAlign = 'center';
+      ctx.fillText('Score: ' + Number(score.toFixed(2)), canvas.width / 2, 40);
+      ctx.textAlign = 'left';
     }
 
-    // --- Desenhar barra de imunidade ---
     function drawImmunityBar() {
+      const barWidth = 150;
+      const barHeight = 20;
+      const barX = canvas.width / 2 - barWidth / 2;
+      const barY = boundary.y + boundary.height + 20;
+
       ctx.strokeStyle = 'white';
       ctx.lineWidth = 2;
-      ctx.strokeRect(20, 50, 150, 20);
+      ctx.strokeRect(barX, barY, barWidth, barHeight);
       ctx.fillStyle = player.immune ? 'yellow' : 'gray';
-      ctx.fillRect(22, 52, (player.energy / 100) * 146, 16);
+      ctx.fillRect(barX + 2, barY + 2, (player.energy / 100) * (barWidth - 4), barHeight - 4);
     }
 
-    // --- Limpar tela ---
     function clearScreen() {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
     }
 
-    // --- Atualizar e desenhar tudo ---
     let lastFrameTime = 0;
     let lastBarTime = 0;
 
@@ -642,7 +617,7 @@
         }
         return;
       }
-      const dt = (timestamp - lastFrameTime) / 16.666; // approx 60fps base
+      const dt = (timestamp - lastFrameTime) / 16.666;
       lastFrameTime = timestamp;
 
       clearScreen();
@@ -652,14 +627,12 @@
       checkCollisions();
       updateEnergy(dt);
 
-      // Criar novas barras a cada 2 segundos
       lastBarTime += dt;
       if (lastBarTime > 120) {
         createBar();
         lastBarTime = 0;
       }
 
-      // Remover barras que saíram da tela
       bars = bars.filter(b =>
         b.x + b.width > -50 && b.x < canvas.width + 50 &&
         b.y + b.height > -50 && b.y < canvas.height + 50
@@ -670,13 +643,12 @@
       drawScore();
       drawImmunityBar();
 
-      score += dt * 0.16667; // 10 pontos por segundo
+      score += dt * 0.16667;
       score = Number(score.toFixed(2));
 
       requestAnimationFrame(gameLoop);
     }
 
-    // --- Skin selector ---
     function updateSkinSelectors() {
       const startSkinOptions = startScreen.querySelectorAll('.skinOption');
       const gameOverSkinOptions = gameOverScreen.querySelectorAll('.skinOption');
@@ -710,7 +682,6 @@
       selectSkin(player.skin, gameOverSkinOptions);
     }
 
-    // --- Responsividade do canvas ---
     function resizeCanvas() {
       const maxWidth = window.innerWidth * 0.9;
       const maxHeight = window.innerHeight * 0.8;
@@ -726,7 +697,6 @@
       updateSkinSelectors();
       setupJoystick();
     });
-
   </script>
 </body>
 </html>
