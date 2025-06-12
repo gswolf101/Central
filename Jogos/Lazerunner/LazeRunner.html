@@ -7,50 +7,55 @@
   <style>
     body {
       display: flex;
-      justify-content: center;
-      align-items: flex-start;
-      gap: 20px;
-      padding: 20px;
+      flex-direction: column;
+      align-items: center;
       margin: 0;
+      padding: 0;
       background-color: #000;
-      color: white;
       font-family: Arial, sans-serif;
+      color: white;
     }
     canvas {
-      border: 2px solid #fff;
-      background-color: black;
+      border: 2px solid white;
+      margin-top: 10px;
     }
     #ranking {
-      width: 250px;
+      margin-top: 10px;
+      text-align: left;
     }
     #startScreen, #gameOverScreen {
       position: absolute;
-      top: 0; left: 0;
-      width: 100%; height: 100%;
-      background: rgba(0, 0, 0, 0.8);
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.85);
       display: flex;
       flex-direction: column;
       justify-content: center;
       align-items: center;
-      color: white;
-      font-size: 48px;
-      text-align: center;
+      font-size: 36px;
+      z-index: 10;
     }
-    .hidden {
+    #startScreen.hidden, #gameOverScreen.hidden {
       display: none;
     }
     button {
-      margin: 10px;
+      margin-top: 20px;
       padding: 10px 20px;
       font-size: 20px;
-      border: none;
-      border-radius: 5px;
       cursor: pointer;
+      background-color: white;
+      color: black;
+      border: none;
+      border-radius: 8px;
     }
     #immunityBar {
       position: absolute;
-      top: 40px; left: 10px;
-      width: 150px; height: 20px;
+      top: 10px;
+      left: 10px;
+      width: 150px;
+      height: 20px;
       border: 2px solid white;
       background-color: #333;
     }
@@ -62,84 +67,82 @@
     #immunityFill.cooldown {
       background-color: gray;
     }
+    #version {
+      position: absolute;
+      bottom: 10px;
+      right: 10px;
+      font-size: 14px;
+      color: #aaa;
+    }
   </style>
 </head>
 <body>
-  <canvas id="gameCanvas" width="800" height="800"></canvas>
-  <div id="ranking">
-    <h2>Ranking</h2>
-    <ol id="rankingList"></ol>
-  </div>
-
   <div id="startScreen">
     <h1>Lazer Runner</h1>
     <button id="playButton">Jogar</button>
   </div>
-
+  <canvas id="gameCanvas" width="600" height="600"></canvas>
   <div id="gameOverScreen" class="hidden">
-    <h1>Game Over</h1>
-    <p id="finalScore"></p>
+    <h2>Game Over</h2>
+    <p id="finalScore">Pontuação: 0</p>
     <button id="restartButton">Reiniciar</button>
-    <button id="saveRankingButton">Salvar no Ranking</button>
   </div>
-
   <div id="immunityBar">
     <div id="immunityFill"></div>
   </div>
+  <div id="version">Versão 1.4</div>
 
   <script>
     const canvas = document.getElementById('gameCanvas');
     const ctx = canvas.getContext('2d');
 
-    const playButton = document.getElementById('playButton');
-    const restartButton = document.getElementById('restartButton');
-    const saveRankingButton = document.getElementById('saveRankingButton');
     const startScreen = document.getElementById('startScreen');
     const gameOverScreen = document.getElementById('gameOverScreen');
+    const playButton = document.getElementById('playButton');
+    const restartButton = document.getElementById('restartButton');
     const finalScoreText = document.getElementById('finalScore');
-    const fill = document.getElementById('immunityFill');
+    const immunityFill = document.getElementById('immunityFill');
 
     const boundary = { x: 50, y: 50, width: canvas.width - 100, height: canvas.height - 100 };
-    let player = {
+    let gameStarted = false;
+    let gameOver = false;
+    let score = 0;
+
+    const player = {
       x: canvas.width / 2,
       y: canvas.height / 2,
-      radius: 20,
+      radius: 15,
       speed: 4,
       immune: false,
       energy: 100,
-      energyCost: 1,
+      energyCost: 2,
       rechargeRate: 0.5,
       trail: []
     };
 
-    let keys = {}, bars = [], score = 0, gameStarted = false, gameOver = false, scoreSaved = false;
-    let lastFrameTime = 0, lastBarTime = 0;
-    let rankings = JSON.parse(localStorage.getItem('rankings')) || [];
+    const keys = {};
+    const bars = [];
 
     document.addEventListener('keydown', e => {
       keys[e.key] = true;
-      if (e.key === ' ' && !player.immune && player.energy >= 10) {
-        player.immune = true;
-      }
-      if (e.key === 'Enter' && gameOver) resetGame();
+      if (e.key === ' ' && !player.immune && player.energy >= 10) player.immune = true;
     });
     document.addEventListener('keyup', e => {
       keys[e.key] = false;
       if (e.key === ' ') player.immune = false;
     });
 
-    playButton.onclick = () => { startScreen.classList.add('hidden'); gameStarted = true; resetGame(); };
-    restartButton.onclick = () => { gameOverScreen.classList.add('hidden'); resetGame(); };
-    saveRankingButton.onclick = () => {
-      if (scoreSaved) return;
-      const name = prompt("Digite seu nome:");
-      if (name) {
-        rankings.push({ name: name.trim(), score });
-        localStorage.setItem('rankings', JSON.stringify(rankings));
-        updateRanking();
-        saveRankingButton.disabled = true;
-        scoreSaved = true;
-      }
+    playButton.onclick = () => {
+      startScreen.classList.add('hidden');
+      resetGame();
+      gameStarted = true;
+      requestAnimationFrame(gameLoop);
+    };
+
+    restartButton.onclick = () => {
+      gameOverScreen.classList.add('hidden');
+      resetGame();
+      requestAnimationFrame(gameLoop);
     };
 
     function resetGame() {
@@ -147,35 +150,36 @@
       player.y = canvas.height / 2;
       player.energy = 100;
       player.immune = false;
-      player.trail = [];
-      bars = [];
       score = 0;
+      bars.length = 0;
+      player.trail.length = 0;
       gameOver = false;
-      scoreSaved = false;
-      saveRankingButton.disabled = false;
-      gameOverScreen.classList.add('hidden');
       updateImmunityBar();
-      requestAnimationFrame(gameLoop);
     }
 
     function updateImmunityBar() {
-      fill.style.width = `${player.energy}%`;
-      fill.className = player.immune ? '' : 'cooldown';
+      immunityFill.style.width = `${player.energy}%`;
+      immunityFill.className = player.immune ? '' : 'cooldown';
     }
 
     function movePlayer() {
       let dx = 0, dy = 0;
-      if (keys.ArrowUp || keys.w) dy -= 1;
-      if (keys.ArrowDown || keys.s) dy += 1;
-      if (keys.ArrowLeft || keys.a) dx -= 1;
-      if (keys.ArrowRight || keys.d) dx += 1;
-      const len = Math.hypot(dx, dy);
-      if (len) {
+      if (keys.ArrowUp || keys.w) dy--;
+      if (keys.ArrowDown || keys.s) dy++;
+      if (keys.ArrowLeft || keys.a) dx--;
+      if (keys.ArrowRight || keys.d) dx++;
+      if (dx || dy) {
+        const len = Math.hypot(dx, dy);
         player.x += (dx / len) * player.speed;
         player.y += (dy / len) * player.speed;
-        player.x = Math.max(boundary.x + player.radius, Math.min(player.x, boundary.x + boundary.width - player.radius));
-        player.y = Math.max(boundary.y + player.radius, Math.min(player.y, boundary.y + boundary.height - player.radius));
-        player.trail.push({ x: player.x, y: player.y, time: Date.now() });
+
+        // limitar dentro dos limites
+        player.x = Math.max(boundary.x + player.radius, Math.min(boundary.x + boundary.width - player.radius, player.x));
+        player.y = Math.max(boundary.y + player.radius, Math.min(boundary.y + boundary.height - player.radius, player.y));
+
+        // adicionar rastro
+        player.trail.push({ x: player.x, y: player.y, alpha: 1 });
+        if (player.trail.length > 30) player.trail.shift();
       }
     }
 
@@ -191,116 +195,93 @@
 
     function createBar() {
       const dir = Math.floor(Math.random() * 4);
-      const size = 30;
-      const len = Math.random() * 200 + 200;
+      const thickness = 20;
+      const length = Math.random() * 200 + 150;
       const speed = 2 + Math.random() * 2;
       let bar;
       switch (dir) {
-        case 0: bar = { x: -size, y: Math.random() * (canvas.height - len), width: size, height: len, dx: speed, dy: 0 }; break;
-        case 1: bar = { x: canvas.width, y: Math.random() * (canvas.height - len), width: size, height: len, dx: -speed, dy: 0 }; break;
-        case 2: bar = { x: Math.random() * (canvas.width - len), y: -size, width: len, height: size, dx: 0, dy: speed }; break;
-        case 3: bar = { x: Math.random() * (canvas.width - len), y: canvas.height, width: len, height: size, dx: 0, dy: -speed }; break;
+        case 0: bar = { x: -thickness, y: Math.random() * canvas.height, w: thickness, h: length, dx: speed, dy: 0 }; break;
+        case 1: bar = { x: canvas.width, y: Math.random() * canvas.height, w: thickness, h: length, dx: -speed, dy: 0 }; break;
+        case 2: bar = { x: Math.random() * canvas.width, y: -thickness, w: length, h: thickness, dx: 0, dy: speed }; break;
+        case 3: bar = { x: Math.random() * canvas.width, y: canvas.height, w: length, h: thickness, dx: 0, dy: -speed }; break;
       }
       bars.push(bar);
     }
 
     function moveBars() {
-      bars.forEach(bar => {
-        bar.x += bar.dx;
-        bar.y += bar.dy;
+      bars.forEach(b => {
+        b.x += b.dx;
+        b.y += b.dy;
       });
     }
 
     function checkCollisions() {
       if (player.immune) return;
-      for (let b of bars) {
-        if (player.x + player.radius > b.x && player.x - player.radius < b.x + b.width &&
-            player.y + player.radius > b.y && player.y - player.radius < b.y + b.height) {
+      for (const b of bars) {
+        if (player.x + player.radius > b.x &&
+            player.x - player.radius < b.x + b.w &&
+            player.y + player.radius > b.y &&
+            player.y - player.radius < b.y + b.h) {
           gameOver = true;
-          finalScoreText.textContent = `Pontuação final: ${score}`;
           gameOverScreen.classList.remove('hidden');
+          finalScoreText.textContent = `Pontuação: ${score}`;
+          break;
         }
       }
     }
 
     function draw() {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.3)';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      // Área de jogo
       ctx.strokeStyle = 'white';
+      ctx.lineWidth = 2;
       ctx.strokeRect(boundary.x, boundary.y, boundary.width, boundary.height);
 
-      // Draw trail
-      const now = Date.now();
-      player.trail = player.trail.filter(p => now - p.time < 600);
-      ctx.strokeStyle = 'rgba(255,255,255,0.2)';
-      ctx.lineWidth = 6;
-      ctx.beginPath();
-      for (let i = 0; i < player.trail.length; i++) {
-        const p = player.trail[i];
-        if (i === 0) ctx.moveTo(p.x, p.y);
-        else ctx.lineTo(p.x, p.y);
-      }
-      ctx.stroke();
+      // Rastro
+      player.trail.forEach(t => {
+        ctx.beginPath();
+        ctx.arc(t.x, t.y, player.radius, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(255,255,255,${t.alpha})`;
+        ctx.fill();
+        t.alpha -= 0.03;
+      });
 
-      // Draw player
+      // Jogador
       ctx.beginPath();
       ctx.arc(player.x, player.y, player.radius, 0, Math.PI * 2);
       ctx.fillStyle = player.immune ? 'yellow' : 'white';
       ctx.fill();
 
-      // Draw aura if immune
-      if (player.immune) {
-        ctx.beginPath();
-        ctx.arc(player.x, player.y, player.radius + 10, 0, Math.PI * 2);
-        ctx.strokeStyle = 'yellow';
-        ctx.lineWidth = 3;
-        ctx.stroke();
-      }
-
-      // Draw bars
+      // Obstáculos
       ctx.fillStyle = 'red';
-      bars.forEach(bar => ctx.fillRect(bar.x, bar.y, bar.width, bar.height));
+      bars.forEach(b => ctx.fillRect(b.x, b.y, b.w, b.h));
 
+      // Pontuação
       ctx.fillStyle = 'white';
       ctx.font = '20px Arial';
-      ctx.fillText(`Pontuação: ${score}`, 10, 20);
+      ctx.fillText(`Pontuação: ${score}`, 10, 30);
     }
 
-    function updateRanking() {
-      const list = document.getElementById('rankingList');
-      list.innerHTML = '';
-      rankings.sort((a, b) => b.score - a.score).slice(0, 10).forEach(entry => {
-        const li = document.createElement('li');
-        li.textContent = `${entry.name} - ${entry.score}`;
-        list.appendChild(li);
-      });
-    }
+    let lastBarTime = 0;
+    function gameLoop(timestamp) {
+      if (gameOver || !gameStarted) return;
 
-    function gameLoop(ts) {
-      if (!lastFrameTime) lastFrameTime = ts;
-      const delta = ts - lastFrameTime;
-      lastFrameTime = ts;
+      movePlayer();
+      moveBars();
+      manageImmunity();
+      checkCollisions();
+      draw();
 
-      if (gameStarted && !gameOver) {
-        if (ts - lastBarTime > 2000) {
-          createBar();
-          lastBarTime = ts;
-          score += 1;
-        }
-
-        movePlayer();
-        moveBars();
-        manageImmunity();
-        checkCollisions();
-        draw();
-
-        requestAnimationFrame(gameLoop);
-      } else {
-        draw(); // Mostra tela parada
+      if (timestamp - lastBarTime > 2500) {
+        createBar();
+        lastBarTime = timestamp;
+        score++;
       }
-    }
 
-    updateRanking();
-    requestAnimationFrame(gameLoop);
+      requestAnimationFrame(gameLoop);
+    }
   </script>
 </body>
 </html>
