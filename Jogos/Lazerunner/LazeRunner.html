@@ -85,7 +85,7 @@
     }
     #startScreen button, #gameOverScreen button {
       margin: 20px;
-      padding: 10px;
+      padding: 10px 20px;
       font-size: 24px;
       cursor: pointer;
       background-color: white;
@@ -93,15 +93,15 @@
       border: none;
       border-radius: 5px;
     }
-    #startScreen button:hover, #gameOverScreen button:hover:not(:disabled):not(:disabled) {
+    #startScreen button:hover, #gameOverScreen button:hover:not(:disabled) {
       background-color: #ccc;
-      }
-
-      #saveRankingButton:disabled {
+    }
+    #saveRankingButton:disabled {
       background-color: #888;
       color: #ccc;
       cursor: not-allowed;
       opacity: 0.6;
+    }
 
     #backButton {
       position: fixed;
@@ -317,7 +317,7 @@
       skin: 'white'
     };
 
-    let bars = [], score = 0, isGameOver = false;
+    let bars = [], score = 0, gameOver = false;
     let keys = {
       ArrowUp: false, ArrowDown: false,
       ArrowLeft: false, ArrowRight: false,
@@ -326,9 +326,6 @@
       ' ': false, Enter: false
     };
     let rankings = JSON.parse(localStorage.getItem('rankings')) || [];
-    let animationFrameId = null;
-    let lastFrameTime = 0;
-    let lastBarTime = 0;
 
     let joystickActive = false;
     let joystickCenter = { x: 0, y: 0 };
@@ -424,10 +421,7 @@
         if (e.key === ' ' && !player.immune && player.energy >= 10) {
           player.immune = true;
         }
-        if (e.key === 'Enter' && isGameOver) {
-          console.log('Enter pressed, triggering resetGame'); // Debug
-          resetGame();
-        }
+        if (e.key === 'Enter' && gameOver) resetGame();
       }
     });
 
@@ -441,13 +435,12 @@
     });
 
     playButton.addEventListener('click', () => {
-      console.log('Play button clicked, resetting score and starting game'); // Debug
       startScreen.classList.add('hidden');
+      gameStarted = true;
       resetGame();
     });
 
     restartButton.addEventListener('click', () => {
-      console.log('Restart button clicked, triggering resetGame'); // Debug
       gameOverScreen.classList.add('hidden');
       resetGame();
     });
@@ -456,7 +449,7 @@
       if (scoreSaved) return;
       const name = prompt('Digite seu nome:');
       if (name && name.trim()) {
-        rankings.push({ name: name.trim(), score: Number(score.toFixed(1)) });
+        rankings.push({ name: name.trim(), score: Number(score.toFixed(2)) });
         saveRanking();
         updateRanking();
         scoreSaved = true;
@@ -469,30 +462,21 @@
     });
 
     function resetGame() {
-      if (animationFrameId) {
-        cancelAnimationFrame(animationFrameId);
-        animationFrameId = null;
-        console.log('Cancelled animation frame'); // Debug
-      }
-
       player.x = canvas.width / 2;
       player.y = canvas.height / 2;
       player.immune = false;
       player.energy = 100;
-      score = 0; // Reset score
+      score = 0;
       bars = [];
-      isGameOver = false;
-      gameStarted = true;
+      gameOver = false;
       scoreSaved = false;
       saveRankingButton.disabled = false;
       saveRankingButton.textContent = 'Salvar no ranking';
-      lastFrameTime = 0;
-      lastBarTime = 0;
+      lastFrameTime = lastBarTime = 0;
       gameOverScreen.classList.add('hidden');
       updateSkinSelectors();
       updateRanking();
-      console.log('Game reset, score:', score, 'gameStarted:', gameStarted, 'isGameOver:', isGameOver); // Debug
-      animationFrameId = requestAnimationFrame(gameLoop);
+      requestAnimationFrame(gameLoop);
     }
 
     function createBar() {
@@ -541,8 +525,7 @@
       for (const b of bars) {
         if (player.x + player.radius > b.x && player.x - player.radius < b.x + b.width &&
             player.y + player.radius > b.y && player.y - player.radius < b.y + b.height) {
-          isGameOver = true;
-          console.log('Collision detected, game over, score:', score); // Debug
+          gameOver = true;
           break;
         }
       }
@@ -602,7 +585,7 @@
       ctx.fillStyle = 'white';
       ctx.font = '24px Arial';
       ctx.textAlign = 'center';
-      ctx.fillText('Pontuação: ' + score.toFixed(1), canvas.width / 2, 40);
+      ctx.fillText('Score: ' + Number(score.toFixed(2)), canvas.width / 2, 40);
       ctx.textAlign = 'left';
     }
 
@@ -623,21 +606,17 @@
       ctx.clearRect(0, 0, canvas.width, canvas.height);
     }
 
+    let lastFrameTime = 0;
+    let lastBarTime = 0;
+
     function gameLoop(timestamp=0) {
-      if (!gameStarted || isGameOver) {
-        if (isGameOver) {
-          finalScoreText.textContent = `Sua pontuação: ${score.toFixed(1)}`;
+      if (!gameStarted || gameOver) {
+        if (gameOver) {
+          finalScoreText.textContent = `Sua pontuação: ${Number(score.toFixed(2))}`;
           gameOverScreen.classList.remove('hidden');
-          console.log('Game over screen shown, score:', score); // Debug
-          if (animationFrameId) {
-            cancelAnimationFrame(animationFrameId);
-            animationFrameId = null;
-            console.log('Game over, animation frame cancelled'); // Debug
-          }
         }
         return;
       }
-
       const dt = (timestamp - lastFrameTime) / 16.666;
       lastFrameTime = timestamp;
 
@@ -664,10 +643,10 @@
       drawScore();
       drawImmunityBar();
 
-      score += dt / 60;
-      console.log('Score:', score, 'dt:', dt); // Debug
+      score += dt * 0.16667;
+      score = Number(score.toFixed(2));
 
-      animationFrameId = requestAnimationFrame(gameLoop);
+      requestAnimationFrame(gameLoop);
     }
 
     function updateSkinSelectors() {
@@ -688,7 +667,6 @@
           player.skin = option.dataset.skin;
           selectSkin(player.skin, startSkinOptions);
           selectSkin(player.skin, gameOverSkinOptions);
-          console.log('Skin selected (start):', player.skin); // Debug
         });
       });
 
@@ -697,7 +675,6 @@
           player.skin = option.dataset.skin;
           selectSkin(player.skin, startSkinOptions);
           selectSkin(player.skin, gameOverSkinOptions);
-          console.log('Skin selected (game over):', player.skin); // Debug
         });
       });
 
@@ -719,7 +696,6 @@
       updateRanking();
       updateSkinSelectors();
       setupJoystick();
-      console.log('Game loaded, initial score:', score); // Debug
     });
   </script>
 </body>
