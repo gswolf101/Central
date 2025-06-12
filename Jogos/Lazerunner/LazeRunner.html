@@ -40,9 +40,15 @@
     #ranking {
       width: 250px;
       max-width: 100%;
+      margin: 20px 0;
     }
     #ranking h2 {
       margin-top: 0;
+      font-size: 24px;
+    }
+    #ranking ol {
+      padding-left: 20px;
+      font-size: 18px;
     }
 
     #footer {
@@ -154,11 +160,26 @@
       }
       #ranking {
         width: 90vw;
-        margin-top: 20px;
+        margin: 10px 0;
       }
       canvas {
         width: 90vw !important;
         height: auto !important;
+      }
+      #startScreen, #gameOverScreen {
+        font-size: 36px;
+      }
+      #startScreen button, #gameOverScreen button {
+        font-size: 20px;
+        padding: 8px 16px;
+      }
+      #skinSelector {
+        margin-top: 10px;
+      }
+      .skinOption {
+        width: 40px;
+        height: 40px;
+        font-size: 20px;
       }
     }
 
@@ -169,14 +190,14 @@
 
   <div id="gameContainer">
     <canvas id="gameCanvas" width="900" height="900"></canvas>
-    <div id="ranking">
-      <h2>Ranking</h2>
-      <ol id="rankingList"></ol>
-    </div>
   </div>
 
   <div id="startScreen">
     <h1>LazerRunner</h1>
+    <div id="ranking">
+      <h2>Ranking</h2>
+      <ol id="rankingList"></ol>
+    </div>
     <div id="skinSelector" title="Escolha sua skin do jogador">
       <div class="skinOption selected" data-skin="white" style="background-color: white;"></div>
       <div class="skinOption" data-skin="red" style="background-color: red;"></div>
@@ -187,9 +208,13 @@
     <button id="playButton">Play</button>
   </div>
 
-  <div id="gameOverScreen" class="hidden">
+  <div id="gameOver@kvN2gA1Screen" class="hidden">
     <h1>Game Over</h1>
     <p id="finalScore"></p>
+    <div id="ranking">
+      <h2>Ranking</h2>
+      <ol id="rankingList"></ol>
+    </div>
     <div id="skinSelector" title="Escolha sua skin do jogador">
       <div class="skinOption selected" data-skin="white" style="background-color: white;"></div>
       <div class="skinOption" data-skin="red" style="background-color: red;"></div>
@@ -208,7 +233,7 @@
     <br>
     Reiniciar: Enter
   </div>
-  <div id="version">Versão 2.0</div>
+  <div id="version">Versão 1.4</div>
 
   <script>
     // Proteção básica
@@ -264,12 +289,17 @@
 
     // --- Atualiza lista do ranking na tela ---
     function updateRanking() {
-      const list = document.getElementById('rankingList');
-      list.innerHTML = '';
+      const startRankingList = startScreen.querySelector('#rankingList');
+      const gameOverRankingList = gameOverScreen.querySelector('#rankingList');
+      startRankingList.innerHTML = '';
+      gameOverRankingList.innerHTML = '';
       rankings.sort((a,b)=>b.score-a.score).slice(0,10).forEach(e => {
-        const li = document.createElement('li');
-        li.textContent = `${e.name} - ${e.score}`;
-        list.appendChild(li);
+        const li1 = document.createElement('li');
+        li1.textContent = `${e.name} - ${e.score}`;
+        startRankingList.appendChild(li1);
+        const li2 = document.createElement('li');
+        li2.textContent = `${e.name} - ${e.score}`;
+        gameOverRankingList.appendChild(li2);
       });
     }
 
@@ -336,6 +366,7 @@
       lastFrameTime = lastBarTime = 0;
       gameOverScreen.classList.add('hidden');
       updateSkinSelectors();
+      updateRanking();
       requestAnimationFrame(gameLoop);
     }
 
@@ -412,11 +443,14 @@
       ctx.fill();
       ctx.shadowBlur = 0;
 
-      // Adicionar borda amarela quando imune
+      // Adicionar borda amarela quando imune, com brilho
       if (player.immune) {
         ctx.strokeStyle = 'yellow';
-        ctx.lineWidth = 4;
+        ctx.lineWidth = 6; // Aumentada para maior visibilidade
+        ctx.shadowColor = 'yellow';
+        ctx.shadowBlur = 10; // Brilho para destacar
         ctx.stroke();
+        ctx.shadowBlur = 0; // Resetar brilho
       }
 
       // Contorno padrão branco
