@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>LazerRunner</title>
+  <title>Lazer Runner</title>
   <style>
     /* Reset e básico */
     body {
@@ -17,6 +17,7 @@
       font-family: Arial, sans-serif;
       min-height: 100vh;
       box-sizing: border-box;
+      overflow: hidden; /* Evitar barras de rolagem */
     }
 
     #gameContainer {
@@ -152,6 +153,49 @@
       box-shadow: 0 0 10px yellow;
     }
 
+    /* Joystick e Botão de Imunidade */
+    #joystick, #immuneButton {
+      display: none; /* Escondido por padrão, mostrado em dispositivos móveis */
+      position: fixed;
+      bottom: 20px;
+      z-index: 1000;
+      user-select: none;
+    }
+    #joystick {
+      left: 20px;
+      width: 100px;
+      height: 100px;
+      background: rgba(255,255,255,0.2);
+      border-radius: 50%;
+      touch-action: none; /* Evitar comportamento padrão do toque */
+    }
+    #joystickKnob {
+      width: 40px;
+      height: 40px;
+      background: white;
+      border-radius: 50%;
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+    }
+    #immuneButton {
+      right: 20px;
+      width: 60px;
+      height: 60px;
+      background: rgba(255,255,0,0.5);
+      border-radius: 50%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-size: 20px;
+      color: white;
+      touch-action: none;
+    }
+    #immuneButton.active {
+      background: yellow;
+    }
+
     /* Responsividade */
     @media(max-width: 720px) {
       #gameContainer {
@@ -180,6 +224,10 @@
         width: 40px;
         height: 40px;
         font-size: 20px;
+      }
+      /* Mostrar controles móveis */
+      #joystick, #immuneButton {
+        display: block;
       }
     }
 
@@ -226,6 +274,11 @@
     <button id="saveRankingButton">Salvar no ranking</button>
   </div>
 
+  <div id="joystick">
+    <div id="joystickKnob"></div>
+  </div>
+  <div id="immuneButton">🛡️</div>
+
   <div id="footer">
     Mover: Setas ou WASD
     <br>
@@ -253,6 +306,9 @@
     const restartButton = document.getElementById('restartButton');
     const saveRankingButton = document.getElementById('saveRankingButton');
     const finalScoreText = document.getElementById('finalScore');
+    const joystick = document.getElementById('joystick');
+    const joystickKnob = document.getElementById('joystickKnob');
+    const immuneButton = document.getElementById('immuneButton');
 
     let gameStarted = false, scoreSaved = false;
     const boundary = { x: 70, y: 70, width: 900 - 140, height: 900 - 140 };
@@ -278,6 +334,75 @@
     };
     let rankings = JSON.parse(localStorage.getItem('rankings')) || [];
 
+    // --- Controle do Joystick ---
+    let joystickActive = false;
+    let joystickCenter = { x: 0, y: 0 };
+    let joystickDirection = { x: 0, y: 0 };
+    const joystickRadius = 50; // Raio do joystick em pixels
+    const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+
+    function setupJoystick() {
+      if (!isTouchDevice) return;
+
+      joystick.addEventListener('touchstart', startJoystick);
+      joystick.addEventListener('touchmove', moveJoystick);
+      joystick.addEventListener('touchend', endJoystick);
+
+      immuneButton.addEventListener('touchstart', () => {
+        if (!player.immune && player.energy >= 10) {
+          player.immune = true;
+          immuneButton.classList.add('active');
+        }
+      });
+      immuneButton.addEventListener('touchend', () => {
+        player.immune = false;
+        immuneButton.classList.remove('active');
+      });
+    }
+
+    function startJoystick(e) {
+      e.preventDefault();
+      const touch = e.touches[0];
+      const rect = joystick.getBoundingClientRect();
+      joystickCenter = {
+        x: rect.left + rect.width / 2,
+        y: rect.top + rect.height / 2
+      };
+      joystickActive = true;
+      moveJoystick(e);
+    }
+
+    function moveJoystick(e) {
+      if (!joystickActive) return;
+      e.preventDefault();
+      const touch = e.touches[0];
+      let dx = touch.clientX - joystickCenter.x;
+      let dy = touch.clientY - joystickCenter.y;
+      const distance = Math.hypot(dx, dy);
+      const maxDistance = joystickRadius;
+
+      // Limitar o movimento do knob ao raio do joystick
+      if (distance > maxDistance) {
+        dx = (dx / distance) * maxDistance;
+        dy = (dy / distance) * maxDistance;
+      }
+
+      // Atualizar posição do knob
+      joystickKnob.style.transform = `translate(${dx - 20}px, ${dy - 20}px)`;
+
+      // Calcular direção normalizada
+      joystickDirection = {
+        x: distance > 0 ? dx / maxDistance : 0,
+        y: distance > 0 ? dy / maxDistance : 0
+      };
+    }
+
+    function endJoystick() {
+      joystickActive = false;
+      joystickDirection = { x: 0, y: 0 };
+      joystickKnob.style.transform = 'translate(-50%, -50%)';
+    }
+
     // --- Função para salvar ranking no localStorage ---
     function saveRanking() {
       try {
@@ -287,7 +412,7 @@
       }
     }
 
-    // --- Atualiza lista do ranking na tela ---
+    // --- Atualiza a lista do ranking na tela ---
     function updateRanking() {
       const startRankingList = startScreen.querySelector('#rankingList');
       const gameOverRankingList = gameOverScreen.querySelector('#rankingList');
@@ -388,17 +513,26 @@
 
     // --- Movimento do jogador ---
     function movePlayer(dt) {
-      let dx=0, dy=0;
-      if (keys.ArrowUp||keys.w) dy--;
-      if (keys.ArrowDown||keys.s) dy++;
-      if (keys.ArrowLeft||keys.a) dx--;
-      if (keys.ArrowRight||keys.d) dx++;
-      if (dx||dy) {
-        const len = Math.hypot(dx,dy);
-        player.x += (dx/len)*player.speed;
-        player.y += (dy/len)*player.speed;
-        player.x = Math.max(boundary.x+player.radius, Math.min(player.x, boundary.x+boundary.width-player.radius));
-        player.y = Math.max(boundary.y+player.radius, Math.min(player.y, boundary.y+boundary.height-player.radius));
+      let dx = 0, dy = 0;
+
+      // Priorizar joystick se ativo
+      if (isTouchDevice && joystickActive && (joystickDirection.x !== 0 || joystickDirection.y !== 0)) {
+        dx = joystickDirection.x;
+        dy = joystickDirection.y;
+      } else {
+        // Usar teclado se não houver joystick ativo
+        if (keys.ArrowUp || keys.w || keys.W) dy--;
+        if (keys.ArrowDown || keys.s || keys.S) dy++;
+        if (keys.ArrowLeft || keys.a || keys.A) dx--;
+        if (keys.ArrowRight || keys.d || keys.D) dx++;
+      }
+
+      if (dx || dy) {
+        const len = Math.hypot(dx, dy);
+        player.x += (dx / len) * player.speed * dt;
+        player.y += (dy / len) * player.speed * dt;
+        player.x = Math.max(boundary.x + player.radius, Math.min(player.x, boundary.x + boundary.width - player.radius));
+        player.y = Math.max(boundary.y + player.radius, Math.min(player.y, boundary.y + boundary.height - player.radius));
       }
     }
 
@@ -411,8 +545,8 @@
     function checkCollisions() {
       if (player.immune) return;
       for (const b of bars) {
-        if (player.x+player.radius > b.x && player.x-player.radius < b.x+b.width &&
-            player.y+player.radius > b.y && player.y-player.radius < b.y+b.height) {
+        if (player.x + player.radius > b.x && player.x - player.radius < b.x + b.width &&
+            player.y + player.radius > b.y && player.y - player.radius < b.y + b.height) {
           gameOver = true;
           break;
         }
@@ -426,6 +560,7 @@
         if (player.energy <= 0) {
           player.energy = 0;
           player.immune = false;
+          if (isTouchDevice) immuneButton.classList.remove('active');
         }
       } else {
         player.energy += player.rechargeRate * dt;
@@ -446,11 +581,11 @@
       // Adicionar borda amarela quando imune, com brilho
       if (player.immune) {
         ctx.strokeStyle = 'yellow';
-        ctx.lineWidth = 6; // Aumentada para maior visibilidade
+        ctx.lineWidth = 6;
         ctx.shadowColor = 'yellow';
-        ctx.shadowBlur = 10; // Brilho para destacar
+        ctx.shadowBlur = 10;
         ctx.stroke();
-        ctx.shadowBlur = 0; // Resetar brilho
+        ctx.shadowBlur = 0;
       }
 
       // Contorno padrão branco
@@ -483,12 +618,9 @@
 
     // --- Desenhar barra de imunidade ---
     function drawImmunityBar() {
-      // Desenhar borda da barra
       ctx.strokeStyle = 'white';
       ctx.lineWidth = 2;
       ctx.strokeRect(20, 50, 150, 20);
-      
-      // Desenhar preenchimento
       ctx.fillStyle = player.immune ? 'yellow' : 'gray';
       ctx.fillRect(22, 52, (player.energy / 100) * 146, 16);
     }
@@ -522,24 +654,24 @@
 
       // Criar novas barras a cada 2 segundos
       lastBarTime += dt;
-      if (lastBarTime > 120) { // Ajustado para frames
+      if (lastBarTime > 120) {
         createBar();
         lastBarTime = 0;
       }
 
-      // Remover barras que saíram da tela para economizar processamento
+      // Remover barras que saíram da tela
       bars = bars.filter(b =>
         b.x + b.width > -50 && b.x < canvas.width + 50 &&
         b.y + b.height > -50 && b.y < canvas.height + 50
       );
 
       drawBars();
-      drawPlayer(timestamp); // Passar timestamp para consistência
+      drawPlayer(timestamp);
       drawScore();
       drawImmunityBar();
 
-      score += dt * 0.5; // Pontuação aumenta com o tempo
-      score = Number(score.toFixed(2)); // Limitar a 2 casas decimais
+      score += dt * 0.16667; // 10 pontos por segundo
+      score = Number(score.toFixed(2));
 
       requestAnimationFrame(gameLoop);
     }
@@ -549,7 +681,6 @@
       const startSkinOptions = startScreen.querySelectorAll('.skinOption');
       const gameOverSkinOptions = gameOverScreen.querySelectorAll('.skinOption');
 
-      // Função para atualizar a seleção visual
       function selectSkin(skin, options) {
         options.forEach(opt => {
           opt.classList.remove('selected');
@@ -559,32 +690,28 @@
         });
       }
 
-      // Adicionar eventos para a tela inicial
       startSkinOptions.forEach(option => {
         option.addEventListener('click', () => {
           player.skin = option.dataset.skin;
           selectSkin(player.skin, startSkinOptions);
-          selectSkin(player.skin, gameOverSkinOptions); // Sincronizar com game over
-        });
-      });
-
-      // Adicionar eventos para a tela de game over
-      gameOverSkinOptions.forEach(option => {
-        option.addEventListener('click', () => {
-          player.skin = option.dataset.skin;
-          selectSkin(player.skin, startSkinOptions); // Sincronizar com tela inicial
           selectSkin(player.skin, gameOverSkinOptions);
         });
       });
 
-      // Inicializar com a skin atual
+      gameOverSkinOptions.forEach(option => {
+        option.addEventListener('click', () => {
+          player.skin = option.dataset.skin;
+          selectSkin(player.skin, startSkinOptions);
+          selectSkin(player.skin, gameOverSkinOptions);
+        });
+      });
+
       selectSkin(player.skin, startSkinOptions);
       selectSkin(player.skin, gameOverSkinOptions);
     }
 
     // --- Responsividade do canvas ---
     function resizeCanvas() {
-      // Manter a área de jogo quadrada e ajustável
       const maxWidth = window.innerWidth * 0.9;
       const maxHeight = window.innerHeight * 0.8;
       const size = Math.min(maxWidth, maxHeight, 900);
@@ -597,6 +724,7 @@
       resizeCanvas();
       updateRanking();
       updateSkinSelectors();
+      setupJoystick();
     });
 
   </script>
