@@ -208,7 +208,7 @@
     // Proteção básica
     document.addEventListener('contextmenu', e => { e.preventDefault(); alert('Clique com o botão direito desativado.'); });
     document.addEventListener('keydown', e => {
-      if (e.key === 'F12' || e.keyCode === '123') {
+      if (e.key === 'F12' || e.keyCode === 123) {
         e.preventDefault();
         alert('Ferramentas de desenvolvedor desativadas.');
       }
@@ -225,7 +225,7 @@
     const skinOptions = document.querySelectorAll('.skinOption');
 
     let gameStarted = false, scoreSaved = false;
-    const boundary = { x:70, y:70, width:900-140,50, height:900-140};
+    const boundary = { x: 70, y: 70, width: 900 - 140, height: 900 - 140 };
     const player = {
       x: 900/2,
       y: 900/2,
@@ -240,11 +240,11 @@
 
     let bars = [], score = 0, gameOver = false;
     let keys = {
-      ArrowUp:false, ArrowDown:false,
-      ArrowLeft:false, ArrowRight:false,
-      w:false, W:false, s:false, S:false,
-      a:false, A:false, d:false, D:false,
-      ' ':false, Enter:false
+      ArrowUp: false, ArrowDown: false,
+      ArrowLeft: false, ArrowRight: false,
+      w: false, W: false, s: false, S: false,
+      a: false, A: false, d: false, D: false,
+      ' ': false, Enter: false
     };
     let rankings = JSON.parse(localStorage.getItem('rankings')) || [];
 
