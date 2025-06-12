@@ -2,50 +2,69 @@
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <title>Lazer Runner</title>
   <style>
+    /* Reset e básico */
     body {
       display: flex;
-      justify-content: center;
-      align-items: flex-start;
-      gap: 20px;
-      padding: 20px;
+      flex-direction: column;
+      align-items: center;
+      padding: 10px;
       margin: 0;
       background-color: #000;
       color: white;
       font-family: Arial, sans-serif;
+      min-height: 100vh;
+      box-sizing: border-box;
     }
+
+    #gameContainer {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 20px;
+      width: 100%;
+      max-width: 1000px;
+    }
+
     canvas {
       border: 2px solid #fff;
+      background-color: #111;
+      max-width: 100%;
+      height: auto;
+      aspect-ratio: 1 / 1;
+      flex-shrink: 0;
     }
+
     #ranking {
       width: 250px;
+      max-width: 100%;
     }
     #ranking h2 {
       margin-top: 0;
     }
+
     #footer {
-      position: absolute;
-      bottom: 10px;
-      left: 10px;
-      font-size: 24px;
+      font-size: 16px;
       color: #aaa;
+      margin-top: 20px;
+      text-align: center;
     }
+
     #version {
-      position: absolute;
-      bottom: 10px;
-      right: 10px;
       font-size: 14px;
       color: #aaa;
+      margin-top: 5px;
     }
+
     #startScreen, #gameOverScreen {
-      position: absolute;
+      position: fixed;
       top: 0;
       left: 0;
-      width: 100%;
-      height: 100%;
-      background: rgba(0,0,0,0.8);
+      width: 100vw;
+      height: 100vh;
+      background: rgba(0,0,0,0.9);
       display: flex;
       flex-direction: column;
       justify-content: center;
@@ -53,6 +72,7 @@
       color: white;
       font-size: 48px;
       text-align: center;
+      z-index: 9999;
     }
     #startScreen.hidden, #gameOverScreen.hidden {
       display: none;
@@ -76,8 +96,9 @@
       cursor: not-allowed;
       opacity: 0.6;
     }
+
     #backButton {
-      position: absolute;
+      position: fixed;
       top: 10px;
       left: 10px;
       padding: 8px 16px;
@@ -87,19 +108,21 @@
       color: black;
       border: none;
       border-radius: 5px;
-      z-index: 1000;
+      z-index: 10000;
     }
     #backButton:hover {
       background-color: #ccc;
     }
+
     #immunityBar {
-      position: absolute;
-      top: 40px;
+      position: fixed;
+      top: 50px;
       left: 10px;
       width: 150px;
       height: 20px;
       border: 2px solid white;
       background-color: #333;
+      z-index: 10000;
     }
     #immunityFill {
       height: 100%;
@@ -109,28 +132,92 @@
     #immunityFill.cooldown {
       background-color: gray;
     }
+
+    /* Skin Selector */
+    #skinSelector {
+      margin-top: 20px;
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      justify-content: center;
+      max-width: 1000px;
+      width: 100%;
+    }
+    .skinOption {
+      width: 50px;
+      height: 50px;
+      border: 2px solid white;
+      border-radius: 50%;
+      cursor: pointer;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-weight: bold;
+      font-size: 24px;
+      color: white;
+      user-select: none;
+      transition: transform 0.2s, border-color 0.3s;
+      flex-shrink: 0;
+    }
+    .skinOption.selected {
+      border-color: yellow;
+      transform: scale(1.2);
+      box-shadow: 0 0 10px yellow;
+    }
+
+    /* Responsividade */
+    @media(max-width: 720px) {
+      #gameContainer {
+        flex-direction: column;
+        align-items: center;
+      }
+      #ranking {
+        width: 90vw;
+        margin-top: 20px;
+      }
+      canvas {
+        width: 90vw !important;
+        height: auto !important;
+      }
+    }
+
   </style>
 </head>
 <body>
   <button id="backButton" onclick="window.location.href='../CentralJogos.html'">Voltar</button>
-  <canvas id="gameCanvas" width="900" height="900"></canvas>
-  <div id="ranking">
-    <h2>Ranking</h2>
-    <ol id="rankingList"></ol>
+
+  <div id="gameContainer">
+    <canvas id="gameCanvas" width="900" height="900"></canvas>
+    <div id="ranking">
+      <h2>Ranking</h2>
+      <ol id="rankingList"></ol>
+    </div>
   </div>
+
   <div id="immunityBar">
     <div id="immunityFill"></div>
   </div>
+
+  <div id="skinSelector" title="Escolha sua skin do jogador">
+    <div class="skinOption selected" data-skin="white" style="background-color: white;"></div>
+    <div class="skinOption" data-skin="red" style="background-color: red;"></div>
+    <div class="skinOption" data-skin="blue" style="background-color: blue;"></div>
+    <div class="skinOption" data-skin="green" style="background-color: green;"></div>
+    <div class="skinOption" data-skin="yellow" style="background-color: yellow; color: black;">&#9733;</div>
+  </div>
+
   <div id="startScreen">
     <h1>LazerRunner</h1>
     <button id="playButton">Play</button>
   </div>
+
   <div id="gameOverScreen" class="hidden">
     <h1>Game Over</h1>
     <p id="finalScore"></p>
     <button id="restartButton">Restart</button>
     <button id="saveRankingButton">Salvar no Ranking</button>
   </div>
+
   <div id="footer">
     Mover: Setas ou WASD<br>
     Imunidade: Barra de espaço<br>
@@ -156,19 +243,24 @@
     const restartButton = document.getElementById('restartButton');
     const saveRankingButton = document.getElementById('saveRankingButton');
     const finalScoreText = document.getElementById('finalScore');
+    const immunityFill = document.getElementById('immunityFill');
+
+    const skinOptions = document.querySelectorAll('.skinOption');
 
     let gameStarted = false, scoreSaved = false;
-    const boundary = { x:70, y:70, width:canvas.width-140, height:canvas.height-140 };
+    const boundary = { x:70, y:70, width:900-140, height:900-140 };
     const player = {
-      x: canvas.width/2,
-      y: canvas.height/2,
+      x: 900/2,
+      y: 900/2,
       radius: 20,
       speed: 4,
       immune: false,
       energy: 100,
       energyCost: 2,
-      rechargeRate: 0.5
+      rechargeRate: 0.5,
+      skin: 'white'  // cor da skin
     };
+
     let bars = [], score = 0, gameOver = false;
     let keys = {
       ArrowUp:false, ArrowDown:false,
@@ -179,6 +271,7 @@
     };
     let rankings = JSON.parse(localStorage.getItem('rankings')) || [];
 
+    // --- Função para salvar ranking no localStorage ---
     function saveRanking() {
       try {
         localStorage.setItem('rankings', JSON.stringify(rankings));
@@ -187,6 +280,7 @@
       }
     }
 
+    // --- Atualiza lista do ranking na tela ---
     function updateRanking() {
       const list = document.getElementById('rankingList');
       list.innerHTML = '';
@@ -197,12 +291,13 @@
       });
     }
 
+    // --- Atualiza barra de imunidade ---
     function updateImmunityBar() {
-      const fill = document.getElementById('immunityFill');
-      fill.style.width = `${player.energy}%`;
-      fill.className = player.immune ? '' : 'cooldown';
+      immunityFill.style.width = `${player.energy}%`;
+      immunityFill.className = player.immune ? '' : 'cooldown';
     }
 
+    // --- Controle de teclas ---
     document.addEventListener('keydown', e => {
       if (e.key in keys) {
         keys[e.key] = true;
@@ -222,8 +317,18 @@
       }
     });
 
-    playButton.addEventListener('click', () => { startScreen.classList.add('hidden'); gameStarted = true; resetGame(); });
-    restartButton.addEventListener('click', () => { gameOverScreen.classList.add('hidden'); resetGame(); });
+    // --- Eventos dos botões ---
+    playButton.addEventListener('click', () => {
+      startScreen.classList.add('hidden');
+      gameStarted = true;
+      resetGame();
+    });
+
+    restartButton.addEventListener('click', () => {
+      gameOverScreen.classList.add('hidden');
+      resetGame();
+    });
+
     saveRankingButton.addEventListener('click', () => {
       if (scoreSaved) return;
       const name = prompt('Digite seu nome:');
@@ -240,9 +345,10 @@
       }
     });
 
+    // --- Reset do jogo ---
     function resetGame() {
-      player.x = canvas.width/2;
-      player.y = canvas.height/2;
+      player.x = canvas.width / 2;
+      player.y = canvas.height / 2;
       player.immune = false;
       player.energy = 100;
       score = 0;
@@ -257,6 +363,7 @@
       requestAnimationFrame(gameLoop);
     }
 
+    // --- Criação das barras ---
     function createBar() {
       const dir = Math.floor(Math.random()*4);
       const thickness = 30;
@@ -272,6 +379,7 @@
       bars.push(bar);
     }
 
+    // --- Movimento do jogador ---
     function movePlayer(dt) {
       let dx=0, dy=0;
       if (keys.ArrowUp||keys.w) dy--;
@@ -287,10 +395,12 @@
       }
     }
 
+    // --- Movimento das barras ---
     function moveBars(dt) {
       bars.forEach(b => { b.x += b.dx * dt; b.y += b.dy * dt; });
     }
 
+    // --- Checar colisões ---
     function checkCollisions() {
       if (player.immune) return;
       for (const b of bars) {
@@ -302,95 +412,132 @@
       }
     }
 
-    function manageImmunity() {
+    // --- Atualizar energia do jogador ---
+    function updateEnergy(dt) {
       if (player.immune) {
-        player.energy = Math.max(0, player.energy - player.energyCost);
+        player.energy -= player.energyCost * dt;
         if (player.energy <= 0) {
+          player.energy = 0;
           player.immune = false;
         }
       } else {
-        player.energy = Math.min(100, player.energy + player.rechargeRate);
+        player.energy += player.rechargeRate * dt;
+        if (player.energy > 100) player.energy = 100;
       }
       updateImmunityBar();
     }
 
-    function draw() {
-      ctx.fillStyle = 'rgba(0, 0, 0, 0.2)';
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-      if (!gameStarted) return;
-
+    // --- Desenhar jogador com skin ---
+    function drawPlayer() {
+      ctx.beginPath();
+      ctx.fillStyle = player.skin;
+      ctx.shadowColor = player.skin;
+      ctx.shadowBlur = 20;
+      ctx.arc(player.x, player.y, player.radius, 0, Math.PI*2);
+      ctx.fill();
+      ctx.shadowBlur = 0;
+      // Contorno mais claro
       ctx.strokeStyle = 'white';
       ctx.lineWidth = 2;
-      ctx.strokeRect(boundary.x, boundary.y, boundary.width, boundary.height);
-
-      ctx.beginPath();
-      ctx.arc(player.x, player.y, player.radius, 0, Math.PI*2);
-      ctx.fillStyle = player.immune ? 'yellow' : player.energy < 10 ? '#444' : 'white';
-      ctx.fill();
-
-      if (player.immune) {
-        ctx.beginPath();
-        ctx.arc(player.x, player.y, player.radius+10, 0, Math.PI*2);
-        ctx.strokeStyle = 'yellow';
-        ctx.lineWidth = 3;
-        ctx.stroke();
-      }
-
-      ctx.fillStyle = 'red';
-      bars.forEach(b => ctx.fillRect(b.x, b.y, b.width, b.height));
-
-      ctx.fillStyle = 'white';
-      ctx.font = '24px Arial';
-      ctx.textAlign = 'left';
-      ctx.fillText(`Pontuação: ${score}`, 10, 20);
-
-      if (gameOver) {
-        finalScoreText.textContent = `Pontuação Final: ${score}`;
-        gameOverScreen.classList.remove('hidden');
-      }
+      ctx.stroke();
     }
 
-    let lastFrameTime=0, lastBarTime=0;
-    function gameLoop(ts) {
+    // --- Desenhar barras ---
+    function drawBars() {
+      ctx.fillStyle = 'red';
+      bars.forEach(b => {
+        ctx.fillRect(b.x, b.y, b.width, b.height);
+      });
+    }
+
+    // --- Desenhar borda da área ---
+    function drawBoundary() {
+      ctx.strokeStyle = 'white';
+      ctx.lineWidth = 3;
+      ctx.strokeRect(boundary.x, boundary.y, boundary.width, boundary.height);
+    }
+
+    // --- Desenhar pontuação ---
+    function drawScore() {
+      ctx.fillStyle = 'white';
+      ctx.font = '24px Arial';
+      ctx.fillText('Score: ' + score, 20, 40);
+    }
+
+    // --- Limpar tela ---
+    function clearScreen() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+    }
+
+    // --- Atualizar e desenhar tudo ---
+    let lastFrameTime = 0;
+    let lastBarTime = 0;
+
+    function gameLoop(timestamp=0) {
       if (!gameStarted || gameOver) {
-        draw();
+        if (gameOver) {
+          finalScoreText.textContent = `Sua pontuação: ${score}`;
+          gameOverScreen.classList.remove('hidden');
+        }
         return;
       }
-      const dt = (ts - lastFrameTime) / 16.67;
-      lastFrameTime = ts;
+      const dt = (timestamp - lastFrameTime) / 16.666; // approx 60fps base
+      lastFrameTime = timestamp;
 
-      let barInterval, numBars;
-      if (score <= 10)       { barInterval = 4000; numBars = 2; }
-      else if (score <= 25)  { barInterval = 3000; numBars = 2; }
-      else if (score <= 35)  { barInterval = 4000; numBars = 3; }
-      else if (score <= 45)  { barInterval = 3800; numBars = 3; }
-      else if (score <= 55)  { barInterval = 4000; numBars = 4; }
-      else                   { barInterval = 3500; numBars = 3; }
-
-      if (ts - lastBarTime > barInterval) {
-        for (let i=0;i<numBars;i++) createBar();
-        lastBarTime = ts;
-        score++;
-      }
-
+      clearScreen();
+      drawBoundary();
       movePlayer(dt);
       moveBars(dt);
-      manageImmunity();
       checkCollisions();
-      draw();
+      updateEnergy(dt);
+
+      // Criar novas barras a cada 2 segundos
+      lastBarTime += dt;
+      if (lastBarTime > 120) { // Ajustado para frames
+        createBar();
+        lastBarTime = 0;
+      }
+
+      // Remover barras que saíram da tela para economizar processamento
+      bars = bars.filter(b =>
+        b.x + b.width > -50 && b.x < canvas.width + 50 &&
+        b.y + b.height > -50 && b.y < canvas.height + 50
+      );
+
+      drawBars();
+      drawPlayer();
+      drawScore();
+
+      score += dt * 0.5; // Pontuação aumenta com o tempo
 
       requestAnimationFrame(gameLoop);
     }
 
-    updateRanking();
-    updateImmunityBar();
-    requestAnimationFrame(ts => {
-      lastFrameTime = ts;
-      lastBarTime = ts;
-      gameLoop(ts);
+    // --- Skin selector ---
+    skinOptions.forEach(option => {
+      option.addEventListener('click', () => {
+        skinOptions.forEach(o => o.classList.remove('selected'));
+        option.classList.add('selected');
+        player.skin = option.dataset.skin;
+      });
     });
+
+    // --- Responsividade do canvas ---
+    function resizeCanvas() {
+      // Manter a área de jogo quadrada e ajustável
+      const maxWidth = window.innerWidth * 0.9;
+      const maxHeight = window.innerHeight * 0.8;
+      const size = Math.min(maxWidth, maxHeight, 900);
+      canvas.style.width = size + 'px';
+      canvas.style.height = size + 'px';
+    }
+
+    window.addEventListener('resize', resizeCanvas);
+    window.addEventListener('load', () => {
+      resizeCanvas();
+      updateRanking();
+    });
+
   </script>
 </body>
 </html>
-
