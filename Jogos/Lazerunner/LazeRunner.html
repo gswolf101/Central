@@ -125,11 +125,17 @@
     #skinSelector {
       margin-top: 20px;
       display: flex;
+      flex-direction: column;
       gap: 10px;
-      flex-wrap: wrap;
       justify-content: center;
       max-width: 1000px;
       width: 100%;
+    }
+    .skinRow {
+      display: flex;
+      gap: 10px;
+      justify-content: center;
+      flex-wrap: wrap;
     }
     .skinOption {
       width: 50px;
@@ -163,14 +169,14 @@
     }
     #joystick {
       left: 20px;
-      width: 120px; /* Aumentado */
+      width: 120px;
       height: 120px;
       background: rgba(255,255,255,0.2);
       border-radius: 50%;
       touch-action: none;
     }
     #joystickKnob {
-      width: 48px; /* Aumentado proporcionalmente */
+      width: 48px;
       height: 48px;
       background: white;
       border-radius: 50%;
@@ -229,7 +235,6 @@
         display: block;
       }
     }
-
   </style>
 </head>
 <body>
@@ -246,11 +251,20 @@
       <ol id="rankingList"></ol>
     </div>
     <div id="skinSelector" title="Escolha uma skin">
-      <div class="skinOption selected" data-skin="white" style="background-color: white;"></div>
-      <div class="skinOption" data-skin="red" style="background-color: red;"></div>
-      <div class="skinOption" data-skin="blue" style="background-color: blue;"></div>
-      <div class="skinOption" data-skin="green" style="background-color: green;"></div>
-      <div class="skinOption" data-skin="yellow" style="background-color: yellow; color: black;">★</div>
+      <div class="skinRow">
+        <div class="skinOption selected" data-skin="white" style="background-color: white;"></div>
+        <div class="skinOption" data-skin="red" style="background-color: red;"></div>
+        <div class="skinOption" data-skin="blue" style="background-color: blue;"></div>
+        <div class="skinOption" data-skin="green" style="background-color: green;"></div>
+        <div class="skinOption" data-skin="yellow" style="background-color: yellow; color: black;">★</div>
+      </div>
+      <div class="skinRow">
+        <div class="skinOption" data-skin="pink" style="background-color: #ff69b4;"></div>
+        <div class="skinOption" data-skin="magenta" style="background-color: #c71585;"></div>
+        <div class="skinOption" data-skin="lilac" style="background-color: #dda0dd;"></div>
+        <div class="skinOption" data-skin="lightblue" style="background-color: #87ceeb;"></div>
+        <div class="skinOption" data-skin="black" style="background-color: #000000;"></div>
+      </div>
     </div>
     <button id="playButton">Play</button>
   </div>
@@ -263,11 +277,20 @@
       <ol id="rankingList"></ol>
     </div>
     <div id="skinSelector" title="Escolha uma skin">
-      <div class="skinOption selected" data-skin="white" style="background-color: white;"></div>
-      <div class="skinOption" data-skin="red" style="background-color: red;"></div>
-      <div class="skinOption" data-skin="blue" style="background-color: blue;"></div>
-      <div class="skinOption" data-skin="green" style="background-color: green;"></div>
-      <div class="skinOption" data-skin="yellow" style="background-color: yellow; color: black;">★</div>
+      <div class="skinRow">
+        <div class="skinOption selected" data-skin="white" style="background-color: white;"></div>
+        <div class="skinOption" data-skin="red" style="background-color: red;"></div>
+        <div class="skinOption" data-skin="blue" style="background-color: blue;"></div>
+        <div class="skinOption" data-skin="green" style="background-color: green;"></div>
+        <div class="skinOption" data-skin="yellow" style="background-color: yellow; color: black;">★</div>
+      </div>
+      <div class="skinRow">
+        <div class="skinOption" data-skin="pink" style="background-color: #ff69b4;"></div>
+        <div class="skinOption" data-skin="magenta" style="background-color: #c71585;"></div>
+        <div class="skinOption" data-skin="lilac" style="background-color: #dda0dd;"></div>
+        <div class="skinOption" data-skin="lightblue" style="background-color: #87ceeb;"></div>
+        <div class="skinOption" data-skin="black" style="background-color: #000000;"></div>
+      </div>
     </div>
     <button id="restartButton">Restart</button>
     <button id="saveRankingButton">Salvar no ranking</button>
@@ -337,7 +360,7 @@
     let joystickActive = false;
     let joystickCenter = { x: 0, y: 0 };
     let joystickDirection = { x: 0, y: 0 };
-    const joystickRadius = 60; // Aumentado (metade do diâmetro)
+    const joystickRadius = 60;
     const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
 
     function setupJoystick() {
@@ -385,7 +408,7 @@
         dy = (dy / distance) * maxDistance;
       }
 
-      joystickKnob.style.transform = `translate(${dx - 24}px, ${dy - 24}px)`; // Ajustado para knob de 48px
+      joystickKnob.style.transform = `translate(${dx - 24}px, ${dy - 24}px)`;
 
       joystickDirection = {
         x: distance > 0 ? dx / maxDistance : 0,
@@ -460,7 +483,7 @@
       if (scoreSaved) return;
       const name = prompt('Digite seu nome:');
       if (name && name.trim()) {
-        rankings.push({ name: name.trim(), score: Number(score.toFixed(2)) });
+        rankings.push({ name: name: trim(name.trim()), score: Number(score.toFixed(2)) });
         saveRanking();
         updateRanking();
         scoreSaved = true;
@@ -483,7 +506,7 @@
       gameOver = false;
       scoreSaved = false;
       saveRankingButton.disabled = false;
-      saveRankingButton.textContent = 'Salvar no Ranking';
+      saveRankingButton.textContent = 'Salvar no ranking';
       lastFrameTime = lastBarTime = 0;
       gameOverScreen.classList.add('hidden');
       updateSkinSelectors();
@@ -605,15 +628,17 @@
     function drawScore() {
       ctx.fillStyle = 'white';
       ctx.font = '24px Arial';
-      ctx.fillText('Score: ' + Number(score.toFixed(2)), 20, 40);
+      ctx.textAlign = 'center';
+      ctx.fillText('Score: ' + Number(score.toFixed(2)), canvas.width / 2, 40);
+      ctx.textAlign = 'left'; // Resetar alinhamento
     }
 
     // --- Desenhar barra de energia ---
     function drawImmunityBar() {
       const barWidth = 150;
       const barHeight = 20;
-      const barX = canvas.width / 2 - barWidth / 2; // Centralizado
-      const barY = boundary.y + boundary.height + 20; // Abaixo da arena
+      const barX = canvas.width / 2 - barWidth / 2;
+      const barY = boundary.y + boundary.height + 20;
 
       ctx.strokeStyle = 'white';
       ctx.lineWidth = 2;
