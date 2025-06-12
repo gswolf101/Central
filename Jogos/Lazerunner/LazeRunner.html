@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>LazerRunner</title>
+  <title>Lazer Runner</title>
   <style>
     body {
       display: flex;
@@ -439,16 +439,16 @@
     });
 
     playButton.addEventListener('click', () => {
-      console.log('Play button clicked, starting game'); // Debug
+      console.log('Play button clicked, resetting score and starting game'); // Debug
       startScreen.classList.add('hidden');
       gameStarted = true;
-      resetGame();
+      resetGame(); // Resets score to 0
     });
 
     restartButton.addEventListener('click', () => {
       console.log('Restart button clicked, triggering resetGame'); // Debug
       gameOverScreen.classList.add('hidden');
-      resetGame();
+      resetGame(); // Resets score to 0
     });
 
     saveRankingButton.addEventListener('click', () => {
@@ -478,7 +478,7 @@
       player.y = canvas.height / 2;
       player.immune = false;
       player.energy = 100;
-      score = 0;
+      score = 0; // Explicitly reset score
       bars = [];
       gameOver = false;
       gameStarted = true;
