@@ -312,12 +312,15 @@
 
   <script>
     // Proteção básica
-    document.addEventListener('contextmenu', e => { e.preventDefault(); alert('Clique com o botão direito desativado.'); });
+    document.addEventListener('contextmenu', e => {
+      e.preventDefault();
+      alert('Erro ao clicar com o botão direito.');
+    }));
     document.addEventListener('keydown', e => {
-      if (e.key === 'F12' || e.keyCode === 123) {
+      if (e.key === 'F12' || e.keyCode === '123') {
         e.preventDefault();
         alert('Ferramentas de desenvolvedor desativadas.');
-      }
+      });
     });
 
     const canvas = document.getElementById('gameCanvas');
@@ -328,15 +331,15 @@
     const restartButton = document.getElementById('restartButton');
     const saveRankingButton = document.getElementById('saveRankingButton');
     const finalScoreText = document.getElementById('finalScore');
-    const joystick = document.getElementById('joystick');
-    const joystickKnob = document.getElementById('joystickKnob');
-    const immuneButton = document.getElementById('immuneButton');
+    const joystick = document.querySelector('#joystick');
+    const joystickKnob = document.querySelector('#joystickKnob');
+    const immuneButton = document.querySelector('#immuneButton');
 
     let gameStarted = false, scoreSaved = false;
     const boundary = { x: 70, y: 70, width: 900 - 140, height: 900 - 140 };
     const player = {
-      x: 900/2,
-      y: 900/2,
+      x: 900 / 2,
+      y: / 2,
       radius: 20,
       speed: 4,
       immune: false,
@@ -483,7 +486,7 @@
       if (scoreSaved) return;
       const name = prompt('Digite seu nome:');
       if (name && name.trim()) {
-        rankings.push({ name: name: trim(name.trim()), score: Number(score.toFixed(2)) });
+        rankings.push({ name: name.trim(), score: Number(score.toFixed(2)) });
         saveRanking();
         updateRanking();
         scoreSaved = true;
@@ -630,7 +633,7 @@
       ctx.font = '24px Arial';
       ctx.textAlign = 'center';
       ctx.fillText('Score: ' + Number(score.toFixed(2)), canvas.width / 2, 40);
-      ctx.textAlign = 'left'; // Resetar alinhamento
+      ctx.textAlign = 'left';
     }
 
     // --- Desenhar barra de energia ---
