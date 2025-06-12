@@ -18,7 +18,7 @@
     }
     canvas {
       border: 2px solid #fff;
-      background: black;
+      background-color: black;
     }
     #ranking {
       width: 250px;
@@ -54,7 +54,6 @@
       color: white;
       font-size: 48px;
       text-align: center;
-      z-index: 10;
     }
     #startScreen.hidden, #gameOverScreen.hidden {
       display: none;
@@ -102,7 +101,6 @@
       height: 20px;
       border: 2px solid white;
       background-color: #333;
-      z-index: 10;
     }
     #immunityFill {
       height: 100%;
@@ -115,308 +113,26 @@
   </style>
 </head>
 <body>
-  <button id="backButton" onclick="window.location.href='../CentralJogos.html'">Voltar</button>
-  <canvas id="gameCanvas" width="900" height="900"></canvas>
+  <button id="backButton" onclick="window.location.href='index.html'">Voltar</button>
+  <div id="immunityBar"><div id="immunityFill"></div></div>
+  <canvas id="gameCanvas" width="800" height="600"></canvas>
   <div id="ranking">
     <h2>Ranking</h2>
-    <ol id="rankingList"></ol>
-  </div>
-  <div id="immunityBar">
-    <div id="immunityFill"></div>
+    <ul id="rankingList"></ul>
   </div>
   <div id="startScreen">
-    <h1>LazerRunner</h1>
-    <button id="playButton">Play</button>
+    <div>Lazer Runner</div>
+    <button onclick="startGame()">Começar</button>
   </div>
   <div id="gameOverScreen" class="hidden">
-    <h1>Game Over</h1>
-    <p id="finalScore"></p>
-    <button id="restartButton">Restart</button>
-    <button id="saveRankingButton">Salvar no Ranking</button>
+    <div>Game Over</div>
+    <div id="finalScore"></div>
+    <input type="text" id="playerName" placeholder="Seu nome" />
+    <button id="saveRankingButton" onclick="saveRanking()">Salvar Ranking</button>
+    <button onclick="resetGame()">Jogar Novamente</button>
   </div>
-  <div id="footer">
-    Mover: Setas ou WASD<br>
-    Imunidade: Barra de espaço<br>
-    Reiniciar: Enter
-  </div>
-  <div id="version">Versão 1.3</div>
-
-  <script>
-    // Proteção básica
-    document.addEventListener('contextmenu', e => { e.preventDefault(); alert('Clique com o botão direito desativado.'); });
-    document.addEventListener('keydown', e => {
-      if (e.key === 'F12' || e.keyCode === 123) {
-        e.preventDefault();
-        alert('Ferramentas de desenvolvedor desativadas.');
-      }
-    });
-
-    const canvas = document.getElementById('gameCanvas');
-    const ctx = canvas.getContext('2d');
-    const startScreen = document.getElementById('startScreen');
-    const gameOverScreen = document.getElementById('gameOverScreen');
-    const playButton = document.getElementById('playButton');
-    const restartButton = document.getElementById('restartButton');
-    const saveRankingButton = document.getElementById('saveRankingButton');
-    const finalScoreText = document.getElementById('finalScore');
-    const immunityFill = document.getElementById('immunityFill');
-
-    let gameStarted = false, scoreSaved = false;
-    const boundary = { x:70, y:70, width:canvas.width-140, height:canvas.height-140 };
-    const player = {
-      x: canvas.width/2,
-      y: canvas.height/2,
-      radius: 20,
-      speed: 4,
-      immune: false,
-      energy: 100,
-      energyCost: 2,
-      rechargeRate: 0.5
-    };
-    let bars = [], score = 0, gameOver = false;
-    let keys = {
-      ArrowUp:false, ArrowDown:false,
-      ArrowLeft:false, ArrowRight:false,
-      w:false, W:false, s:false, S:false,
-      a:false, A:false, d:false, D:false,
-      ' ':false, Enter:false
-    };
-    let rankings = JSON.parse(localStorage.getItem('rankings')) || [];
-
-    // Para rastro do jogador
-    let trail = [];
-    const maxTrailLength = 15;
-
-    function saveRanking() {
-      try {
-        localStorage.setItem('rankings', JSON.stringify(rankings));
-      } catch {
-        alert('Erro ao salvar a pontuação.');
-      }
-    }
-
-    function updateRanking() {
-      const list = document.getElementById('rankingList');
-      list.innerHTML = '';
-      rankings.sort((a,b)=>b.score-a.score).slice(0,10).forEach(e => {
-        const li = document.createElement('li');
-        li.textContent = `${e.name} - ${e.score}`;
-        list.appendChild(li);
-      });
-    }
-
-    function updateImmunityBar() {
-      immunityFill.style.width = `${player.energy}%`;
-      immunityFill.className = player.immune ? '' : 'cooldown';
-    }
-
-    document.addEventListener('keydown', e => {
-      if (e.key in keys) {
-        keys[e.key] = true;
-        if (e.key === ' ' && !player.immune && player.energy >= 10) {
-          player.immune = true;
-        }
-        if (e.key === 'Enter' && gameOver) resetGame();
-      }
-    });
-
-    document.addEventListener('keyup', e => {
-      if (e.key in keys) {
-        keys[e.key] = false;
-        if (e.key === ' ') {
-          player.immune = false;
-        }
-      }
-    });
-
-    playButton.addEventListener('click', () => { startScreen.classList.add('hidden'); gameStarted = true; resetGame(); });
-    restartButton.addEventListener('click', () => { gameOverScreen.classList.add('hidden'); resetGame(); });
-    saveRankingButton.addEventListener('click', () => {
-      if (scoreSaved) return;
-      const name = prompt('Digite seu nome:');
-      if (name && name.trim()) {
-        rankings.push({ name: name.trim(), score: Math.floor(score) });
-        saveRanking();
-        updateRanking();
-        scoreSaved = true;
-        saveRankingButton.disabled = true;
-        saveRankingButton.textContent = 'Salvo';
-        alert('Pontuação salva!');
-      } else if (name !== null) {
-        alert('Nome inválido.');
-      }
-    });
-
-    function resetGame() {
-      player.x = canvas.width/2;
-      player.y = canvas.height/2;
-      player.immune = false;
-      player.energy = 100;
-      score = 0;
-      bars = [];
-      trail = [];
-      gameOver = false;
-      scoreSaved = false;
-      saveRankingButton.disabled = false;
-      saveRankingButton.textContent = 'Salvar no Ranking';
-      lastFrameTime = 0;
-      lastBarTime = 0;
-      gameOverScreen.classList.add('hidden');
-      updateImmunityBar();
-      requestAnimationFrame(gameLoop);
-    }
-
-    function createBar() {
-      const dir = Math.floor(Math.random()*4);
-      const thickness = 30;
-      const length = Math.random()*400 + 200;
-      const speed = 2 + Math.random()*1.8;
-      let bar;
-      switch(dir) {
-        case 0: bar = { x:-thickness, y:Math.random()*(canvas.height-length), width:thickness, height:length, dx:speed, dy:0 }; break;
-        case 1: bar = { x:canvas.width, y:Math.random()*(canvas.height-length), width:thickness, height:length, dx:-speed, dy:0 }; break;
-        case 2: bar = { x:Math.random()*(canvas.width-length), y:-thickness, width:length, height:thickness, dx:0, dy:speed }; break;
-        case 3: bar = { x:Math.random()*(canvas.width-length), y:canvas.height, width:length, height:thickness, dx:0, dy:-speed }; break;
-      }
-      bars.push(bar);
-    }
-
-    function movePlayer(dt) {
-      let dx=0, dy=0;
-      if (keys.ArrowUp||keys.w) dy--;
-      if (keys.ArrowDown||keys.s) dy++;
-      if (keys.ArrowLeft||keys.a) dx--;
-      if (keys.ArrowRight||keys.d) dx++;
-      if (dx||dy) {
-        const len = Math.hypot(dx,dy);
-        player.x += (dx/len)*player.speed;
-        player.y += (dy/len)*player.speed;
-        player.x = Math.max(boundary.x+player.radius, Math.min(player.x, boundary.x+boundary.width-player.radius));
-        player.y = Math.max(boundary.y+player.radius, Math.min(player.y, boundary.y+boundary.height-player.radius));
-      }
-    }
-
-    function moveBars(dt) {
-      bars.forEach(b => { b.x += b.dx * dt; b.y += b.dy * dt; });
-    }
-
-    function checkCollisions() {
-      if (player.immune) return;
-      for (const b of bars) {
-        if (player.x+player.radius > b.x && player.x-player.radius < b.x+b.width &&
-            player.y+player.radius > b.y && player.y-player.radius < b.y+b.height) {
-          gameOver = true;
-          break;
-        }
-      }
-    }
-
-    function manageImmunity() {
-      if (player.immune) {
-        player.energy = Math.max(0, player.energy - player.energyCost);
-        if (player.energy <= 0) {
-          player.immune = false;
-        }
-      } else {
-        player.energy = Math.min(100, player.energy + player.rechargeRate);
-      }
-      updateImmunityBar();
-    }
-
-    function drawTrail() {
-      for (let i = 0; i < trail.length; i++) {
-        const pos = trail[i];
-        const alpha = (i + 1) / trail.length / 3; // opacidade menor para pontos mais antigos
-        ctx.beginPath();
-        ctx.fillStyle = `rgba(255, 255, 255, ${alpha})`;
-        ctx.arc(pos.x, pos.y, player.radius * 0.7, 0, Math.PI * 2);
-        ctx.fill();
-      }
-    }
-
-    function drawPlayer() {
-      ctx.beginPath();
-      ctx.arc(player.x, player.y, player.radius, 0, Math.PI*2);
-      ctx.fillStyle = player.immune ? 'yellow' : 'white';
-      ctx.shadowColor = player.immune ? 'yellow' : 'transparent';
-      ctx.shadowBlur = player.immune ? 15 : 0;
-      ctx.fill();
-      ctx.shadowBlur = 0;
-    }
-
-    function drawBars() {
-      ctx.fillStyle = 'red';
-      bars.forEach(b => {
-        ctx.fillRect(b.x, b.y, b.width, b.height);
-      });
-    }
-
-    function drawBoundary() {
-      ctx.strokeStyle = 'white';
-      ctx.lineWidth = 5;
-      ctx.strokeRect(boundary.x, boundary.y, boundary.width, boundary.height);
-    }
-
-    function clearScreen() {
-      ctx.clearRect(0,0,canvas.width,canvas.height);
-    }
-
-    function drawScore() {
-      ctx.fillStyle = 'white';
-      ctx.font = '24px Arial';
-      ctx.fillText('Score: ' + Math.floor(score), 20, 40);
-    }
-
-    let lastFrameTime = 0;
-    let lastBarTime = 0;
-
-    function gameLoop(timestamp=0) {
-      if (!gameStarted || gameOver) {
-        if (gameOver) {
-          finalScoreText.textContent = `Sua pontuação: ${Math.floor(score)}`;
-          gameOverScreen.classList.remove('hidden');
-        }
-        return;
-      }
-      const dt = (timestamp - lastFrameTime) / 16.666; // base 60fps
-      lastFrameTime = timestamp;
-
-      clearScreen();
-      drawBoundary();
-      movePlayer(dt);
-      moveBars(dt);
-      checkCollisions();
-      manageImmunity();
-
-      // Criar novas barras a cada 2 segundos
-      lastBarTime += dt;
-      if (lastBarTime > 120) {
-        createBar();
-        lastBarTime = 0;
-      }
-
-      // Remove barras fora da tela
-      bars = bars.filter(b =>
-        b.x + b.width > -50 && b.x < canvas.width + 50 &&
-        b.y + b.height > -50 && b.y < canvas.height + 50
-      );
-
-      // Atualizar rastro do jogador
-      trail.push({x: player.x, y: player.y});
-      if (trail.length > maxTrailLength) trail.shift();
-
-      drawTrail();
-      drawBars();
-      drawPlayer();
-      drawScore();
-
-      // Incrementa score lentamente (1 ponto por segundo aprox)
-      score += dt * 0.016;
-
-      requestAnimationFrame(gameLoop);
-    }
-
-    updateRanking();
-  </script>
+  <div id="footer">Lazer Runner</div>
+  <div id="version">v1.0.0</div>
+  <script src="game.js"></script>
 </body>
 </html>
