@@ -422,7 +422,10 @@
         if (e.key === ' ' && !player.immune && player.energy >= 10) {
           player.immune = true;
         }
-        if (e.key === 'Enter' && gameOver) resetGame();
+        if (e.key === 'Enter' && gameOver) {
+          console.log('Enter pressed, triggering resetGame'); // Debug log
+          resetGame();
+        }
       }
     });
 
@@ -436,12 +439,14 @@
     });
 
     playButton.addEventListener('click', () => {
+      console.log('Play button clicked, starting game'); // Debug log
       startScreen.classList.add('hidden');
       gameStarted = true;
       resetGame();
     });
 
     restartButton.addEventListener('click', () => {
+      console.log('Restart button clicked, triggering resetGame'); // Debug log
       gameOverScreen.classList.add('hidden');
       resetGame();
     });
@@ -463,8 +468,11 @@
     });
 
     function resetGame() {
-      // Cancel any existing animation frame to prevent stray loops
-      if (animationFrameId) cancelAnimationFrame(animationFrameId);
+      // Cancel any existing animation frame
+      if (animationFrameId) {
+        cancelAnimationFrame(animationFrameId);
+        console.log('Cancelled animation frame:', animationFrameId); // Debug log
+      }
 
       player.x = canvas.width / 2;
       player.y = canvas.height / 2;
@@ -482,8 +490,8 @@
       gameOverScreen.classList.add('hidden');
       updateSkinSelectors();
       updateRanking();
-      console.log('Game reset, score:', score); // Debug log
-      requestAnimationFrame(gameLoop);
+      console.log('Game reset, score:', score, 'gameStarted:', gameStarted, 'gameOver:', gameOver); // Debug log
+      animationFrameId = requestAnimationFrame(gameLoop);
     }
 
     function createBar() {
@@ -593,7 +601,7 @@
       ctx.fillStyle = 'white';
       ctx.font = '24px Arial';
       ctx.textAlign = 'center';
-      ctx.fillText('Score: ' + score.toFixed(1), canvas.width / 2, 40);
+      ctx.fillText('Pontuação: ' + score.toFixed(1), canvas.width / 2, 40); // Changed "Score" to "Pontuação"
       ctx.textAlign = 'left';
     }
 
@@ -622,6 +630,7 @@
         if (gameOver) {
           finalScoreText.textContent = `Sua pontuação: ${score.toFixed(1)}`;
           gameOverScreen.classList.remove('hidden');
+          console.log('Game over screen shown, score:', score); // Debug log
         }
         return;
       }
@@ -651,60 +660,58 @@
       drawScore();
       drawImmunityBar();
 
-      score += dt / 60; // 1 point per second (60 frames per second)
-      console.log('Score:', score, 'dt:', dt); // Debug log
+      score += dt / 60; // 1 point per second
+      console.log('Score update, score:', dt, 'new score:', score); // Debug log
 
       animationFrameId = requestAnimationFrame(gameLoop);
     }
 
     function updateSkinSelectors() {
-      const startSkinOptions = startScreen.querySelectorAll('.skinOption');
+      const startScreenOptions = startScreen.querySelectorAll('.skinOption');
       const gameOverSkinOptions = gameOverScreen.querySelectorAll('.skinOption');
 
       function selectSkin(skin, options) {
         options.forEach(opt => {
           opt.classList.remove('selected');
-          if (opt.dataset.skin === skin) {
+          if (opt.dataset.skin === 'skin') {
             opt.classList.add('selected');
           }
+        }
+        startSkinOptions.forEach(option => {
+          option.addEventListener('click', () => {
+            player.skin = option.dataset.skin;
+            selectSkin(player.skin, startSkinOptions);
+            selectSkin(player.skin, gameOverSkinOptions);
+          });
         });
+
+        gameOverSkinOptions.forEach(option => {
+          option.addEventListener('click', () => {
+            player.skin = option.dataset.skin;
+            selectSkin(player.skin, startSkinOptions);
+            selectSkin(player.skin, gameOverSkinOptions);
+          };
+        });
+
+        selectSkin(player.skin, startSkinOptions);
+        selectSkin(player.gameOverSkinOptions);
       }
 
-      startSkinOptions.forEach(option => {
-        option.addEventListener('click', () => {
-          player.skin = option.dataset.skin;
-          selectSkin(player.skin, startSkinOptions);
-          selectSkin(player.skin, gameOverSkinOptions);
-        });
+      function resizeCanvas() {
+        const maxWidth = window.innerWidth * 0.9;
+        const maxHeight = window.innerHeight * 0.8;
+        const size = Math.min(maxWidth, maxHeight, 900);
+        canvas.style.width = size + 'px';
+        canvas.style.height = size + 'px';
+      }
+
+      window.addEventListener('resize', resizeCanvas);
+      window.addEventListener('load', () => {
+        resizeCanvas();
+        updateRanking();
+        updateSkinSelectors();
+        setupJoystick();
       });
-
-      gameOverSkinOptions.forEach(option => {
-        option.addEventListener('click', () => {
-          player.skin = option.dataset.skin;
-          selectSkin(player.skin, startSkinOptions);
-          selectSkin(player.skin, gameOverSkinOptions);
-        });
-      });
-
-      selectSkin(player.skin, startSkinOptions);
-      selectSkin(player.skin, gameOverSkinOptions);
-    }
-
-    function resizeCanvas() {
-      const maxWidth = window.innerWidth * 0.9;
-      const maxHeight = window.innerHeight * 0.8;
-      const size = Math.min(maxWidth, maxHeight, 900);
-      canvas.style.width = size + 'px';
-      canvas.style.height = size + 'px';
-    }
-
-    window.addEventListener('resize', resizeCanvas);
-    window.addEventListener('load', () => {
-      resizeCanvas();
-      updateRanking();
-      updateSkinSelectors();
-      setupJoystick();
-    });
-  </script>
-</body>
+    </script>
+  </body>
 </html>
