@@ -408,17 +408,18 @@
       ctx.fillStyle = player.skin;
       ctx.shadowColor = player.skin;
       ctx.shadowBlur = 20;
-
-      // Adicionar efeito de pulsação quando imune
-      let radius = player.radius;
-      if (player.immune) {
-        radius *= 1 + 0.1 * Math.sin(timestamp / 100); // Pulsar entre 0.9x e 1.1x do raio
-      }
-
-      ctx.arc(player.x, player.y, radius, 0, Math.PI*2);
+      ctx.arc(player.x, player.y, player.radius, 0, Math.PI*2);
       ctx.fill();
       ctx.shadowBlur = 0;
-      // Contorno mais claro
+
+      // Adicionar borda amarela quando imune
+      if (player.immune) {
+        ctx.strokeStyle = 'yellow';
+        ctx.lineWidth = 4;
+        ctx.stroke();
+      }
+
+      // Contorno padrão branco
       ctx.strokeStyle = 'white';
       ctx.lineWidth = 2;
       ctx.stroke();
@@ -499,7 +500,7 @@
       );
 
       drawBars();
-      drawPlayer(timestamp); // Passar timestamp para o efeito de pulsação
+      drawPlayer(timestamp); // Passar timestamp para consistência
       drawScore();
       drawImmunityBar();
 
