@@ -246,6 +246,12 @@
       <div class="skinOption" data-skin="blue" style="background-color: blue;"></div>
       <div class="skinOption" data-skin="green" style="background-color: green;"></div>
       <div class="skinOption" data-skin="yellow" style="background-color: yellow; color: black;">★</div>
+      <div style="width: 100%; height: 10px;"></div> <!-- Spacer -->
+      <div class="skinOption" data-skin="pink" style="background-color: #FFC1CC;"></div>
+      <div class="skinOption" data-skin="lightblue" style="background-color: #ADD8E6;"></div>
+      <div class="skinOption" data-skin="magenta" style="background-color: #FF00FF;"></div>
+      <div class="skinOption" data-skin="orange" style="background-color: #FFA500;"></div>
+      <div class="skinOption" data-skin="black" style="background-color: black; color: white;">●</div>
     </div>
     <button id="playButton">Play</button>
   </div>
@@ -263,6 +269,12 @@
       <div class="skinOption" data-skin="blue" style="background-color: blue;"></div>
       <div class="skinOption" data-skin="green" style="background-color: green;"></div>
       <div class="skinOption" data-skin="yellow" style="background-color: yellow; color: black;">★</div>
+      <div style="width: 100%; height: 10px;"></div> <!-- Spacer -->
+      <div class="skinOption" data-skin="pink" style="background-color: #FFC1CC;"></div>
+      <div class="skinOption" data-skin="lightblue" style="background-color: #ADD8E6;"></div>
+      <div class="skinOption" data-skin="magenta" style="background-color: #FF00FF;"></div>
+      <div class="skinOption" data-skin="orange" style="background-color: #FFA500;"></div>
+      <div class="skinOption" data-skin="black" style="background-color: black; color: white;">●</div>
     </div>
     <button id="restartButton">Restart</button>
     <button id="saveRankingButton">Salvar no ranking</button>
@@ -334,13 +346,12 @@
     const joystickRadius = 60;
     const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
 
-    // Difficulty levels
     const difficultyLevels = [
-      { minScore: 0, maxScore: 10, barsToSpawn: 2, spawnInterval: 240 }, // 4 seconds
-      { minScore: 11, maxScore: 25, barsToSpawn: 2, spawnInterval: 150 }, // 2.5 seconds
-      { minScore: 26, maxScore: 40, barsToSpawn: 3, spawnInterval: 228 }, // 3.8 seconds
-      { minScore: 41, maxScore: 99, barsToSpawn: 3, spawnInterval: 210 }, // 3.5 seconds
-      { minScore: 100, maxScore: Infinity, barsToSpawn: 4, spawnInterval: 240 } // 4 seconds
+      { minScore: 0, maxScore: 10, barsToSpawn: 2, spawnInterval: 240 },
+      { minScore: 11, maxScore: 25, barsToSpawn: 2, spawnInterval: 150 },
+      { minScore: 26, maxScore: 40, barsToSpawn: 3, spawnInterval: 228 },
+      { minScore: 41, maxScore: 99, barsToSpawn: 3, spawnInterval: 210 },
+      { minScore: 100, maxScore: Infinity, barsToSpawn: 4, spawnInterval: 240 }
     ];
     let currentDifficulty = difficultyLevels[0];
 
@@ -497,7 +508,7 @@
       saveRankingButton.textContent = 'Salvar no ranking';
       lastFrameTime = 0;
       lastBarTime = 0;
-      currentDifficulty = difficultyLevels[0]; // Reset to initial difficulty
+      currentDifficulty = difficultyLevels[0];
       gameOverScreen.classList.add('hidden');
       updateSkinSelectors();
       updateRanking();
@@ -661,7 +672,6 @@
       const dt = (timestamp - lastFrameTime) / 16.666;
       lastFrameTime = timestamp;
 
-      // Update difficulty based on score
       const newDifficulty = difficultyLevels.find(level => score >= level.minScore && score <= level.maxScore);
       if (newDifficulty !== currentDifficulty) {
         currentDifficulty = newDifficulty;
