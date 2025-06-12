@@ -114,25 +114,6 @@
       background-color: #ccc;
     }
 
-    #immunityBar {
-      position: fixed;
-      top: 50px;
-      left: 10px;
-      width: 150px;
-      height: 20px;
-      border: 2px solid white;
-      background-color: #333;
-      z-index: 10000;
-    }
-    #immunityFill {
-      height: 100%;
-      background-color: yellow;
-      transition: width 0.1s linear;
-    }
-    #immunityFill.cooldown {
-      background-color: gray;
-    }
-
     /* Skin Selector */
     #skinSelector {
       margin-top: 20px;
@@ -194,16 +175,12 @@
     </div>
   </div>
 
-  <div id="immunityBar">
-    <div id="immunityFill"></div>
-  </div>
-
   <div id="skinSelector" title="Escolha sua skin do jogador">
     <div class="skinOption selected" data-skin="white" style="background-color: white;"></div>
     <div class="skinOption" data-skin="red" style="background-color: red;"></div>
     <div class="skinOption" data-skin="blue" style="background-color: blue;"></div>
     <div class="skinOption" data-skin="green" style="background-color: green;"></div>
-    <div class="skinOption" data-skin="yellow" style="background-color: yellow; color: black;">&#9733;</div>
+    <div class="skinOption" data-skin="yellow" style="background-color: yellow; color: black;">★</div>
   </div>
 
   <div id="startScreen">
@@ -215,21 +192,23 @@
     <h1>Game Over</h1>
     <p id="finalScore"></p>
     <button id="restartButton">Restart</button>
-    <button id="saveRankingButton">Salvar no Ranking</button>
+    <button id="saveRankingButton">Salvar no ranking</button>
   </div>
 
   <div id="footer">
-    Mover: Setas ou WASD<br>
-    Imunidade: Barra de espaço<br>
+    Mover: Setas ou WASD
+    <br>
+    Imunidade: Barra de espaço
+    <br>
     Reiniciar: Enter
   </div>
-  <div id="version">Versão 1.3</div>
+  <div id="version">Versão 2.0</div>
 
   <script>
     // Proteção básica
     document.addEventListener('contextmenu', e => { e.preventDefault(); alert('Clique com o botão direito desativado.'); });
     document.addEventListener('keydown', e => {
-      if (e.key === 'F12' || e.keyCode === 123) {
+      if (e.key === 'F12' || e.keyCode === '123') {
         e.preventDefault();
         alert('Ferramentas de desenvolvedor desativadas.');
       }
@@ -243,12 +222,10 @@
     const restartButton = document.getElementById('restartButton');
     const saveRankingButton = document.getElementById('saveRankingButton');
     const finalScoreText = document.getElementById('finalScore');
-    const immunityFill = document.getElementById('immunityFill');
-
     const skinOptions = document.querySelectorAll('.skinOption');
 
     let gameStarted = false, scoreSaved = false;
-    const boundary = { x:70, y:70, width:900-140, height:900-140 };
+    const boundary = { x:70, y:70, width:900-140,50, height:900-140};
     const player = {
       x: 900/2,
       y: 900/2,
@@ -291,12 +268,6 @@
       });
     }
 
-    // --- Atualiza barra de imunidade ---
-    function updateImmunityBar() {
-      immunityFill.style.width = `${player.energy}%`;
-      immunityFill.className = player.immune ? '' : 'cooldown';
-    }
-
     // --- Controle de teclas ---
     document.addEventListener('keydown', e => {
       if (e.key in keys) {
@@ -333,7 +304,7 @@
       if (scoreSaved) return;
       const name = prompt('Digite seu nome:');
       if (name && name.trim()) {
-        rankings.push({ name: name.trim(), score });
+        rankings.push({ name: name.trim(), score: Number(score.toFixed(2)) });
         saveRanking();
         updateRanking();
         scoreSaved = true;
@@ -351,7 +322,7 @@
       player.y = canvas.height / 2;
       player.immune = false;
       player.energy = 100;
-      score = 0;
+      score = 0; // Garantir que a pontuação seja zerada
       bars = [];
       gameOver = false;
       scoreSaved = false;
@@ -359,7 +330,6 @@
       saveRankingButton.textContent = 'Salvar no Ranking';
       lastFrameTime = lastBarTime = 0;
       gameOverScreen.classList.add('hidden');
-      updateImmunityBar();
       requestAnimationFrame(gameLoop);
     }
 
@@ -424,7 +394,6 @@
         player.energy += player.rechargeRate * dt;
         if (player.energy > 100) player.energy = 100;
       }
-      updateImmunityBar();
     }
 
     // --- Desenhar jogador com skin ---
@@ -461,7 +430,19 @@
     function drawScore() {
       ctx.fillStyle = 'white';
       ctx.font = '24px Arial';
-      ctx.fillText('Score: ' + score, 20, 40);
+      ctx.fillText('Score: ' + Number(score.toFixed(2)), 20, 40);
+    }
+
+    // --- Desenhar barra de imunidade ---
+    function drawImmunityBar() {
+      // Desenhar borda da barra
+      ctx.strokeStyle = 'white';
+      ctx.lineWidth = 2;
+      ctx.strokeRect(20, 50, 150, 20);
+      
+      // Desenhar preenchimento
+      ctx.fillStyle = player.immune ? 'yellow' : 'gray';
+      ctx.fillRect(22, 52, (player.energy / 100) * 146, 16);
     }
 
     // --- Limpar tela ---
@@ -476,7 +457,7 @@
     function gameLoop(timestamp=0) {
       if (!gameStarted || gameOver) {
         if (gameOver) {
-          finalScoreText.textContent = `Sua pontuação: ${score}`;
+          finalScoreText.textContent = `Sua pontuação: ${Number(score.toFixed(2))}`;
           gameOverScreen.classList.remove('hidden');
         }
         return;
@@ -507,8 +488,10 @@
       drawBars();
       drawPlayer();
       drawScore();
+      drawImmunityBar();
 
       score += dt * 0.5; // Pontuação aumenta com o tempo
+      score = Number(score.toFixed(2)); // Limitar a 2 casas decimais
 
       requestAnimationFrame(gameLoop);
     }
