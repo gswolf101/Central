@@ -94,8 +94,8 @@
     }
     #immunityBar {
       position: absolute;
-      top: 50px;
-      left: 180px;
+      top: 40px;
+      left: 10px;
       width: 150px;
       height: 20px;
       border: 2px solid white;
@@ -165,9 +165,9 @@
       radius: 20,
       speed: 4,
       immune: false,
-      energy: 100, // Nível de energia (0-100)
-      energyCost: 2, // Custo por frame quando imune
-      rechargeRate: 0.5 // Recarga por frame quando não imune
+      energy: 100,
+      energyCost: 2,
+      rechargeRate: 0.5
     };
     let bars = [], score = 0, gameOver = false;
     let keys = {
@@ -315,14 +315,14 @@
     }
 
     function draw() {
-      ctx.fillStyle = 'rgba(0, 0, 0, 0.075)';
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.2)';
       ctx.fillRect(0, 0, canvas.width, canvas.height);
 
       if (!gameStarted) return;
 
       ctx.strokeStyle = 'white';
       ctx.lineWidth = 2;
-      ctx.strokeRect(boundary.x, boundary.y, boundary.x+boundary.width, boundary.y+boundary.height);
+      ctx.strokeRect(boundary.x, boundary.y, boundary.width, boundary.height);
 
       ctx.beginPath();
       ctx.arc(player.x, player.y, player.radius, 0, Math.PI*2);
@@ -343,7 +343,7 @@
       ctx.fillStyle = 'white';
       ctx.font = '24px Arial';
       ctx.textAlign = 'left';
-      ctx.fillText(`Pontuação: ${score}`, 10, 30);
+      ctx.fillText(`Pontuação: ${score}`, 10, 20);
 
       if (gameOver) {
         finalScoreText.textContent = `Pontuação Final: ${score}`;
@@ -393,3 +393,4 @@
   </script>
 </body>
 </html>
+
