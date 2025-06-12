@@ -326,6 +326,7 @@
       ' ': false, Enter: false
     };
     let rankings = JSON.parse(localStorage.getItem('rankings')) || [];
+    let animationFrameId = null; // Track animation frame for cancellation
 
     let joystickActive = false;
     let joystickCenter = { x: 0, y: 0 };
@@ -462,14 +463,17 @@
     });
 
     function resetGame() {
+      // Cancel any existing animation frame to prevent stray loops
+      if (animationFrameId) cancelAnimationFrame(animationFrameId);
+
       player.x = canvas.width / 2;
       player.y = canvas.height / 2;
       player.immune = false;
       player.energy = 100;
-      score = 0; // Garantir que a pontuação seja resetada
+      score = 0; // Explicitly reset score
       bars = [];
       gameOver = false;
-      gameStarted = true; // Garantir que o jogo esteja ativo
+      gameStarted = true;
       scoreSaved = false;
       saveRankingButton.disabled = false;
       saveRankingButton.textContent = 'Salvar no ranking';
@@ -478,6 +482,7 @@
       gameOverScreen.classList.add('hidden');
       updateSkinSelectors();
       updateRanking();
+      console.log('Game reset, score:', score); // Debug log
       requestAnimationFrame(gameLoop);
     }
 
@@ -528,6 +533,7 @@
         if (player.x + player.radius > b.x && player.x - player.radius < b.x + b.width &&
             player.y + player.radius > b.y && player.y - player.radius < b.y + b.height) {
           gameOver = true;
+          console.log('Collision detected, game over, score:', score); // Debug log
           break;
         }
       }
@@ -587,7 +593,7 @@
       ctx.fillStyle = 'white';
       ctx.font = '24px Arial';
       ctx.textAlign = 'center';
-      ctx.fillText('Score: ' + Number(score.toFixed(1)), canvas.width / 2, 40);
+      ctx.fillText('Score: ' + score.toFixed(1), canvas.width / 2, 40);
       ctx.textAlign = 'left';
     }
 
@@ -614,12 +620,12 @@
     function gameLoop(timestamp=0) {
       if (!gameStarted || gameOver) {
         if (gameOver) {
-          finalScoreText.textContent = `Sua pontuação: ${Number(score.toFixed(1))}`;
+          finalScoreText.textContent = `Sua pontuação: ${score.toFixed(1)}`;
           gameOverScreen.classList.remove('hidden');
         }
         return;
       }
-      const dt = (timestamp - lastFrameTime) / 16.666;
+      const dt = (timestamp - lastFrameTime) / 16.666; // Normalize to 60 FPS
       lastFrameTime = timestamp;
 
       clearScreen();
@@ -645,10 +651,10 @@
       drawScore();
       drawImmunityBar();
 
-      score += dt * 0.016667; // 1 ponto por segundo
-      score = Number(score.toFixed(1));
+      score += dt / 60; // 1 point per second (60 frames per second)
+      console.log('Score:', score, 'dt:', dt); // Debug log
 
-      requestAnimationFrame(gameLoop);
+      animationFrameId = requestAnimationFrame(gameLoop);
     }
 
     function updateSkinSelectors() {
