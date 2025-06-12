@@ -326,13 +326,23 @@
       ' ': false, Enter: false
     };
     let rankings = JSON.parse(localStorage.getItem('rankings')) || [];
-    let animationFrameId = null; // Added to track animation frames
+    let animationFrameId = null;
 
     let joystickActive = false;
     let joystickCenter = { x: 0, y: 0 };
     let joystickDirection = { x: 0, y: 0 };
     const joystickRadius = 60;
     const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+
+    // Difficulty levels
+    const difficultyLevels = [
+      { minScore: 0, maxScore: 10, barsToSpawn: 2, spawnInterval: 240 }, // 4 seconds
+      { minScore: 11, maxScore: 25, barsToSpawn: 2, spawnInterval: 150 }, // 2.5 seconds
+      { minScore: 26, maxScore: 40, barsToSpawn: 3, spawnInterval: 228 }, // 3.8 seconds
+      { minScore: 41, maxScore: 99, barsToSpawn: 3, spawnInterval: 210 }, // 3.5 seconds
+      { minScore: 100, maxScore: Infinity, barsToSpawn: 4, spawnInterval: 240 } // 4 seconds
+    ];
+    let currentDifficulty = difficultyLevels[0];
 
     function setupJoystick() {
       if (!isTouchDevice) return;
@@ -423,7 +433,7 @@
           player.immune = true;
         }
         if (e.key === 'Enter' && gameOver) {
-          console.log('Enter pressed, triggering resetGame'); // Debug
+          console.log('Enter pressed, triggering resetGame');
           resetGame();
         }
       }
@@ -439,14 +449,14 @@
     });
 
     playButton.addEventListener('click', () => {
-      console.log('Play button clicked, resetting score and starting game'); // Debug
+      console.log('Play button clicked, resetting score and starting game');
       startScreen.classList.add('hidden');
       gameStarted = true;
       resetGame();
     });
 
     restartButton.addEventListener('click', () => {
-      console.log('Restart button clicked, triggering resetGame'); // Debug
+      console.log('Restart button clicked, triggering resetGame');
       gameOverScreen.classList.add('hidden');
       resetGame();
     });
@@ -471,14 +481,14 @@
       if (animationFrameId) {
         cancelAnimationFrame(animationFrameId);
         animationFrameId = null;
-        console.log('Cancelled animation frame'); // Debug
+        console.log('Cancelled animation frame');
       }
 
       player.x = canvas.width / 2;
       player.y = canvas.height / 2;
       player.immune = false;
       player.energy = 100;
-      score = 0; // Reset score
+      score = 0;
       bars = [];
       gameOver = false;
       gameStarted = true;
@@ -487,10 +497,11 @@
       saveRankingButton.textContent = 'Salvar no ranking';
       lastFrameTime = 0;
       lastBarTime = 0;
+      currentDifficulty = difficultyLevels[0]; // Reset to initial difficulty
       gameOverScreen.classList.add('hidden');
       updateSkinSelectors();
       updateRanking();
-      console.log('Game reset, score:', score, 'gameStarted:', gameStarted, 'gameOver:', gameOver); // Debug
+      console.log('Game reset, score:', score, 'gameStarted:', gameStarted, 'gameOver:', gameOver);
       animationFrameId = requestAnimationFrame(gameLoop);
     }
 
@@ -507,8 +518,8 @@
         case 3: bar = { x:Math.random()*(canvas.width-length), y:canvas.height, width:length, height:thickness, dx:0, dy:-speed, scored: false }; break;
       }
       bars.push(bar);
-      score += 1; // 1 point for bar creation
-      console.log('Bar created, score:', score); // Debug
+      score += 1;
+      console.log('Bar created, score:', score, 'difficulty:', currentDifficulty);
     }
 
     function movePlayer(dt) {
@@ -542,12 +553,12 @@
         if (player.x + player.radius > b.x && player.x - player.radius < b.x + b.width &&
             player.y + player.radius > b.y && player.y - player.radius < b.y + b.height) {
           if (player.immune && !b.scored) {
-            score += 1; // 1 point for passing through with immunity
-            b.scored = true; // Prevent double-counting
-            console.log('Immune collision, score:', score); // Debug
+            score += 1;
+            b.scored = true;
+            console.log('Immune collision, score:', score);
           } else if (!player.immune) {
             gameOver = true;
-            console.log('Collision detected, game over, score:', score); // Debug
+            console.log('Collision detected, game over, score:', score);
             break;
           }
         }
@@ -608,7 +619,7 @@
       ctx.fillStyle = 'white';
       ctx.font = '24px Arial';
       ctx.textAlign = 'center';
-      ctx.fillText('Score: ' + score, canvas.width / 2, 40); // Integer score
+      ctx.fillText('Score: ' + score, canvas.width / 2, 40);
       ctx.textAlign = 'left';
     }
 
@@ -637,11 +648,11 @@
         if (gameOver) {
           finalScoreText.textContent = `Sua pontuação: ${score.toFixed(2)}`;
           gameOverScreen.classList.remove('hidden');
-          console.log('Game over screen shown, score:', score); // Debug
+          console.log('Game over screen shown, score:', score);
           if (animationFrameId) {
             cancelAnimationFrame(animationFrameId);
             animationFrameId = null;
-            console.log('Game over, animation frame cancelled'); // Debug
+            console.log('Game over, animation frame cancelled');
           }
         }
         return;
@@ -649,6 +660,13 @@
 
       const dt = (timestamp - lastFrameTime) / 16.666;
       lastFrameTime = timestamp;
+
+      // Update difficulty based on score
+      const newDifficulty = difficultyLevels.find(level => score >= level.minScore && score <= level.maxScore);
+      if (newDifficulty !== currentDifficulty) {
+        currentDifficulty = newDifficulty;
+        console.log('Difficulty changed:', currentDifficulty);
+      }
 
       clearScreen();
       drawBoundary();
@@ -658,9 +676,12 @@
       updateEnergy(dt);
 
       lastBarTime += dt;
-      if (lastBarTime > 120) {
-        createBar();
+      if (lastBarTime > currentDifficulty.spawnInterval) {
+        for (let i = 0; i < currentDifficulty.barsToSpawn; i++) {
+          createBar();
+        }
         lastBarTime = 0;
+        console.log('Spawned', currentDifficulty.barsToSpawn, 'bars, score:', score);
       }
 
       bars = bars.filter(b =>
@@ -673,7 +694,7 @@
       drawScore();
       drawImmunityBar();
 
-      console.log('Score:', score); // Debug
+      console.log('Score:', score);
 
       animationFrameId = requestAnimationFrame(gameLoop);
     }
@@ -696,7 +717,7 @@
           player.skin = option.dataset.skin;
           selectSkin(player.skin, startSkinOptions);
           selectSkin(player.skin, gameOverSkinOptions);
-          console.log('Skin selected (start):', player.skin); // Debug
+          console.log('Skin selected (start):', player.skin);
         });
       });
 
@@ -705,7 +726,7 @@
           player.skin = option.dataset.skin;
           selectSkin(player.skin, startSkinOptions);
           selectSkin(player.skin, gameOverSkinOptions);
-          console.log('Skin selected (game over):', player.skin); // Debug
+          console.log('Skin selected (game over):', player.skin);
         });
       });
 
@@ -727,7 +748,7 @@
       updateRanking();
       updateSkinSelectors();
       setupJoystick();
-      console.log('Game loaded, initial score:', score); // Debug
+      console.log('Game loaded, initial score:', score);
     });
   </script>
 </body>
