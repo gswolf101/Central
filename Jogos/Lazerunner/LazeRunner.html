@@ -160,15 +160,15 @@
     }
     #joystick {
       left: 20px;
-      width: 120px;
-      height: 120px;
+      width: 160px;
+      height: 160px;
       background: rgba(255,255,255,0.2);
       border-radius: 50%;
       touch-action: none;
     }
     #joystickKnob {
-      width: 48px;
-      height: 48px;
+      width: 64px;
+      height: 64px;
       background: white;
       border-radius: 50%;
       position: absolute;
@@ -246,6 +246,12 @@
       <div class="skinOption" data-skin="blue" style="background-color: blue;"></div>
       <div class="skinOption" data-skin="green" style="background-color: green;"></div>
       <div class="skinOption" data-skin="yellow" style="background-color: yellow; color: black;">★</div>
+      <div style="width: 100%; height: 10px;"></div>
+      <div class="skinOption" data-skin="pink" style="background-color: #FFC1CC;"></div>
+      <div class="skinOption" data-skin="lightblue" style="background-color: #ADD8E6;"></div>
+      <div class="skinOption" data-skin="magenta" style="background-color: #FF00FF;"></div>
+      <div class="skinOption" data-skin="orange" style="background-color: #FFA500;"></div>
+      <div class="skinOption" data-skin="black" style="background-color: black; color: white;">●</div>
     </div>
     <button id="playButton">Play</button>
   </div>
@@ -263,6 +269,12 @@
       <div class="skinOption" data-skin="blue" style="background-color: blue;"></div>
       <div class="skinOption" data-skin="green" style="background-color: green;"></div>
       <div class="skinOption" data-skin="yellow" style="background-color: yellow; color: black;">★</div>
+      <div style="width: 100%; height: 10px;"></div>
+      <div class="skinOption" data-skin="pink" style="background-color: #FFC1CC;"></div>
+      <div class="skinOption" data-skin="lightblue" style="background-color: #ADD8E6;"></div>
+      <div class="skinOption" data-skin="magenta" style="background-color: #FF00FF;"></div>
+      <div class="skinOption" data-skin="orange" style="background-color: #FFA500;"></div>
+      <div class="skinOption" data-skin="black" style="background-color: black; color: white;">●</div>
     </div>
     <button id="restartButton">Restart</button>
     <button id="saveRankingButton">Salvar no ranking</button>
@@ -280,7 +292,7 @@
     <br>
     Reiniciar: Enter
   </div>
-  <div id="version">Versão 1.4</div>
+  <div id="version">Versão 1.5</div>
 
   <script>
     document.addEventListener('contextmenu', e => { e.preventDefault(); alert('Clique com o botão direito desativado.'); });
@@ -331,16 +343,15 @@
     let joystickActive = false;
     let joystickCenter = { x: 0, y: 0 };
     let joystickDirection = { x: 0, y: 0 };
-    const joystickRadius = 60;
+    const joystickRadius = 80;
     const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
 
-    // Difficulty levels
     const difficultyLevels = [
-      { minScore: 0, maxScore: 10, barsToSpawn: 2, spawnInterval: 240 }, // 4 seconds
-      { minScore: 11, maxScore: 25, barsToSpawn: 2, spawnInterval: 150 }, // 2.5 seconds
-      { minScore: 26, maxScore: 40, barsToSpawn: 3, spawnInterval: 228 }, // 3.8 seconds
-      { minScore: 41, maxScore: 99, barsToSpawn: 3, spawnInterval: 210 }, // 3.5 seconds
-      { minScore: 100, maxScore: Infinity, barsToSpawn: 4, spawnInterval: 240 } // 4 seconds
+      { minScore: 0, maxScore: 10, barsToSpawn: 2, spawnInterval: 240 },
+      { minScore: 11, maxScore: 25, barsToSpawn: 2, spawnInterval: 150 },
+      { minScore: 26, maxScore: 40, barsToSpawn: 3, spawnInterval: 228 },
+      { minScore: 41, maxScore: 99, barsToSpawn: 3, spawnInterval: 210 },
+      { minScore: 100, maxScore: Infinity, barsToSpawn: 4, spawnInterval: 240 }
     ];
     let currentDifficulty = difficultyLevels[0];
 
@@ -373,6 +384,7 @@
       };
       joystickActive = true;
       moveJoystick(e);
+      console.log('Joystick touch started, center:', joystickCenter);
     }
 
     function moveJoystick(e) {
@@ -389,18 +401,20 @@
         dy = (dy / distance) * maxDistance;
       }
 
-      joystickKnob.style.transform = `translate(${dx - 24}px, ${dy - 24}px)`;
+      joystickKnob.style.transform = `translate(${dx - 32}px, ${dy - 32}px)`;
 
       joystickDirection = {
         x: distance > 0 ? dx / maxDistance : 0,
         y: distance > 0 ? dy / maxDistance : 0
       };
+      console.log('Joystick moved, direction:', joystickDirection);
     }
 
     function endJoystick() {
       joystickActive = false;
       joystickDirection = { x: 0, y: 0 };
       joystickKnob.style.transform = 'translate(-50%, -50%)';
+      console.log('Joystick touch ended');
     }
 
     function saveRanking() {
@@ -497,7 +511,7 @@
       saveRankingButton.textContent = 'Salvar no ranking';
       lastFrameTime = 0;
       lastBarTime = 0;
-      currentDifficulty = difficultyLevels[0]; // Reset to initial difficulty
+      currentDifficulty = difficultyLevels[0];
       gameOverScreen.classList.add('hidden');
       updateSkinSelectors();
       updateRanking();
@@ -661,7 +675,6 @@
       const dt = (timestamp - lastFrameTime) / 16.666;
       lastFrameTime = timestamp;
 
-      // Update difficulty based on score
       const newDifficulty = difficultyLevels.find(level => score >= level.minScore && score <= level.maxScore);
       if (newDifficulty !== currentDifficulty) {
         currentDifficulty = newDifficulty;
