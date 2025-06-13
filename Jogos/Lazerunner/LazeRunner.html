@@ -160,15 +160,15 @@
     }
     #joystick {
       left: 20px;
-      width: 120px;
-      height: 120px;
+      width: 160px;
+      height: 160px;
       background: rgba(255,255,255,0.2);
       border-radius: 50%;
       touch-action: none;
     }
     #joystickKnob {
-      width: 48px;
-      height: 48px;
+      width: 64px;
+      height: 64px;
       background: white;
       border-radius: 50%;
       position: absolute;
@@ -246,7 +246,7 @@
       <div class="skinOption" data-skin="blue" style="background-color: blue;"></div>
       <div class="skinOption" data-skin="green" style="background-color: green;"></div>
       <div class="skinOption" data-skin="yellow" style="background-color: yellow; color: black;">★</div>
-      <div style="width: 100%; height: 10px;"></div> <!-- Spacer -->
+      <div style="width: 100%; height: 10px;"></div>
       <div class="skinOption" data-skin="pink" style="background-color: #FFC1CC;"></div>
       <div class="skinOption" data-skin="lightblue" style="background-color: #ADD8E6;"></div>
       <div class="skinOption" data-skin="magenta" style="background-color: #FF00FF;"></div>
@@ -269,7 +269,7 @@
       <div class="skinOption" data-skin="blue" style="background-color: blue;"></div>
       <div class="skinOption" data-skin="green" style="background-color: green;"></div>
       <div class="skinOption" data-skin="yellow" style="background-color: yellow; color: black;">★</div>
-      <div style="width: 100%; height: 10px;"></div> <!-- Spacer -->
+      <div style="width: 100%; height: 10px;"></div>
       <div class="skinOption" data-skin="pink" style="background-color: #FFC1CC;"></div>
       <div class="skinOption" data-skin="lightblue" style="background-color: #ADD8E6;"></div>
       <div class="skinOption" data-skin="magenta" style="background-color: #FF00FF;"></div>
@@ -292,7 +292,7 @@
     <br>
     Reiniciar: Enter
   </div>
-  <div id="version">Versão 1.4</div>
+  <div id="version">Versão 1.5</div>
 
   <script>
     document.addEventListener('contextmenu', e => { e.preventDefault(); alert('Clique com o botão direito desativado.'); });
@@ -337,13 +337,12 @@
       a: false, A: false, d: false, D: false,
       ' ': false, Enter: false
     };
-    let rankings = JSON.parse(localStorage.getItem('rankings')) || [];
     let animationFrameId = null;
 
     let joystickActive = false;
     let joystickCenter = { x: 0, y: 0 };
     let joystickDirection = { x: 0, y: 0 };
-    const joystickRadius = 60;
+    const joystickRadius = 80;
     const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
 
     const difficultyLevels = [
@@ -354,6 +353,53 @@
       { minScore: 100, maxScore: Infinity, barsToSpawn: 4, spawnInterval: 240 }
     ];
     let currentDifficulty = difficultyLevels[0];
+
+    async function fetchRanking() {
+      try {
+        const response = await fetch('http://localhost:3000/api/ranking');
+        if (!response.ok) throw new Error(`Erro HTTP: ${response.status}`);
+        const rankings = await response.json();
+        console.log('Ranking obtido:', rankings);
+        return rankings;
+      } catch (err) {
+        console.error('Erro ao obter ranking:', err);
+        alert('Erro ao carregar o ranking. Verifique se o servidor está rodando.');
+        return [];
+      }
+    }
+
+    async function saveRankingToServer(name, score) {
+      try {
+        const response = await fetch('http://localhost:3000/api/ranking', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name, score })
+        });
+        if (!response.ok) throw new Error(`Erro HTTP: ${response.status}`);
+        const updatedRankings = await response.json();
+        console.log('Pontuação salva:', { name, score }, 'Ranking atualizado:', updatedRankings);
+        return updatedRankings;
+      } catch (err) {
+        console.error('Erro ao salvar pontuação:', err);
+        alert('Erro ao salvar a pontuação. Verifique se o servidor está rodando.');
+        return null;
+      }
+    }
+
+    function updateRanking(rankings) {
+      const startRankingList = startScreen.querySelector('#rankingList');
+      const gameOverRankingList = gameOverScreen.querySelector('#rankingList');
+      startRankingList.innerHTML = '';
+      gameOverRankingList.innerHTML = '';
+      rankings.forEach(e => {
+        const li1 = document.createElement('li');
+        li1.textContent = `${e.name} - ${Number(e.score).toFixed(2)}`;
+        startRankingList.appendChild(li1);
+        const li2 = document.createElement('li');
+        li2.textContent = `${e.name} - ${Number(e.score).toFixed(2)}`;
+        gameOverRankingList.appendChild(li2);
+      });
+    }
 
     function setupJoystick() {
       if (!isTouchDevice) return;
@@ -384,6 +430,7 @@
       };
       joystickActive = true;
       moveJoystick(e);
+      console.log('Toque no joystick iniciado, centro:', joystickCenter);
     }
 
     function moveJoystick(e) {
@@ -400,41 +447,20 @@
         dy = (dy / distance) * maxDistance;
       }
 
-      joystickKnob.style.transform = `translate(${dx - 24}px, ${dy - 24}px)`;
+      joystickKnob.style.transform = `translate(${dx - 32}px, ${dy - 32}px)`;
 
       joystickDirection = {
         x: distance > 0 ? dx / maxDistance : 0,
         y: distance > 0 ? dy / maxDistance : 0
       };
+      console.log('Joystick movido, direção:', joystickDirection);
     }
 
     function endJoystick() {
       joystickActive = false;
       joystickDirection = { x: 0, y: 0 };
       joystickKnob.style.transform = 'translate(-50%, -50%)';
-    }
-
-    function saveRanking() {
-      try {
-        localStorage.setItem('rankings', JSON.stringify(rankings));
-      } catch {
-        alert('Erro ao salvar a pontuação.');
-      }
-    }
-
-    function updateRanking() {
-      const startRankingList = startScreen.querySelector('#rankingList');
-      const gameOverRankingList = gameOverScreen.querySelector('#rankingList');
-      startRankingList.innerHTML = '';
-      gameOverRankingList.innerHTML = '';
-      rankings.sort((a,b)=>b.score-a.score).slice(0,10).forEach(e => {
-        const li1 = document.createElement('li');
-        li1.textContent = `${e.name} - ${Number(e.score).toFixed(2)}`;
-        startRankingList.appendChild(li1);
-        const li2 = document.createElement('li');
-        li2.textContent = `${e.name} - ${Number(e.score).toFixed(2)}`;
-        gameOverRankingList.appendChild(li2);
-      });
+      console.log('Toque no joystick finalizado');
     }
 
     document.addEventListener('keydown', e => {
@@ -444,7 +470,7 @@
           player.immune = true;
         }
         if (e.key === 'Enter' && gameOver) {
-          console.log('Enter pressed, triggering resetGame');
+          console.log('Enter pressionado, reiniciando jogo');
           resetGame();
         }
       }
@@ -460,29 +486,30 @@
     });
 
     playButton.addEventListener('click', () => {
-      console.log('Play button clicked, resetting score and starting game');
+      console.log('Botão Play clicado, reiniciando pontuação e iniciando jogo');
       startScreen.classList.add('hidden');
       gameStarted = true;
       resetGame();
     });
 
     restartButton.addEventListener('click', () => {
-      console.log('Restart button clicked, triggering resetGame');
+      console.log('Botão Restart clicado, reiniciando jogo');
       gameOverScreen.classList.add('hidden');
       resetGame();
     });
 
-    saveRankingButton.addEventListener('click', () => {
+    saveRankingButton.addEventListener('click', async () => {
       if (scoreSaved) return;
       const name = prompt('Digite seu nome:');
       if (name && name.trim()) {
-        rankings.push({ name: name.trim(), score: Number(score.toFixed(2)) });
-        saveRanking();
-        updateRanking();
-        scoreSaved = true;
-        saveRankingButton.disabled = true;
-        saveRankingButton.textContent = 'Salvo';
-        alert('Pontuação salva!');
+        const updatedRankings = await saveRankingToServer(name.trim(), Number(score.toFixed(2)));
+        if (updatedRankings) {
+          updateRanking(updatedRankings);
+          scoreSaved = true;
+          saveRankingButton.disabled = true;
+          saveRankingButton.textContent = 'Salvo';
+          alert('Pontuação salva!');
+        }
       } else if (name !== null) {
         alert('Nome inválido.');
       }
@@ -492,7 +519,7 @@
       if (animationFrameId) {
         cancelAnimationFrame(animationFrameId);
         animationFrameId = null;
-        console.log('Cancelled animation frame');
+        console.log('Animação cancelada');
       }
 
       player.x = canvas.width / 2;
@@ -511,8 +538,7 @@
       currentDifficulty = difficultyLevels[0];
       gameOverScreen.classList.add('hidden');
       updateSkinSelectors();
-      updateRanking();
-      console.log('Game reset, score:', score, 'gameStarted:', gameStarted, 'gameOver:', gameOver);
+      console.log('Jogo reiniciado, pontuação:', score, 'gameStarted:', gameStarted, 'gameOver:', gameOver);
       animationFrameId = requestAnimationFrame(gameLoop);
     }
 
@@ -530,7 +556,7 @@
       }
       bars.push(bar);
       score += 1;
-      console.log('Bar created, score:', score, 'difficulty:', currentDifficulty);
+      console.log('Barra criada, pontuação:', score, 'dificuldade:', currentDifficulty);
     }
 
     function movePlayer(dt) {
@@ -566,10 +592,10 @@
           if (player.immune && !b.scored) {
             score += 1;
             b.scored = true;
-            console.log('Immune collision, score:', score);
+            console.log('Colisão imune, pontuação:', score);
           } else if (!player.immune) {
             gameOver = true;
-            console.log('Collision detected, game over, score:', score);
+            console.log('Colisão detectada, fim de jogo, pontuação:', score);
             break;
           }
         }
@@ -659,11 +685,11 @@
         if (gameOver) {
           finalScoreText.textContent = `Sua pontuação: ${score.toFixed(2)}`;
           gameOverScreen.classList.remove('hidden');
-          console.log('Game over screen shown, score:', score);
+          console.log('Tela de game over exibida, pontuação:', score);
           if (animationFrameId) {
             cancelAnimationFrame(animationFrameId);
             animationFrameId = null;
-            console.log('Game over, animation frame cancelled');
+            console.log('Fim de jogo, animação cancelada');
           }
         }
         return;
@@ -675,7 +701,7 @@
       const newDifficulty = difficultyLevels.find(level => score >= level.minScore && score <= level.maxScore);
       if (newDifficulty !== currentDifficulty) {
         currentDifficulty = newDifficulty;
-        console.log('Difficulty changed:', currentDifficulty);
+        console.log('Dificuldade alterada:', currentDifficulty);
       }
 
       clearScreen();
@@ -691,7 +717,7 @@
           createBar();
         }
         lastBarTime = 0;
-        console.log('Spawned', currentDifficulty.barsToSpawn, 'bars, score:', score);
+        console.log('Criadas', currentDifficulty.barsToSpawn, 'barras, pontuação:', score);
       }
 
       bars = bars.filter(b =>
@@ -704,7 +730,7 @@
       drawScore();
       drawImmunityBar();
 
-      console.log('Score:', score);
+      console.log('Pontuação:', score);
 
       animationFrameId = requestAnimationFrame(gameLoop);
     }
@@ -727,7 +753,7 @@
           player.skin = option.dataset.skin;
           selectSkin(player.skin, startSkinOptions);
           selectSkin(player.skin, gameOverSkinOptions);
-          console.log('Skin selected (start):', player.skin);
+          console.log('Skin selecionada (início):', player.skin);
         });
       });
 
@@ -736,7 +762,7 @@
           player.skin = option.dataset.skin;
           selectSkin(player.skin, startSkinOptions);
           selectSkin(player.skin, gameOverSkinOptions);
-          console.log('Skin selected (game over):', player.skin);
+          console.log('Skin selecionada (game over):', player.skin);
         });
       });
 
@@ -753,12 +779,13 @@
     }
 
     window.addEventListener('resize', resizeCanvas);
-    window.addEventListener('load', () => {
+    window.addEventListener('load', async () => {
       resizeCanvas();
-      updateRanking();
+      const rankings = await fetchRanking();
+      updateRanking(rankings);
       updateSkinSelectors();
       setupJoystick();
-      console.log('Game loaded, initial score:', score);
+      console.log('Jogo carregado, pontuação inicial:', score);
     });
   </script>
 </body>
