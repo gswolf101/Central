@@ -4,6 +4,9 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <title>Lazer Runner</title>
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js"></script>
   <style>
     body {
       display: flex;
@@ -295,6 +298,19 @@
   <div id="version">Versão 1.5</div>
 
   <script>
+    // Inicializar Firebase
+    const firebaseConfig = {
+      apiKey: "AIzaSyB1RN6S1lTMoeGw1avqBjxC6is-LAWjblI",
+      authDomain: "gswolf101-lazerrunner.firebaseapp.com",
+      projectId: "gswolf101-lazerrunner",
+      storageBucket: "gswolf101-lazerrunner.firebasestorage.app",
+      messagingSenderId: "262516569774",
+      appId: "1:262516569774:web:c1751897f17ec016acdf3f",
+      measurementId: "G-QQBG5EFCK7"
+    };
+    const app = firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+
     document.addEventListener('contextmenu', e => { e.preventDefault(); alert('Clique com o botão direito desativado.'); });
     document.addEventListener('keydown', e => {
       if (e.key === 'F12' || e.keyCode === 123) {
@@ -318,8 +334,8 @@
     let gameStarted = false, scoreSaved = false;
     const boundary = { x: 70, y: 70, width: 900 - 140, height: 900 - 140 };
     const player = {
-      x: 900/2,
-      y: 900/2,
+      x: 900 / 2,
+      y: 900 / 2,
       radius: 20,
       speed: 4,
       immune: false,
@@ -354,34 +370,36 @@
     ];
     let currentDifficulty = difficultyLevels[0];
 
-    async function fetchRanking() {
+    async function getRankingFromFirestore() {
       try {
-        const response = await fetch('http://localhost:3000/api/ranking');
-        if (!response.ok) throw new Error(`Erro HTTP: ${response.status}`);
-        const rankings = await response.json();
-        console.log('Ranking obtido:', rankings);
+        const querySnapshot = await db.collection('rankings')
+          .orderBy('score', 'desc')
+          .limit(10)
+          .get();
+        const rankings = querySnapshot.docs.map(doc => doc.data());
+        console.log('Ranking obtido do Firestore:', rankings);
         return rankings;
       } catch (err) {
         console.error('Erro ao obter ranking:', err);
-        alert('Erro ao carregar o ranking. Verifique se o servidor está rodando.');
+        alert('Erro ao carregar o ranking.');
         return [];
       }
     }
 
-    async function saveRankingToServer(name, score) {
+    async function saveRankingToFirestore(name, score) {
       try {
-        const response = await fetch('http://localhost:3000/api/ranking', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ name, score })
+        await db.collection('rankings').add({
+          name: name.trim(),
+          score: Number(score.toFixed(2)),
+          timestamp: firebase.firestore.FieldValue.serverTimestamp()
         });
-        if (!response.ok) throw new Error(`Erro HTTP: ${response.status}`);
-        const updatedRankings = await response.json();
-        console.log('Pontuação salva:', { name, score }, 'Ranking atualizado:', updatedRankings);
+        console.log('Pontuação salva no Firestore:', { name, score });
+        const updatedRankings = await getRankingFromFirestore();
+        console.log('Ranking atualizado:', updatedRankings);
         return updatedRankings;
       } catch (err) {
         console.error('Erro ao salvar pontuação:', err);
-        alert('Erro ao salvar a pontuação. Verifique se o servidor está rodando.');
+        alert('Erro ao salvar a pontuação.');
         return null;
       }
     }
@@ -502,7 +520,7 @@
       if (scoreSaved) return;
       const name = prompt('Digite seu nome:');
       if (name && name.trim()) {
-        const updatedRankings = await saveRankingToServer(name.trim(), Number(score.toFixed(2)));
+        const updatedRankings = await saveRankingToFirestore(name.trim(), Number(score.toFixed(2)));
         if (updatedRankings) {
           updateRanking(updatedRankings);
           scoreSaved = true;
@@ -543,16 +561,16 @@
     }
 
     function createBar() {
-      const dir = Math.floor(Math.random()*4);
+      const dir = Math.floor(Math.random() * 4);
       const thickness = 30;
-      const length = Math.random()*400 + 200;
-      const speed = 2 + Math.random()*1.8;
+      const length = Math.random() * 400 + 200;
+      const speed = 2 + Math.random() * 1.8;
       let bar;
-      switch(dir) {
-        case 0: bar = { x:-thickness, y:Math.random()*(canvas.height-length), width:thickness, height:length, dx:speed, dy:0, scored: false }; break;
-        case 1: bar = { x:canvas.width, y:Math.random()*(canvas.height-length), width:thickness, height:length, dx:-speed, dy:0, scored: false }; break;
-        case 2: bar = { x:Math.random()*(canvas.width-length), y:-thickness, width:length, height:thickness, dx:0, dy:speed, scored: false }; break;
-        case 3: bar = { x:Math.random()*(canvas.width-length), y:canvas.height, width:length, height:thickness, dx:0, dy:-speed, scored: false }; break;
+      switch (dir) {
+        case 0: bar = { x: -thickness, y: Math.random() * (canvas.height - length), width: thickness, height: length, dx: speed, dy: 0, scored: false }; break;
+        case 1: bar = { x: canvas.width, y: Math.random() * (canvas.height - length), width: thickness, height: length, dx: -speed, dy: 0, scored: false }; break;
+        case 2: bar = { x: Math.random() * (canvas.width - length), y: -thickness, width: length, height: thickness, dx: 0, dy: speed, scored: false }; break;
+        case 3: bar = { x: Math.random() * (canvas.width - length), y: canvas.height, width: length, height: thickness, dx: 0, dy: -speed, scored: false }; break;
       }
       bars.push(bar);
       score += 1;
@@ -621,7 +639,7 @@
       ctx.fillStyle = player.skin;
       ctx.shadowColor = player.skin;
       ctx.shadowBlur = 20;
-      ctx.arc(player.x, player.y, player.radius, 0, Math.PI*2);
+      ctx.arc(player.x, player.y, player.radius, 0, Math.PI * 2);
       ctx.fill();
       ctx.shadowBlur = 0;
 
@@ -680,7 +698,7 @@
     let lastFrameTime = 0;
     let lastBarTime = 0;
 
-    function gameLoop(timestamp=0) {
+    function gameLoop(timestamp = 0) {
       if (!gameStarted || gameOver) {
         if (gameOver) {
           finalScoreText.textContent = `Sua pontuação: ${score.toFixed(2)}`;
@@ -781,7 +799,7 @@
     window.addEventListener('resize', resizeCanvas);
     window.addEventListener('load', async () => {
       resizeCanvas();
-      const rankings = await fetchRanking();
+      const rankings = await getRankingFromFirestore();
       updateRanking(rankings);
       updateSkinSelectors();
       setupJoystick();
