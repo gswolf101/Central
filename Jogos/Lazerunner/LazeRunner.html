@@ -5,8 +5,25 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <title>Lazer Runner</title>
   <!-- Firebase SDK -->
-  <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js"></script>
+  <script type="module">
+    import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js';
+    import { getFirestore, collection, addDoc, getDocs, query, orderBy, limit } from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js';
+
+    // Configuração do Firebase
+    const firebaseConfig = {
+      apiKey: "AIzaSyB1RN6S1lTMoeGw1avqBjxC6is-LAWjblI",
+      authDomain: "gswolf101-lazerrunner.firebaseapp.com",
+      projectId: "gswolf101-lazerrunner",
+      storageBucket: "gswolf101-lazerrunner.firebasestorage.app",
+      messagingSenderId: "262516569774",
+      appId: "1:262516569774:web:c1751897f17ec016acdf3f",
+      measurementId: "G-QQBG5EFCK7"
+    };
+
+    // Inicializar Firebase
+    const app = initializeApp(firebaseConfig);
+    window.db = getFirestore(app);
+  </script>
   <style>
     body {
       display: flex;
@@ -45,10 +62,12 @@
       max-width: 100%;
       margin: 20px 0;
     }
+
     #ranking h2 {
       margin-top: 0;
       font-size: 24px;
     }
+
     #ranking ol {
       padding-left: 20px;
       font-size: 18px;
@@ -67,13 +86,14 @@
       margin-top: 5px;
     }
 
-    #startScreen, #gameOverScreen {
+    #startScreen,
+    #gameOverScreen {
       position: fixed;
       top: 0;
       left: 0;
       width: 100vw;
       height: 100vh;
-      background: rgba(0,0,0,0.9);
+      background: rgba(0, 0, 0, 0.9);
       display: flex;
       flex-direction: column;
       justify-content: center;
@@ -83,10 +103,14 @@
       text-align: center;
       z-index: 9999;
     }
-    #startScreen.hidden, #gameOverScreen.hidden {
+
+    #startScreen.hidden,
+    #gameOverScreen.hidden {
       display: none;
     }
-    #startScreen button, #gameOverScreen button {
+
+    #startScreen button,
+    #gameOverScreen button {
       margin: 20px;
       padding: 10px 20px;
       font-size: 24px;
@@ -96,9 +120,12 @@
       border: none;
       border-radius: 5px;
     }
-    #startScreen button:hover, #gameOverScreen button:hover:not(:disabled) {
+
+    #startScreen button:hover,
+    #gameOverScreen button:hover:not(:disabled) {
       background-color: #ccc;
     }
+
     #saveRankingButton:disabled {
       background-color: #888;
       color: #ccc;
@@ -119,6 +146,7 @@
       border-radius: 5px;
       z-index: 10000;
     }
+
     #backButton:hover {
       background-color: #ccc;
     }
@@ -132,6 +160,7 @@
       max-width: 1000px;
       width: 100%;
     }
+
     .skinOption {
       width: 50px;
       height: 50px;
@@ -148,27 +177,31 @@
       transition: transform 0.2s, border-color 0.3s;
       flex-shrink: 0;
     }
+
     .skinOption.selected {
       border-color: yellow;
       transform: scale(1.2);
       box-shadow: 0 0 10px yellow;
     }
 
-    #joystick, #immuneButton {
+    #joystick,
+    #immuneButton {
       display: none;
       position: fixed;
       bottom: 20px;
       z-index: 1000;
       user-select: none;
     }
+
     #joystick {
       left: 20px;
       width: 160px;
       height: 160px;
-      background: rgba(255,255,255,0.2);
+      background: rgba(255, 255, 255, 0.2);
       border-radius: 50%;
       touch-action: none;
     }
+
     #joystickKnob {
       width: 64px;
       height: 64px;
@@ -179,11 +212,12 @@
       left: 50%;
       transform: translate(-50%, -50%);
     }
+
     #immuneButton {
       right: 20px;
       width: 60px;
       height: 60px;
-      background: rgba(255,255,0,0.5);
+      background: rgba(255, 255, 0, 0.5);
       border-radius: 50%;
       display: flex;
       justify-content: center;
@@ -192,6 +226,7 @@
       color: white;
       touch-action: none;
     }
+
     #immuneButton.active {
       background: yellow;
     }
@@ -201,30 +236,40 @@
         flex-direction: column;
         align-items: center;
       }
+
       #ranking {
         width: 90vw;
         margin: 10px 0;
       }
+
       canvas {
         width: 90vw !important;
         height: auto !important;
       }
-      #startScreen, #gameOverScreen {
+
+      #startScreen,
+      #gameOverScreen {
         font-size: 36px;
       }
-      #startScreen button, #gameOverScreen button {
+
+      #startScreen button,
+      #gameOverScreen button {
         font-size: 20px;
         padding: 8px 16px;
       }
+
       #skinSelector {
         margin-top: 10px;
       }
+
       .skinOption {
         width: 40px;
         height: 40px;
         font-size: 20px;
       }
-      #joystick, #immuneButton {
+
+      #joystick,
+      #immuneButton {
         display: block;
       }
     }
@@ -297,28 +342,8 @@
   </div>
   <div id="version">Versão 1.5</div>
 
-  <script>
-    // Inicializar Firebase
-    const firebaseConfig = {
-      apiKey: "AIzaSyB1RN6S1lTMoeGw1avqBjxC6is-LAWjblI",
-      authDomain: "gswolf101-lazerrunner.firebaseapp.com",
-      projectId: "gswolf101-lazerrunner",
-      storageBucket: "gswolf101-lazerrunner.firebasestorage.app",
-      messagingSenderId: "262516569774",
-      appId: "1:262516569774:web:c1751897f17ec016acdf3f",
-      measurementId: "G-QQBG5EFCK7"
-    };
-    const app = firebase.initializeApp(firebaseConfig);
-    const db = firebase.firestore();
-
-    document.addEventListener('contextmenu', e => { e.preventDefault(); alert('Clique com o botão direito desativado.'); });
-    document.addEventListener('keydown', e => {
-      if (e.key === 'F12' || e.keyCode === 123) {
-        e.preventDefault();
-        alert('Ferramentas de desenvolvedor desativadas.');
-      }
-    });
-
+  <script type="module">
+    // Elementos do DOM
     const canvas = document.getElementById('gameCanvas');
     const ctx = canvas.getContext('2d');
     const startScreen = document.getElementById('startScreen');
@@ -331,7 +356,14 @@
     const joystickKnob = document.getElementById('joystickKnob');
     const immuneButton = document.getElementById('immuneButton');
 
-    let gameStarted = false, scoreSaved = false;
+    // Estado do jogo
+    let gameStarted = false;
+    let scoreSaved = false;
+    let gameOver = false;
+    let animationFrameId = null;
+    let lastFrameTime = 0;
+    let lastBarTime = 0;
+
     const boundary = { x: 70, y: 70, width: 900 - 140, height: 900 - 140 };
     const player = {
       x: 900 / 2,
@@ -345,7 +377,8 @@
       skin: 'white'
     };
 
-    let bars = [], score = 0, gameOver = false;
+    let bars = [];
+    let score = 0;
     let keys = {
       ArrowUp: false, ArrowDown: false,
       ArrowLeft: false, ArrowRight: false,
@@ -353,14 +386,15 @@
       a: false, A: false, d: false, D: false,
       ' ': false, Enter: false
     };
-    let animationFrameId = null;
 
+    // Configuração do joystick
     let joystickActive = false;
     let joystickCenter = { x: 0, y: 0 };
     let joystickDirection = { x: 0, y: 0 };
     const joystickRadius = 80;
     const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
 
+    // Configuração da dificuldade
     const difficultyLevels = [
       { minScore: 0, maxScore: 10, barsToSpawn: 2, spawnInterval: 240 },
       { minScore: 11, maxScore: 25, barsToSpawn: 2, spawnInterval: 150 },
@@ -370,12 +404,11 @@
     ];
     let currentDifficulty = difficultyLevels[0];
 
+    // Funções de ranking
     async function getRankingFromFirestore() {
       try {
-        const querySnapshot = await db.collection('rankings')
-          .orderBy('score', 'desc')
-          .limit(10)
-          .get();
+        const q = query(collection(window.db, 'rankings'), orderBy('score', 'desc'), limit(10));
+        const querySnapshot = await getDocs(q);
         const rankings = querySnapshot.docs.map(doc => doc.data());
         console.log('Ranking obtido do Firestore:', rankings);
         return rankings;
@@ -388,10 +421,10 @@
 
     async function saveRankingToFirestore(name, score) {
       try {
-        await db.collection('rankings').add({
+        await addDoc(collection(window.db, 'rankings'), {
           name: name.trim(),
           score: Number(score.toFixed(2)),
-          timestamp: firebase.firestore.FieldValue.serverTimestamp()
+          timestamp: new Date()
         });
         console.log('Pontuação salva no Firestore:', { name, score });
         const updatedRankings = await getRankingFromFirestore();
@@ -407,18 +440,19 @@
     function updateRanking(rankings) {
       const startRankingList = startScreen.querySelector('#rankingList');
       const gameOverRankingList = gameOverScreen.querySelector('#rankingList');
+      if (!startRankingList || !gameOverRankingList) return;
+
       startRankingList.innerHTML = '';
       gameOverRankingList.innerHTML = '';
       rankings.forEach(e => {
-        const li1 = document.createElement('li');
-        li1.textContent = `${e.name} - ${Number(e.score).toFixed(2)}`;
-        startRankingList.appendChild(li1);
-        const li2 = document.createElement('li');
-        li2.textContent = `${e.name} - ${Number(e.score).toFixed(2)}`;
-        gameOverRankingList.appendChild(li2);
+        const li = document.createElement('li');
+        li.textContent = `${e.name} - ${Number(e.score).toFixed(2)}`;
+        startRankingList.appendChild(li.cloneNode(true));
+        gameOverRankingList.appendChild(li);
       });
     }
 
+    // Configuração do joystick
     function setupJoystick() {
       if (!isTouchDevice) return;
 
@@ -426,7 +460,8 @@
       joystick.addEventListener('touchmove', moveJoystick);
       joystick.addEventListener('touchend', endJoystick);
 
-      immuneButton.addEventListener('touchstart', () => {
+      immuneButton.addEventListener('touchstart', (e) => {
+        e.preventDefault();
         if (!player.immune && player.energy >= 10) {
           player.immune = true;
           immuneButton.classList.add('active');
@@ -466,78 +501,80 @@
       }
 
       joystickKnob.style.transform = `translate(${dx - 32}px, ${dy - 32}px)`;
-
       joystickDirection = {
         x: distance > 0 ? dx / maxDistance : 0,
         y: distance > 0 ? dy / maxDistance : 0
       };
-      console.log('Joystick movido, direção:', joystickDirection);
     }
 
     function endJoystick() {
       joystickActive = false;
       joystickDirection = { x: 0, y: 0 };
       joystickKnob.style.transform = 'translate(-50%, -50%)';
-      console.log('Toque no joystick finalizado');
     }
 
-    document.addEventListener('keydown', e => {
-      if (e.key in keys) {
-        keys[e.key] = true;
-        if (e.key === ' ' && !player.immune && player.energy >= 10) {
-          player.immune = true;
+    // Manipulação de eventos
+    function setupEventListeners() {
+      document.addEventListener('contextmenu', (e) => {
+        e.preventDefault();
+        alert('Clique com o botão direito desativado.');
+      });
+
+      document.addEventListener('keydown', (e) => {
+        if (e.key in keys) {
+          keys[e.key] = true;
+          if (e.key === ' ' && !player.immune && player.energy >= 10) {
+            player.immune = true;
+          }
+          if (e.key === 'Enter' && gameOver) {
+            resetGame();
+          }
         }
-        if (e.key === 'Enter' && gameOver) {
-          console.log('Enter pressionado, reiniciando jogo');
-          resetGame();
+      });
+
+      document.addEventListener('keyup', (e) => {
+        if (e.key in keys) {
+          keys[e.key] = false;
+          if (e.key === ' ') {
+            player.immune = false;
+          }
         }
-      }
-    });
+      });
 
-    document.addEventListener('keyup', e => {
-      if (e.key in keys) {
-        keys[e.key] = false;
-        if (e.key === ' ') {
-          player.immune = false;
+      playButton.addEventListener('click', () => {
+        startScreen.classList.add('hidden');
+        gameStarted = true;
+        resetGame();
+      });
+
+      restartButton.addEventListener('click', () => {
+        gameOverScreen.classList.add('hidden');
+        resetGame();
+      });
+
+      saveRankingButton.addEventListener('click', async () => {
+        if (scoreSaved) return;
+        const name = prompt('Digite seu nome:');
+        if (name && name.trim()) {
+          const updatedRankings = await saveRankingToFirestore(name.trim(), Number(score.toFixed(2)));
+          if (updatedRankings) {
+            updateRanking(updatedRankings);
+            scoreSaved = true;
+            saveRankingButton.disabled = true;
+            saveRankingButton.textContent = 'Salvo';
+            alert('Pontuação salva!');
+          }
+        } else if (name !== null) {
+          alert('Nome inválido.');
         }
-      }
-    });
+      });
+    }
 
-    playButton.addEventListener('click', () => {
-      console.log('Botão Play clicado, reiniciando pontuação e iniciando jogo');
-      startScreen.classList.add('hidden');
-      gameStarted = true;
-      resetGame();
-    });
-
-    restartButton.addEventListener('click', () => {
-      console.log('Botão Restart clicado, reiniciando jogo');
-      gameOverScreen.classList.add('hidden');
-      resetGame();
-    });
-
-    saveRankingButton.addEventListener('click', async () => {
-      if (scoreSaved) return;
-      const name = prompt('Digite seu nome:');
-      if (name && name.trim()) {
-        const updatedRankings = await saveRankingToFirestore(name.trim(), Number(score.toFixed(2)));
-        if (updatedRankings) {
-          updateRanking(updatedRankings);
-          scoreSaved = true;
-          saveRankingButton.disabled = true;
-          saveRankingButton.textContent = 'Salvo';
-          alert('Pontuação salva!');
-        }
-      } else if (name !== null) {
-        alert('Nome inválido.');
-      }
-    });
-
+    // Lógica do jogo
     function resetGame() {
       if (animationFrameId) {
         cancelAnimationFrame(animationFrameId);
         animationFrameId = null;
-        console.log('Animação cancelada');
       }
 
       player.x = canvas.width / 2;
@@ -556,7 +593,6 @@
       currentDifficulty = difficultyLevels[0];
       gameOverScreen.classList.add('hidden');
       updateSkinSelectors();
-      console.log('Jogo reiniciado, pontuação:', score, 'gameStarted:', gameStarted, 'gameOver:', gameOver);
       animationFrameId = requestAnimationFrame(gameLoop);
     }
 
@@ -574,7 +610,6 @@
       }
       bars.push(bar);
       score += 1;
-      console.log('Barra criada, pontuação:', score, 'dificuldade:', currentDifficulty);
     }
 
     function movePlayer(dt) {
@@ -600,20 +635,25 @@
     }
 
     function moveBars(dt) {
-      bars.forEach(b => { b.x += b.dx * dt; b.y += b.dy * dt; });
+      bars.forEach(b => {
+        b.x += b.dx * dt;
+        b.y += b.dy * dt;
+      });
     }
 
     function checkCollisions() {
       for (const b of bars) {
-        if (player.x + player.radius > b.x && player.x - player.radius < b.x + b.width &&
-            player.y + player.radius > b.y && player.y - player.radius < b.y + b.height) {
+        if (
+          player.x + player.radius > b.x &&
+          player.x - player.radius < b.x + b.width &&
+          player.y + player.radius > b.y &&
+          player.y - player.radius < b.y + b.height
+        ) {
           if (player.immune && !b.scored) {
             score += 1;
             b.scored = true;
-            console.log('Colisão imune, pontuação:', score);
           } else if (!player.immune) {
             gameOver = true;
-            console.log('Colisão detectada, fim de jogo, pontuação:', score);
             break;
           }
         }
@@ -634,7 +674,8 @@
       }
     }
 
-    function drawPlayer(timestamp) {
+    // Renderização
+    function drawPlayer() {
       ctx.beginPath();
       ctx.fillStyle = player.skin;
       ctx.shadowColor = player.skin;
@@ -674,7 +715,7 @@
       ctx.fillStyle = 'white';
       ctx.font = '24px Arial';
       ctx.textAlign = 'center';
-      ctx.fillText('Score: ' + score, canvas.width / 2, 40);
+      ctx.fillText(`Score: ${score.toFixed(2)}`, canvas.width / 2, 40);
       ctx.textAlign = 'left';
     }
 
@@ -695,19 +736,15 @@
       ctx.clearRect(0, 0, canvas.width, canvas.height);
     }
 
-    let lastFrameTime = 0;
-    let lastBarTime = 0;
-
+    // Loop do jogo
     function gameLoop(timestamp = 0) {
       if (!gameStarted || gameOver) {
         if (gameOver) {
           finalScoreText.textContent = `Sua pontuação: ${score.toFixed(2)}`;
           gameOverScreen.classList.remove('hidden');
-          console.log('Tela de game over exibida, pontuação:', score);
           if (animationFrameId) {
             cancelAnimationFrame(animationFrameId);
             animationFrameId = null;
-            console.log('Fim de jogo, animação cancelada');
           }
         }
         return;
@@ -719,7 +756,6 @@
       const newDifficulty = difficultyLevels.find(level => score >= level.minScore && score <= level.maxScore);
       if (newDifficulty !== currentDifficulty) {
         currentDifficulty = newDifficulty;
-        console.log('Dificuldade alterada:', currentDifficulty);
       }
 
       clearScreen();
@@ -735,24 +771,24 @@
           createBar();
         }
         lastBarTime = 0;
-        console.log('Criadas', currentDifficulty.barsToSpawn, 'barras, pontuação:', score);
       }
 
       bars = bars.filter(b =>
-        b.x + b.width > -50 && b.x < canvas.width + 50 &&
-        b.y + b.height > -50 && b.y < canvas.height + 50
+        b.x + b.width > -50 &&
+        b.x < canvas.width + 50 &&
+        b.y + b.height > -50 &&
+        b.y < canvas.height + 50
       );
 
       drawBars();
-      drawPlayer(timestamp);
+      drawPlayer();
       drawScore();
       drawImmunityBar();
-
-      console.log('Pontuação:', score);
 
       animationFrameId = requestAnimationFrame(gameLoop);
     }
 
+    // Seleção de skins
     function updateSkinSelectors() {
       const startSkinOptions = startScreen.querySelectorAll('.skinOption');
       const gameOverSkinOptions = gameOverScreen.querySelectorAll('.skinOption');
@@ -771,7 +807,6 @@
           player.skin = option.dataset.skin;
           selectSkin(player.skin, startSkinOptions);
           selectSkin(player.skin, gameOverSkinOptions);
-          console.log('Skin selecionada (início):', player.skin);
         });
       });
 
@@ -780,7 +815,6 @@
           player.skin = option.dataset.skin;
           selectSkin(player.skin, startSkinOptions);
           selectSkin(player.skin, gameOverSkinOptions);
-          console.log('Skin selecionada (game over):', player.skin);
         });
       });
 
@@ -788,23 +822,27 @@
       selectSkin(player.skin, gameOverSkinOptions);
     }
 
+    // Redimensionamento do canvas
     function resizeCanvas() {
       const maxWidth = window.innerWidth * 0.9;
       const maxHeight = window.innerHeight * 0.8;
       const size = Math.min(maxWidth, maxHeight, 900);
-      canvas.style.width = size + 'px';
-      canvas.style.height = size + 'px';
+      canvas.style.width = `${size}px`;
+      canvas.style.height = `${size}px`;
     }
 
-    window.addEventListener('resize', resizeCanvas);
-    window.addEventListener('load', async () => {
+    // Inicialização
+    async function init() {
       resizeCanvas();
       const rankings = await getRankingFromFirestore();
       updateRanking(rankings);
       updateSkinSelectors();
       setupJoystick();
-      console.log('Jogo carregado, pontuação inicial:', score);
-    });
+      setupEventListeners();
+    }
+
+    window.addEventListener('resize', resizeCanvas);
+    window.addEventListener('load', init);
   </script>
 </body>
 </html>
